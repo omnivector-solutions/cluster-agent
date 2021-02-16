@@ -7,9 +7,9 @@ import requests
 
 class ScraperAgent:
 
-    def __init__(self) -> None:
+    def __init__(self, stage="dev") -> None:
 
-        self.config = Config()
+        self.config = Config(stage)
 
     def hpc_header(self):
 
