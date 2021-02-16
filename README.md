@@ -11,7 +11,7 @@
   pip3 install -e .
   ```
 
-1. Setup parameters on AWS SSM
+2. Setup parameters on AWS SSM
   ```bash
   armada-agent-config <stage> # e.g. armada-agent-config dev
   ```
