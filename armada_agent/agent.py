@@ -73,9 +73,57 @@ class ScraperAgent:
                     data=json.dumps(payload)
                 )
 
+    def update_node(self):
+
+        endpoint = "/slurm/v0.0.35/nodes/"
+
+        response = requests.get(
+            self.config.base_scraper_url + endpoint,
+            headers=self.hpc_header(),
+            data={}
+        )
+
+        if response.status_code == 401:
+
+            raise requests.HTTPError("Authentication failed.")
+
+        elif response.status_code == 200:
+
+            nodes = response.json()
+
+        else:
+
+            raise requests.RequestException("Unknown error.")
+
+        if isinstance(nodes.get("nodes"), dict):
+
+            payload = {
+                "nodeInfo": next(iter(nodes.get("nodes").values()))
+            }
+
+            response = requests.put(
+                self.config.base_api_url + "/node",
+                headers=self.armada_api_header(),
+                data=json.dumps(payload)
+            )
+        
+        elif isinstance(nodes.get("nodes"), list):
+
+            for partition in nodes.get("nodes"):
+
+                payload = {
+                    "nodeInfo": partition
+                }
+
+                response = requests.put(
+                    self.config.base_api_url + "/node",
+                    headers=self.armada_api_header(),
+                    data=json.dumps(payload)
+                )
+
 
 if __name__ == "__main__":
 
     agent = ScraperAgent()
 
-    pprint(agent.update_partition())
+    pprint(agent.update_node())
