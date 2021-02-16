@@ -121,6 +121,20 @@ class ScraperAgent:
                     data=json.dumps(payload)
                 )
 
+    def create_cluster_record(self):
+
+        ## TODO:
+        # check route which aggregates cluster data
+
+        pass
+
+    def update_cluster_record(self):
+
+        ## TODO:
+        # check whether status column must be in DynamoDB table
+
+        pass
+
 
 if __name__ == "__main__":
 
