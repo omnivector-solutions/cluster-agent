@@ -25,7 +25,7 @@ class ScraperAgent:
             "Authorization": self.config.api_key
         }
 
-    def update_node(self):
+    def update_partition(self):
 
         endpoint = "/slurm/v0.0.35/partitions/"
 
@@ -78,4 +78,4 @@ if __name__ == "__main__":
 
     agent = ScraperAgent()
 
-    pprint(agent.update_node())
+    pprint(agent.update_partition())
