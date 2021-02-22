@@ -121,6 +121,41 @@ class ScraperAgent:
                     data=json.dumps(payload)
                 )
 
+    def update_cluster_diagnostics(self, table_name):
+
+        endpoint = "/slurm/v0.0.35/diag/"
+
+        response = requests.get(
+            self.config.base_scraper_url + endpoint,
+            headers=self.hpc_header(),
+            data={}
+        )
+
+        if response.status_code == 401:
+
+            raise requests.HTTPError("Authentication failed.")
+
+        elif response.status_code == 200:
+
+            payload = {
+                "diagnostics": response.json()
+            }
+
+        else:
+
+            raise requests.RequestException("Unknown error.")
+
+        pass
+
+        response = requests.put(
+            self.config.base_api_url + "/diag",
+            headers=self.armada_api_header(),
+            data=json.dumps(payload),
+            params={
+                "tableName": table_name
+            }
+        )
+
     def create_cluster_record(self):
 
         ## TODO:
@@ -140,4 +175,4 @@ if __name__ == "__main__":
 
     agent = ScraperAgent()
 
-    pprint(agent.update_node())
+    pprint(agent.update_cluster_diagnostics("cluster-1.scania"))
