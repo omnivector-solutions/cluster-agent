@@ -64,7 +64,7 @@ class ScraperAgent:
             for partition in partitions.get("partitions"):
 
                 payload = {
-                    "partitionInfo": partition
+                    "partitionInfo": [partition]
                 }
 
                 response = requests.put(
@@ -98,7 +98,7 @@ class ScraperAgent:
         if isinstance(nodes.get("nodes"), dict):
 
             payload = {
-                "nodeInfo": next(iter(nodes.get("nodes").values()))
+                "nodeInfo": [next(iter(nodes.get("nodes").values()))]
             }
 
             response = requests.put(
@@ -138,7 +138,7 @@ class ScraperAgent:
         elif response.status_code == 200:
 
             payload = {
-                "diagnostics": response.json()
+                "diagnostics": [response.json()]
             }
 
         else:
