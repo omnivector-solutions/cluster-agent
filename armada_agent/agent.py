@@ -181,9 +181,9 @@ class ScraperAgent:
                 })
             )
 
-    def update_cluster_diagnostics(self, table_name):
+    def update_cluster_diagnostics(self):
 
-        endpoint = "/slurm/v0.0.35/diag/"
+        endpoint = "/slurm/v0.0.36/diag/"
 
         response = requests.get(
             self.config.base_scraper_url + endpoint,
@@ -197,9 +197,7 @@ class ScraperAgent:
 
         elif response.status_code == 200:
 
-            payload = {
-                "diagnostics": [response.json()]
-            }
+            payload = response.json()
 
         else:
 
@@ -210,11 +208,10 @@ class ScraperAgent:
         response = requests.put(
             self.config.base_api_url + "/diag",
             headers=self.armada_api_header(),
-            data=json.dumps(payload),
-            params={
-                "tableName": table_name
-            }
+            data=json.dumps(payload)
         )
+
+        return response
 
     def upsert_cluster_record(self):
 
@@ -225,4 +222,8 @@ if __name__ == "__main__":
 
     agent = ScraperAgent()
 
-    pprint(agent.upsert_partition_and_node_records())
+    res = agent.update_cluster_diagnostics()
+
+    print("Status code: {}".format(res.status_code))
+    print("Response JSON:")
+    pprint(res.json())
