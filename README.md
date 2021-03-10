@@ -25,8 +25,7 @@ stage = "dev" # define stage name here. Default is "dev"
 
 agent = ScraperAgent(stage)
 
-agent.update_partition()
-agent.update_node()
+agent.upsert_partition_and_node_records()
 ```
 
 ## Deploy
