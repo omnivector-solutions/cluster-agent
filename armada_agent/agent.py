@@ -25,9 +25,84 @@ class ScraperAgent:
             "Authorization": self.config.api_key
         }
 
-    def update_partition(self):
+    def upsert_partition_and_node_records(self):
 
-        endpoint = "/slurm/v0.0.35/partitions/"
+        partition_endpoint = "/slurm/v0.0.36/partitions"
+        node_endpoint = "/slurm/v0.0.36/nodes"
+
+        # get partition data
+        response = requests.get(
+            self.config.base_scraper_url + partition_endpoint,
+            headers=self.hpc_header(),
+            data={}
+        )
+
+        if response.status_code == 401:
+
+            raise requests.HTTPError("Authentication failed.")
+
+        elif response.status_code == 200:
+
+            partitions = response.json()
+
+        else:
+
+            raise requests.RequestException("Unknown error.")
+
+        # get node data
+        response = requests.get(
+            self.config.base_scraper_url + node_endpoint,
+            headers=self.hpc_header(),
+            data={}
+        )
+
+        if response.status_code == 401:
+
+            raise requests.HTTPError("Authentication failed.")
+
+        elif response.status_code == 200:
+
+            nodes = response.json()
+
+        else:
+
+            raise requests.RequestException("Unknown error.")
+
+        responses = list()
+
+        for partition in partitions["partitions"]:
+
+            payload = {
+                "partition": {
+                    "name": partition["name"],
+                    "status": "active"
+                },
+                "nodes": list(map(
+                    lambda _node: {
+                        "name": _node["name"],
+                        "status": _node["state"]
+                    },
+                    filter(
+                        lambda node: node["name"] in partition["nodes"],
+                        nodes["nodes"]
+                    )
+                ))
+            }
+
+            # send data to api
+            response = requests.post(
+                self.config.base_api_url + "/partition/upsert",
+                headers=self.armada_api_header(),
+                data=json.dumps(payload)
+            )
+
+            responses.append(response)
+
+        return responses
+
+    def upsert_partition_record(self):
+
+        endpoint = "/slurm/v0.0.36/partitions/"
 
         response = requests.get(
             self.config.base_scraper_url + endpoint,
@@ -73,9 +148,9 @@ class ScraperAgent:
                     data=json.dumps(payload)
                 )
 
-    def update_node(self):
+    def upsert_node_record(self):
 
-        endpoint = "/slurm/v0.0.35/nodes/"
+        endpoint = "/slurm/v0.0.36/nodes"
 
         response = requests.get(
             self.config.base_scraper_url + endpoint,
@@ -95,31 +170,16 @@ class ScraperAgent:
 
             raise requests.RequestException("Unknown error.")
 
-        if isinstance(nodes.get("nodes"), dict):
+        for node in nodes["nodes"]:
 
-            payload = {
-                "nodeInfo": [next(iter(nodes.get("nodes").values()))]
-            }
-
-            response = requests.put(
-                self.config.base_api_url + "/node",
+            response = requests.post(
+                self.config.base_api_url + "/node/upsert",
                 headers=self.armada_api_header(),
-                data=json.dumps(payload)
+                data=json.dumps({
+                    "name": node["name"],
+                    "status": node["state"]
+                })
             )
-        
-        elif isinstance(nodes.get("nodes"), list):
-
-            for partition in nodes.get("nodes"):
-
-                payload = {
-                    "nodeInfo": partition
-                }
-
-                response = requests.put(
-                    self.config.base_api_url + "/node",
-                    headers=self.armada_api_header(),
-                    data=json.dumps(payload)
-                )
 
     def update_cluster_diagnostics(self, table_name):
 
@@ -156,17 +216,7 @@ class ScraperAgent:
             }
         )
 
-    def create_cluster_record(self):
-
-        ## TODO:
-        # check route which aggregates cluster data
-
-        pass
-
-    def update_cluster_record(self):
-
-        ## TODO:
-        # check whether status column must be in DynamoDB table
+    def upsert_cluster_record(self):
 
         pass
 
@@ -175,4 +225,4 @@ if __name__ == "__main__":
 
     agent = ScraperAgent()
 
-    pprint(agent.update_cluster_diagnostics("cluster-1.scania"))
+    pprint(agent.upsert_partition_and_node_records())
