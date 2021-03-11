@@ -73,15 +73,9 @@ class ScraperAgent:
         for partition in partitions["partitions"]:
 
             payload = {
-                "partition": {
-                    "name": partition["name"],
-                    "status": "active"
-                },
+                "partition": partition,
                 "nodes": list(map(
-                    lambda _node: {
-                        "name": _node["name"],
-                        "status": _node["state"]
-                    },
+                    lambda _node: _node,
                     filter(
                         lambda node: node["name"] in partition["nodes"],
                         nodes["nodes"]
@@ -222,8 +216,12 @@ if __name__ == "__main__":
 
     agent = ScraperAgent()
 
-    res = agent.update_cluster_diagnostics()
+    # res = agent.update_cluster_diagnostics()
 
-    print("Status code: {}".format(res.status_code))
-    print("Response JSON:")
-    pprint(res.json())
+    # print("Status code: {}".format(res.status_code))
+    # print("Response JSON:")
+    # pprint(res.json())
+
+    res = agent.upsert_partition_and_node_records()
+
+    print(res)
