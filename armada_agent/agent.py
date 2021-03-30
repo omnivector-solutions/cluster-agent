@@ -1,15 +1,14 @@
-from armada_agent.config import Config
+from armada_agent.utils.request import check_request_status
 
-from pprint import pprint
 import json
 
 import requests
 
 class ScraperAgent:
 
-    def __init__(self, stage="dev") -> None:
+    def __init__(self, config) -> None:
 
-        self.config = Config(stage)
+        self.config = config
 
     def hpc_header(self):
 
@@ -37,17 +36,7 @@ class ScraperAgent:
             data={}
         )
 
-        if response.status_code == 401:
-
-            raise requests.HTTPError("Authentication failed.")
-
-        elif response.status_code == 200:
-
-            partitions = response.json()
-
-        else:
-
-            raise requests.RequestException("Unknown error.")
+        partitions = check_request_status(response)
 
         # get node data
         response = requests.get(
@@ -56,17 +45,7 @@ class ScraperAgent:
             data={}
         )
 
-        if response.status_code == 401:
-
-            raise requests.HTTPError("Authentication failed.")
-
-        elif response.status_code == 200:
-
-            nodes = response.json()
-
-        else:
-
-            raise requests.RequestException("Unknown error.")
+        nodes = check_request_status(response)
 
         responses = list()
 
@@ -85,7 +64,7 @@ class ScraperAgent:
 
             # send data to api
             response = requests.post(
-                self.config.base_api_url + "/partition/upsert",
+                self.config.base_api_url + "/upsert/partition",
                 headers=self.armada_api_header(),
                 data=json.dumps(payload)
             )
@@ -93,87 +72,6 @@ class ScraperAgent:
             responses.append(response)
 
         return responses
-
-    def upsert_partition_record(self):
-
-        endpoint = "/slurm/v0.0.36/partitions/"
-
-        response = requests.get(
-            self.config.base_scraper_url + endpoint,
-            headers=self.hpc_header(),
-            data={}
-        )
-
-        if response.status_code == 401:
-
-            raise requests.HTTPError("Authentication failed.")
-
-        elif response.status_code == 200:
-
-            partitions = response.json()
-
-        else:
-
-            raise requests.RequestException("Unknown error.")
-
-        if isinstance(partitions.get("partitions"), dict):
-
-            payload = {
-                "partitionInfo": next(iter(partitions.get("partitions").values()))
-            }
-
-            response = requests.put(
-                self.config.base_api_url + "/partition",
-                headers=self.armada_api_header(),
-                data=json.dumps(payload)
-            )
-        
-        elif isinstance(partitions.get("partitions"), list):
-
-            for partition in partitions.get("partitions"):
-
-                payload = {
-                    "partitionInfo": [partition]
-                }
-
-                response = requests.put(
-                    self.config.base_api_url + "/partition",
-                    headers=self.armada_api_header(),
-                    data=json.dumps(payload)
-                )
-
-    def upsert_node_record(self):
-
-        endpoint = "/slurm/v0.0.36/nodes"
-
-        response = requests.get(
-            self.config.base_scraper_url + endpoint,
-            headers=self.hpc_header(),
-            data={}
-        )
-
-        if response.status_code == 401:
-
-            raise requests.HTTPError("Authentication failed.")
-
-        elif response.status_code == 200:
-
-            nodes = response.json()
-
-        else:
-
-            raise requests.RequestException("Unknown error.")
-
-        for node in nodes["nodes"]:
-
-            response = requests.post(
-                self.config.base_api_url + "/node/upsert",
-                headers=self.armada_api_header(),
-                data=json.dumps({
-                    "name": node["name"],
-                    "status": node["state"]
-                })
-            )
 
     def update_cluster_diagnostics(self):
 
@@ -185,43 +83,12 @@ class ScraperAgent:
             data={}
         )
 
-        if response.status_code == 401:
-
-            raise requests.HTTPError("Authentication failed.")
-
-        elif response.status_code == 200:
-
-            payload = response.json()
-
-        else:
-
-            raise requests.RequestException("Unknown error.")
-
-        pass
+        diagnostics = check_request_status(response)
 
         response = requests.put(
-            self.config.base_api_url + "/diag",
+            self.config.base_api_url + "/agent/insert/diagnostics",
             headers=self.armada_api_header(),
-            data=json.dumps(payload)
+            data=json.dumps(diagnostics)
         )
 
         return response
-
-    def upsert_cluster_record(self):
-
-        pass
-
-
-if __name__ == "__main__":
-
-    agent = ScraperAgent()
-
-    # res = agent.update_cluster_diagnostics()
-
-    # print("Status code: {}".format(res.status_code))
-    # print("Response JSON:")
-    # pprint(res.json())
-
-    res = agent.upsert_partition_and_node_records()
-
-    print(res)
