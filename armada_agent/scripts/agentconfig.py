@@ -62,6 +62,8 @@ def read_upstream():
 
         if k not in CONFIG:
             val = defaults.get(k, "")
+        else:
+            val = CONFIG[k]
 
         yield (k, val)
 
