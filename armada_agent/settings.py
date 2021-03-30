@@ -1,4 +1,9 @@
+from pydantic.error_wrappers import ValidationError
 from pydantic import BaseSettings
+
+from armada_agent.utils.logging import logger
+
+import sys
 
 
 class Settings(BaseSettings):
@@ -18,3 +23,14 @@ class Settings(BaseSettings):
     class Config:
 
         env_file = ".env"
+
+
+def init_settings() -> Settings:
+    try:
+        return Settings()
+    except ValidationError as e:
+        logger.error(e)
+        sys.exit(1)
+
+
+SETTINGS = init_settings()

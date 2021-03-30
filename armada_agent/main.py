@@ -7,6 +7,7 @@ import logging
 
 from armada_agent.utils.logging import logger
 from armada_agent.agent import ScraperAgent
+from armada_agent.settings import SETTINGS
 from armada_agent.utils import response
 from armada_agent import settings
 
@@ -32,16 +33,9 @@ async def health():
 
 
 @lru_cache()
-def get_settings():
-    return settings.Settings()
+def get_agent():
 
-
-@lru_cache()
-def get_agent(config: settings.Settings = Depends(get_settings)):
-
-    logger.info(config)
-
-    return ScraperAgent(config)
+    return ScraperAgent(SETTINGS)
 
 
 @app.on_event("startup")
@@ -60,17 +54,16 @@ def begin_logging():
 
 @app.on_event("startup")
 @repeat_every(
-    seconds=60,
+    seconds=5,
     logger=logger,
     raise_exceptions=True,
 )
-def collect_diagnostics(agent: ScraperAgent = Depends(get_agent)):
+def collect_diagnostics():
     """
     Periodically get diagnostics data and report them to the backend
     """
 
-    logger.info("Run collecting")
-    logger.info(agent)
+    agent = get_agent()
 
     ## TODO: make diagnostics call asynchronously
     # agent.update_cluster_diagnostics()
@@ -82,11 +75,13 @@ def collect_diagnostics(agent: ScraperAgent = Depends(get_agent)):
     logger=logger,
     raise_exceptions=True,
 )
-def collect_partition_and_nodes(agent: ScraperAgent = Depends(get_agent)):
+def collect_partition_and_nodes():
     """
     Periodically get partition data and node data then
     report them to the backend
     """
+
+    agent = get_agent()
 
     ## TODO: make partitions and nodes call asynchronously
     # agent.upsert_partition_and_node_records()
