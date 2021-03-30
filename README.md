@@ -11,21 +11,36 @@
   pip3 install -e .
   ```
 
-2. Setup parameters on AWS SSM
+2. Setup `.env` parameters
   ```bash
-  armada-agent-config <stage> # e.g. armada-agent-config dev
+  agentconfig
   ```
 
 ## Local usage example
 
-```python
-from armada_agent.agent import ScraperAgent
+1. Run app
+  ```bash
+  agentrun
+  ```
 
-stage = "dev" # define stage name here. Default is "dev"
+Outputs:
+  ```bash
+  INFO:     Started server process [8798]
+  INFO:     Waiting for application startup.
+  INFO:     Run collecting
+  INFO:     Depends(get_agent)
+  INFO:     Application startup complete.
+  INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+  ```
 
-agent = ScraperAgent(stage)
+2. Make local request
+  ```bash
+  curl http://localhost:8080/health
+  ```
 
-agent.upsert_partition_and_node_records()
-```
+Outputs:
+  ```json
+  {"status":"ok","message":""}
+  ```
 
 ## Deploy
