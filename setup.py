@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-from os.path import join, dirname
+from os.path import dirname
 
 here = dirname(__file__)
 
@@ -38,6 +38,9 @@ setup(
         'Operating System :: OS Independent',
     ],
     entry_points={
-        "console_scripts": ["armada-agent-config=armada_agent.config:ssmparameters"]
+        "console_scripts": [
+            "agentconfig=armada_agent.scripts.agentconfig:parameters",
+            "agentrun=armada_agent.scripts.agentrun:run"
+        ]
     }
 )
