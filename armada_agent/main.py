@@ -88,7 +88,6 @@ async def collect_partition_and_nodes():
 
     agent = get_agent()
 
-    # @todo: make partitions and nodes call asynchronously
     logger.info("💡💡💡 Calling upsertion of cluster partitions and nodes 💡💡💡")
 
     res = agent.upsert_partition_and_node_records()

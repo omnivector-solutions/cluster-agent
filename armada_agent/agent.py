@@ -1,7 +1,9 @@
 from armada_agent.utils.request import check_request_status
+from armada_agent.utils.request import request_exception
 
 import json
 
+import grequests
 import requests
 
 class ScraperAgent:
@@ -47,7 +49,8 @@ class ScraperAgent:
 
         nodes = check_request_status(response)
 
-        responses = list()
+        # [docs for grequests](https://github.com/spyoungtech/grequests)
+        reqs = list()
 
         for partition in partitions["partitions"]:
 
@@ -62,14 +65,13 @@ class ScraperAgent:
                 ))
             }
 
-            # send data to api
-            response = requests.post(
+            reqs.append(grequests.post(
                 self.config.base_api_url + "/agent/upsert/partition",
                 headers=self.armada_api_header(),
                 data=json.dumps(payload)
-            )
+            ))
 
-            responses.append(response)
+        responses = list(grequests.imap(reqs, exception_handler=request_exception))
 
         return responses
 
