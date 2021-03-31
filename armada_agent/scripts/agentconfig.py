@@ -79,7 +79,8 @@ def save_upstream(data):
 
 
 @click.command()
-def parameters():
+@click.pass_context
+def parameters(ctx: click.Context):
     """
     Edit .env parameters in a text editor and save them
     """
@@ -98,7 +99,10 @@ def parameters():
             new_file = hotedit.hotedit(initial=orig_file, validate_unchanged=True)
         except hotedit.Unchanged:
             click.echo("** Parameters were unchanged", file=sys.stderr)
-            continue
+            if click.confirm("Try again?"):
+                continue
+            else:
+                ctx.exit(1)
 
         new_data = toml.loads(new_file)
         # sanity check that we've only seen the keys we want to see
