@@ -1,4 +1,7 @@
 """Core module for request processing operations"""
+from armada_agent.utils.logging import logger
+
+import grequests
 import requests
 
 
@@ -31,3 +34,8 @@ def check_request_status(request):
         raise requests.RequestException("Unknown error.")
 
     return payload
+
+
+def request_exception(request, exception):
+
+    logger.info("⚠️⚠️⚠️ Request failed: {} ⚠️⚠️⚠️".format(exception))
