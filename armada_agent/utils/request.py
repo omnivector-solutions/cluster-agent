@@ -1,6 +1,4 @@
 """Core module for request processing operations"""
-from armada_agent.utils import response
-
 import requests
 
 
@@ -20,13 +18,13 @@ def check_request_status(request):
         requests.RequestException: Unknown error
     """
 
-    if response.status_code == 401:
+    if request.status_code == 401:
 
         raise requests.HTTPError("Authentication failed.")
 
-    elif response.status_code == 200:
+    elif request.status_code == 200:
 
-        payload = response.json()
+        payload = request.json()
 
     else:
 
