@@ -64,7 +64,7 @@ class ScraperAgent:
 
             # send data to api
             response = requests.post(
-                self.config.base_api_url + "/upsert/partition",
+                self.config.base_api_url + "/agent/upsert/partition",
                 headers=self.armada_api_header(),
                 data=json.dumps(payload)
             )
@@ -85,10 +85,14 @@ class ScraperAgent:
 
         diagnostics = check_request_status(response)
 
-        response = requests.put(
+        payload = {
+            "diagnostics": diagnostics
+        }
+
+        response = requests.post(
             self.config.base_api_url + "/agent/insert/diagnostics",
             headers=self.armada_api_header(),
-            data=json.dumps(diagnostics)
+            data=json.dumps(payload)
         )
 
         return response
