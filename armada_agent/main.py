@@ -54,19 +54,24 @@ def begin_logging():
 
 @app.on_event("startup")
 @repeat_every(
-    seconds=5,
+    seconds=60,
     logger=logger,
     raise_exceptions=True,
 )
-def collect_diagnostics():
+async def collect_diagnostics():
     """
     Periodically get diagnostics data and report them to the backend
     """
 
     agent = get_agent()
 
-    ## TODO: make diagnostics call asynchronously
-    # agent.update_cluster_diagnostics()
+    logger.info("💡💡💡 Calling insertion of cluster diagnostics 💡💡💡")
+
+    res = agent.update_cluster_diagnostics()
+
+    logger.info("Response information ({}): {}".format(collect_diagnostics.__name__, res))
+
+    logger.info(f"✅✅✅ {collect_diagnostics.__name__} run successfully ✅✅✅")
 
 
 @app.on_event("startup")
@@ -75,7 +80,7 @@ def collect_diagnostics():
     logger=logger,
     raise_exceptions=True,
 )
-def collect_partition_and_nodes():
+async def collect_partition_and_nodes():
     """
     Periodically get partition data and node data then
     report them to the backend
@@ -83,5 +88,11 @@ def collect_partition_and_nodes():
 
     agent = get_agent()
 
-    ## TODO: make partitions and nodes call asynchronously
-    # agent.upsert_partition_and_node_records()
+    # @todo: make partitions and nodes call asynchronously
+    logger.info("💡💡💡 Calling upsertion of cluster partitions and nodes 💡💡💡")
+
+    res = agent.upsert_partition_and_node_records()
+
+    logger.info("📩📩📩 Response information ({}): {}".format(collect_partition_and_nodes.__name__, res))
+
+    logger.info(f"✅✅✅ {collect_partition_and_nodes.__name__} run successfully ✅✅✅")
