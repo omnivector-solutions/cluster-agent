@@ -65,13 +65,13 @@ async def collect_diagnostics():
 
     agent = get_agent()
 
-    logger.info("💡💡💡 Calling insertion of cluster diagnostics 💡💡💡")
+    logger.info("##### Calling insertion of cluster diagnostics #####")
 
     res = agent.update_cluster_diagnostics()
 
-    logger.info("Response information ({}): {}".format(collect_diagnostics.__name__, res))
+    logger.info("##### Response information ({}): {} #####".format(collect_diagnostics.__name__, res))
 
-    logger.info(f"✅✅✅ {collect_diagnostics.__name__} run successfully ✅✅✅")
+    logger.info(f"##### {collect_diagnostics.__name__} run successfully #####")
 
 
 @app.on_event("startup")
@@ -88,10 +88,10 @@ async def collect_partition_and_nodes():
 
     agent = get_agent()
 
-    logger.info("💡💡💡 Calling upsertion of cluster partitions and nodes 💡💡💡")
+    logger.info("##### Calling upsertion of cluster partitions and nodes #####")
 
     res = agent.upsert_partition_and_node_records()
 
-    logger.info("📩📩📩 Response information ({}): {}".format(collect_partition_and_nodes.__name__, res))
+    logger.info("##### Response information ({}): {} #####".format(collect_partition_and_nodes.__name__, res))
 
-    logger.info(f"✅✅✅ {collect_partition_and_nodes.__name__} run successfully ✅✅✅")
+    logger.info(f"##### {collect_partition_and_nodes.__name__} run successfully #####")
