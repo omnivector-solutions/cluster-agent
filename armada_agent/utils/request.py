@@ -38,4 +38,4 @@ def check_request_status(request):
 
 def request_exception(request, exception):
 
-    logger.info("⚠️⚠️⚠️ Request failed: {} ⚠️⚠️⚠️".format(exception))
+    logger.info("##### Request failed: {} #####".format(exception))
