@@ -6,13 +6,13 @@ import json
 import grequests
 import requests
 
-class ScraperAgent:
+class SlurmrestdScraperAgent:
 
     def __init__(self, config) -> None:
 
         self.config = config
 
-    def hpc_header(self):
+    def slurmrestd_header(self):
 
         return {
             "X-SLURM-USER-NAME": self.config.x_slurm_user_name,
@@ -34,7 +34,7 @@ class ScraperAgent:
         # get partition data
         response = requests.get(
             self.config.base_scraper_url + partition_endpoint,
-            headers=self.hpc_header(),
+            headers=self.slurmrestd_header(),
             data={}
         )
 
@@ -43,7 +43,7 @@ class ScraperAgent:
         # get node data
         response = requests.get(
             self.config.base_scraper_url + node_endpoint,
-            headers=self.hpc_header(),
+            headers=self.slurmrestd_header(),
             data={}
         )
 
@@ -81,7 +81,7 @@ class ScraperAgent:
 
         response = requests.get(
             self.config.base_scraper_url + endpoint,
-            headers=self.hpc_header(),
+            headers=self.slurmrestd_header(),
             data={}
         )
 

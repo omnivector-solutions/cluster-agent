@@ -5,11 +5,10 @@ from fastapi import FastAPI, Depends
 from functools import lru_cache
 import logging
 
+from armada_agent.agent import SlurmrestdScraperAgent
 from armada_agent.utils.logging import logger
-from armada_agent.agent import ScraperAgent
 from armada_agent.settings import SETTINGS
 from armada_agent.utils import response
-from armada_agent import settings
 
 
 app = FastAPI(
@@ -34,8 +33,8 @@ async def health():
 
 @lru_cache()
 def get_agent():
+    return SlurmrestdScraperAgent(SETTINGS)
 
-    return ScraperAgent(SETTINGS)
 
 
 @app.on_event("startup")
