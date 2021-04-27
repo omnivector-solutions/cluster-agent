@@ -87,14 +87,10 @@ class SlurmrestdScraperAgent:
 
         diagnostics = check_request_status(response)
 
-        payload = {
-            "diagnostics": diagnostics
-        }
-
         response = requests.post(
             self.config.base_api_url + "/agent/insert/diagnostics",
             headers=self.armada_api_header(),
-            data=json.dumps(payload)
+            data=json.dumps(diagnostics)
         )
 
         return response
