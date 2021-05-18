@@ -39,7 +39,7 @@ jobs:
       - id: set-version
         run: |
           echo 'RELEASE_VERSION=${{ github.event.inputs.version }}' >> $GITHUB_ENV;
-          echo 'RELEASE_PREFIX=license-manager-${{ github.event.inputs.version }}' >> $GITHUB_ENV;
+          echo 'RELEASE_PREFIX=armada-agent-${{ github.event.inputs.version }}' >> $GITHUB_ENV;
       - uses: actions/checkout@v2
         with:
           ref: release/${{ env.RELEASE_VERSION }}

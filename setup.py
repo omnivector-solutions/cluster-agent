@@ -10,7 +10,7 @@ setup(
     version=_VERSION,
     description="Armada data aggregator",
     # long_description=open(join(here, 'README.md')).read(),
-    license='proprietary',
+    license='MIT',
     author='omnivector-solutions',
     author_email='info@omnivector.solutions',
     url='https://github.com/omnivector-solutions/armada-agent/',
