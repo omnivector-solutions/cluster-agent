@@ -1,6 +1,21 @@
 # armada-agent
 
-## Secrets
+# Table of contents
+
+- [Project setup](#project-setup)
+  - [Github secrets](#github-secrets)
+- [Setup parameters](#setup-parameters)
+- [Local usage example](#local-usage-exemple)
+- [Release](#release)
+- [Future work](#future-work)
+
+## Project Setup
+
+### Github Secrets
+
+* PYPI_URL
+* PYPI_USERNAME
+* PYPI_PASSWORD
 
 ## Setup parameters
 
@@ -43,4 +58,10 @@ Outputs:
   {"status":"ok","message":""}
   ```
 
-## Deploy
+## Release
+
+TODO
+
+## Future work
+
+- [ ] TODO
