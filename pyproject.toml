@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "armada-agent"
-version = ""
+version = "0.1.0"
 description = "Armada data aggregator"
 authors = ["OmniVector Solutions <info@omnivector.solutions>"]
 license = "MIT"
