@@ -3,7 +3,7 @@ from os.path import dirname
 
 here = dirname(__file__)
 
-_VERSION = '0.1.0'
+_VERSION = '0.1.4'
 
 setup(
     name='armada-agent',
