@@ -7,6 +7,7 @@ import sys
 
 
 _URL_REGEX = r"http[s]?://.+"
+_API_KEY_REGEX = r"([a-zA-Z0-9])\w+"
 
 
 class Settings(BaseSettings):
@@ -15,8 +16,8 @@ class Settings(BaseSettings):
     ARMADA_AGENT_X_SLURM_USER_NAME: str = Field("root")
 
     # armada api info
-    ARMADA_AGENT_BASE_API_URL: str
-    ARMADA_AGENT_API_KEY: str
+    ARMADA_AGENT_BASE_API_URL: str = Field("https://rats.omnivector.solutions", regex=_URL_REGEX)
+    ARMADA_AGENT_API_KEY: str = Field("ratsratsrats", regex=_API_KEY_REGEX)
 
 
     class Config:
