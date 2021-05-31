@@ -3,6 +3,7 @@ from pydantic import BaseSettings, Field
 
 from armada_agent.utils.logging import logger
 
+from functools import lru_cache
 import sys
 
 
@@ -25,6 +26,7 @@ class Settings(BaseSettings):
         env_file = ".env"
 
 
+@lru_cache()
 def init_settings() -> Settings:
     try:
         return Settings()

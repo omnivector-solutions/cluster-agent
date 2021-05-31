@@ -7,13 +7,12 @@ import logging
 
 from armada_agent.agent import SlurmrestdScraperAgent
 from armada_agent.utils.logging import logger
-from armada_agent.settings import SETTINGS
 from armada_agent.utils import response
 
 
 app = FastAPI(
     title="Armada Agent",
-    version="0.1.0"
+    version="0.1.4"
 )
 app.add_middleware(
     CORSMiddleware,
@@ -33,7 +32,7 @@ async def health():
 
 @lru_cache()
 def get_agent():
-    return SlurmrestdScraperAgent(SETTINGS)
+    return SlurmrestdScraperAgent()
 
 
 
@@ -53,7 +52,7 @@ def begin_logging():
 
 @app.on_event("startup")
 @repeat_every(
-    seconds=60,
+    seconds=3,
     logger=logger,
     raise_exceptions=True,
 )
@@ -66,7 +65,7 @@ async def collect_diagnostics():
 
     logger.info("##### Calling insertion of cluster diagnostics #####")
 
-    res = agent.update_cluster_diagnostics()
+    res = await agent.update_cluster_diagnostics()
 
     logger.info("##### Response information ({}): {} #####".format(collect_diagnostics.__name__, res))
 

@@ -1,24 +1,26 @@
 from armada_agent.utils.request import check_request_status
 from armada_agent.utils.request import request_exception
 from armada_agent.utils.jwt import generate_jwt_token
+from armada_agent.utils.logging import logger
+from armada_agent.settings import SETTINGS
 
+# import grequests
+# import requests
+import asyncio
 import json
-
-import grequests
-import requests
 
 class SlurmrestdScraperAgent:
 
-    def __init__(self, config) -> None:
+    def __init__(self) -> None:
 
-        self.config = config
+        pass
 
-    def slurmrestd_header(self):
+    async def slurmrestd_header(self):
 
-        x_slurm_user_token = generate_jwt_token()
+        x_slurm_user_token = await generate_jwt_token(test=False)
 
         return {
-            "X-SLURM-USER-NAME": self.config.ARMADA_AGENT_X_SLURM_USER_NAME,
+            "X-SLURM-USER-NAME": SETTINGS.ARMADA_AGENT_X_SLURM_USER_NAME,
             "X-SLURM-USER-TOKEN": x_slurm_user_token
         }
     
@@ -26,18 +28,18 @@ class SlurmrestdScraperAgent:
 
         return {
             "Content-Type": "application/json",
-            "Authorization": self.config.ARMADA_AGENT_API_KEY
+            "Authorization": SETTINGS.ARMADA_AGENT_API_KEY
         }
 
-    def upsert_partition_and_node_records(self):
+    async def upsert_partition_and_node_records(self):
 
         partition_endpoint = "/slurm/v0.0.36/partitions"
         node_endpoint = "/slurm/v0.0.36/nodes"
 
         # get partition data
         response = requests.get(
-            self.config.ARMADA_AGENT_BASE_SLURMRESTD_URL + partition_endpoint,
-            headers=self.slurmrestd_header(),
+            SETTINGS.ARMADA_AGENT_BASE_SLURMRESTD_URL + partition_endpoint,
+            headers=await self.slurmrestd_header(),
             data={}
         )
 
@@ -45,8 +47,8 @@ class SlurmrestdScraperAgent:
 
         # get node data
         response = requests.get(
-            self.config.ARMADA_AGENT_BASE_SLURMRESTD_URL + node_endpoint,
-            headers=self.slurmrestd_header(),
+            SETTINGS.ARMADA_AGENT_BASE_SLURMRESTD_URL + node_endpoint,
+            headers=await self.slurmrestd_header(),
             data={}
         )
 
@@ -69,7 +71,7 @@ class SlurmrestdScraperAgent:
             }
 
             reqs.append(grequests.post(
-                self.config.ARMADA_AGENT_BASE_API_URL + "/agent/upsert/partition",
+                SETTINGS.ARMADA_AGENT_BASE_API_URL + "/agent/upsert/partition",
                 headers=self.armada_api_header(),
                 data=json.dumps(payload)
             ))
@@ -78,20 +80,24 @@ class SlurmrestdScraperAgent:
 
         return responses
 
-    def update_cluster_diagnostics(self):
+    async def update_cluster_diagnostics(self):
 
         endpoint = "/slurm/v0.0.36/diag/"
 
+        header = await self.slurmrestd_header()
+
+        logger.info("##### {}".format(header))
+
         response = requests.get(
-            self.config.ARMADA_AGENT_BASE_SLURMRESTD_URL + endpoint,
-            headers=self.slurmrestd_header(),
+            SETTINGS.ARMADA_AGENT_BASE_SLURMRESTD_URL + endpoint,
+            headers=await self.slurmrestd_header(),
             data={}
         )
 
         diagnostics = check_request_status(response)
 
         response = requests.post(
-            self.config.ARMADA_AGENT_BASE_API_URL + "/agent/insert/diagnostics",
+            SETTINGS.ARMADA_AGENT_BASE_API_URL + "/agent/insert/diagnostics",
             headers=self.armada_api_header(),
             data=json.dumps(diagnostics)
         )

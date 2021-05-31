@@ -1,17 +1,18 @@
 """Core module for JWT related operations"""
-import subprocess
+import asyncio
 
 from armada_agent.settings import SETTINGS
 
-def generate_jwt_token() -> str:
+async def generate_jwt_token(test: bool = True):
 
-    output = subprocess.check_output(
+    proc = await asyncio.create_subprocess_shell(
         "scontrol token username={}" \
-        .format(SETTINGS.ARMADA_AGENT_X_SLURM_USER_NAME) \
-        .split()
-    ).decode('utf-8')
+        .format(SETTINGS.ARMADA_AGENT_X_SLURM_USER_NAME) if not test else
+        "juju run --unit slurmctld/3 scontrol token",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE
+    )
 
-    # TODO: Get JWT token from regex
-    jwt_token = output.strip().split('=')[1]
+    stdout, stderr = await proc.communicate()
 
-    return jwt_token
+    return stdout.decode().strip().split('=')[1] if stdout else ""
