@@ -86,7 +86,8 @@ def parameters(ctx: click.Context):
 
     while True:
         try:
-            new_file = hotedit.hotedit(initial=orig_file, validate_unchanged=True)
+            new_file = hotedit.hotedit(
+                initial=orig_file, validate_unchanged=True)
         except hotedit.Unchanged:
             click.echo("** Parameters were unchanged", file=sys.stderr)
             if click.confirm("Try again?"):
@@ -98,12 +99,14 @@ def parameters(ctx: click.Context):
         # sanity check that we've only seen the keys we want to see
         check_keys = sorted(new_data.keys())
         if not check_keys == sorted(PARAM_KEYS):
-            click.echo(f"** Error: some unexpected parameters (saw: {check_keys})")
+            click.echo(
+                f"** Error: some unexpected parameters (saw: {check_keys})")
             if click.confirm("Try again?"):
                 orig_file = new_file
                 continue
             else:
-                raise ValueError("Please install the application again and provide only expected keys")
+                raise ValueError(
+                    "Please install the application again and provide only expected keys")
 
         break
 

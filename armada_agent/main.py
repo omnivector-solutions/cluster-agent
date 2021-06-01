@@ -52,7 +52,7 @@ def begin_logging():
 
 @app.on_event("startup")
 @repeat_every(
-    seconds=3,
+    seconds=60,
     logger=logger,
     raise_exceptions=True,
 )
@@ -89,7 +89,7 @@ async def collect_partition_and_nodes():
 
     logger.info("##### Calling upsertion of cluster partitions and nodes #####")
 
-    res = agent.upsert_partition_and_node_records()
+    res = await agent.upsert_partition_and_node_records()
 
     logger.info("##### Response information ({}): {} #####".format(
         collect_partition_and_nodes.__name__, res))

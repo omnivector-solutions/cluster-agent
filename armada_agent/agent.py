@@ -1,13 +1,17 @@
 from armada_agent.utils.request import check_request_status
-from armada_agent.utils.request import request_exception
+from armada_agent.utils.request import async_req, LOOP
 from armada_agent.utils.jwt import generate_jwt_token
 from armada_agent.utils.logging import logger
 from armada_agent.settings import SETTINGS
 
-# import grequests
-# import requests
+import requests
 import asyncio
 import json
+
+# [nest-asyncio docs](https://pypi.org/project/nest-asyncio/)
+import nest_asyncio
+nest_asyncio.apply()
+
 
 class SlurmrestdScraperAgent:
 
@@ -23,7 +27,7 @@ class SlurmrestdScraperAgent:
             "X-SLURM-USER-NAME": SETTINGS.ARMADA_AGENT_X_SLURM_USER_NAME,
             "X-SLURM-USER-TOKEN": x_slurm_user_token
         }
-    
+
     def armada_api_header(self):
 
         return {
@@ -54,8 +58,12 @@ class SlurmrestdScraperAgent:
 
         nodes = check_request_status(response)
 
-        # [docs for grequests](https://github.com/spyoungtech/grequests)
-        reqs = list()
+        # arguments passed to async request handler
+        urls = list()
+        methods = list()
+        params = list()
+        data = list()
+        header = self.armada_api_header()
 
         for partition in partitions["partitions"]:
 
@@ -70,15 +78,20 @@ class SlurmrestdScraperAgent:
                 ))
             }
 
-            reqs.append(grequests.post(
-                SETTINGS.ARMADA_AGENT_BASE_API_URL + "/agent/upsert/partition",
-                headers=self.armada_api_header(),
-                data=json.dumps(payload)
-            ))
+            urls.append(SETTINGS.ARMADA_AGENT_BASE_API_URL +
+                        "/agent/upsert/partition")
+            methods.append("POST")
+            params.append(None)
+            data.append(json.dumps(payload))
 
-        responses = list(grequests.imap(reqs, exception_handler=request_exception))
+        future = asyncio.ensure_future(
+            async_req(urls, methods, header, params, data), loop=LOOP)
+        LOOP.run_until_complete(future)
 
-        return responses
+        responses = future.result()
+
+        # return a list container just the responses' status, e.g. [200, 400]
+        return list(map(lambda response: response.status, responses))
 
     async def update_cluster_diagnostics(self):
 
