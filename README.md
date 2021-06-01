@@ -21,21 +21,24 @@
 
 1. Setup env
   ```bash
-  virtualenv -p python3 env
-  source env/bin/activate
-  pip3 install -e .
+  make dependencies
   ```
 
-2. Setup `.env` parameters
+2. Activate env
   ```bash
-  agentconfig
+  source env/bin/activate
+  ```
+
+3. Setup `.env` parameters
+  ```bash
+  poetry run agentconfig
   ```
 
 ## Local usage example
 
 1. Run app
   ```bash
-  agentrun
+  make run
   ```
 
 Outputs:
