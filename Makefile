@@ -23,6 +23,17 @@ run: ## Start uvicorn app on port 8080
 test: ## Run tests against the application
 	poetry run pytest -v
 
+publish:
+	. env/bin/activate
+	poetry build
+
+	poetry config repositories.pypicloud ${PYPI_URL}
+
+	poetry publish \
+		--repository pypicloud \
+		--username ${PYPI_USERNAME}
+		--password ${PYPI_PASSWORD}
+
 # Display target comments in 'make help'
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
