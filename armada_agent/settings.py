@@ -13,13 +13,14 @@ _API_KEY_REGEX = r"([a-zA-Z0-9])\w+"
 
 class Settings(BaseSettings):
     # slurmrestd info
-    ARMADA_AGENT_BASE_SLURMRESTD_URL: str = Field("http://127.1:6820", regex=_URL_REGEX)
+    ARMADA_AGENT_BASE_SLURMRESTD_URL: str = Field(
+        "http://127.1:6820", regex=_URL_REGEX)
     ARMADA_AGENT_X_SLURM_USER_NAME: str = Field("root")
 
     # armada api info
-    ARMADA_AGENT_BASE_API_URL: str = Field("https://rats.omnivector.solutions", regex=_URL_REGEX)
+    ARMADA_AGENT_BASE_API_URL: str = Field(
+        "https://rats.omnivector.solutions", regex=_URL_REGEX)
     ARMADA_AGENT_API_KEY: str = Field("ratsratsrats", regex=_API_KEY_REGEX)
-
 
     class Config:
 

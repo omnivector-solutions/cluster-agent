@@ -35,7 +35,6 @@ def get_agent():
     return SlurmrestdScraperAgent()
 
 
-
 @app.on_event("startup")
 def begin_logging():
     """
@@ -49,6 +48,7 @@ def begin_logging():
     uvicorn = logging.getLogger("uvicorn")
     if uvicorn.handlers:  # pragma: nocover
         logger.addHandler(uvicorn.handlers[0])
+
 
 @app.on_event("startup")
 @repeat_every(
@@ -67,7 +67,8 @@ async def collect_diagnostics():
 
     res = await agent.update_cluster_diagnostics()
 
-    logger.info("##### Response information ({}): {} #####".format(collect_diagnostics.__name__, res))
+    logger.info("##### Response information ({}): {} #####".format(
+        collect_diagnostics.__name__, res))
 
     logger.info(f"##### {collect_diagnostics.__name__} run successfully #####")
 
@@ -90,6 +91,8 @@ async def collect_partition_and_nodes():
 
     res = agent.upsert_partition_and_node_records()
 
-    logger.info("##### Response information ({}): {} #####".format(collect_partition_and_nodes.__name__, res))
+    logger.info("##### Response information ({}): {} #####".format(
+        collect_partition_and_nodes.__name__, res))
 
-    logger.info(f"##### {collect_partition_and_nodes.__name__} run successfully #####")
+    logger.info(
+        f"##### {collect_partition_and_nodes.__name__} run successfully #####")
