@@ -157,3 +157,4 @@ dmypy.json
 cdk.out
 python
 layer.zip
+w.py
