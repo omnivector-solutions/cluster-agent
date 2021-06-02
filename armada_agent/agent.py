@@ -88,18 +88,17 @@ async def upsert_partition_and_node_records():
     # return a list container just the responses' status, e.g. [200, 400]
     return list(map(lambda response: response.status, responses))
 
+
 async def update_cluster_diagnostics():
 
     endpoint = "/slurm/v0.0.36/diag/"
 
-    breakpoint()
     header = await slurmrestd_header()
 
     logger.info("##### {}".format(header))
     response = requests.get(
         SETTINGS.ARMADA_AGENT_BASE_SLURMRESTD_URL + endpoint,
-        headers=header,
-        # data={}
+        headers=header
     )
 
     diagnostics = check_request_status(response)
