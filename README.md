@@ -63,7 +63,19 @@ Outputs:
 
 ## Release
 
-TODO
+For publishing you need first to export some credentials:
+
+```bash
+export PYPI_URL="https://link-to-pypicloud.com"
+export PYPI_USERNAME="rats"
+export PYPI_PASSWORD="ratsratsrats"
+```
+
+Then, run:
+
+```bash
+make publish
+```
 
 ## Future work
 
