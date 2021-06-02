@@ -15,7 +15,8 @@ autopep: ## Run autopep8
 
 .PHONY: clean
 clean: ## Remove temporary file holding the app settings
-	rm /tmp/.env
+	rm .env
+	rm -rf dist/
 
 .PHONY: run
 run: ## Start uvicorn app on port 8080
@@ -29,7 +30,7 @@ test: ## Run tests against the application
 	poetry run pytest -v
 
 .PHONY: publish
-publish:
+publish: clean ## Publish package to pypicloud
 	. env/bin/activate
 	poetry build
 
@@ -37,7 +38,7 @@ publish:
 
 	poetry publish \
 		--repository pypicloud \
-		--username ${PYPI_USERNAME}
+		--username ${PYPI_USERNAME} \
 		--password ${PYPI_PASSWORD}
 
 # Display target comments in 'make help'
