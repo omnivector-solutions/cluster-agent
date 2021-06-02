@@ -1,9 +1,10 @@
 from setuptools import setup, find_packages
 from os.path import dirname
+from pathlib import Path
 
 here = dirname(__file__)
 
-_VERSION = '0.1.0'
+_VERSION = Path('VERSION').read_text().strip()
 
 setup(
     name='armada-agent',
