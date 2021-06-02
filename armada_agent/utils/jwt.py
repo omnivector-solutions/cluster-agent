@@ -16,4 +16,10 @@ async def generate_jwt_token(test: bool = True):
 
     stdout, stderr = await proc.communicate()
 
-    return stdout.decode().strip().split('=')[1] if stdout else ""
+    if proc.returncode != 0:
+
+        raise Exception(
+            "Armada Agent could not retrieve slurmrestd token for username `{}`".format(
+                SETTINGS.ARMADA_AGENT_X_SLURM_USER_NAME))
+
+    return stdout.decode().strip().split('=')[1]
