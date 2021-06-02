@@ -3,6 +3,7 @@
 # Table of contents
 
 - [Project setup](#project-setup)
+  - [Dependencies](#dependencies)
   - [Github secrets](#github-secrets)
 - [Setup parameters](#setup-parameters)
 - [Local usage example](#local-usage-exemple)
@@ -10,6 +11,10 @@
 - [Future work](#future-work)
 
 ## Project Setup
+
+### Dependencies
+
+* python3-venv
 
 ### Github Secrets
 
@@ -24,14 +29,12 @@
   make dependencies
   ```
 
-2. Activate env
+2. Setup `.env` parameters
   ```bash
-  source env/bin/activate
-  ```
-
-3. Setup `.env` parameters
-  ```bash
-  poetry run agentconfig
+  ARMADA_AGENT_BASE_API_URL="<base-api-url>"
+  ARMADA_AGENT_API_KEY="<api-key>"
+  ARMADA_AGENT_BASE_SLURMRESTD_URL="<slurmrestd-endpoint>"
+  ARMADA_AGENT_X_SLURM_USER_NAME="<slurmrestd-user-name>"
   ```
 
 ## Local usage example
@@ -74,9 +77,9 @@ export PYPI_PASSWORD="ratsratsrats"
 Then, run:
 
 ```bash
-make publish
+TODO
 ```
 
 ## Future work
 
-- [ ] TODO
+- [ ] Implement script to push package to pypicloud
