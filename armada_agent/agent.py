@@ -109,4 +109,5 @@ async def update_cluster_diagnostics():
         data=json.dumps(diagnostics)
     )
 
-    return response
+    # return a list container the status code response, e.g. [200]
+    return [response.status_code]
