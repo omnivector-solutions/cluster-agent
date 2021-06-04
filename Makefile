@@ -1,13 +1,16 @@
-dependencies: pyproject.toml ## Install project dependencies needed to run the application
-	virtualenv -p python3 env
-	. env/bin/activate \
-		&& pip3 install -U pip wheel poetry \
-		&& python3 -m pip install .[dev] \
-		&& pip3 freeze | grep -v armada-agent > requirements.txt
+dependencies: ## Install project dependencies needed to run the application
+	python3 -m venv env
+	. env/bin/activate
+	pip3 install -U pip wheel
+	pip3 install -r requirements.txt
 
 .PHONY: lint
 lint: ## Run flake8 linter. It will checks syntax errors or undefined names
 	flake8 $(git ls-files | grep 'ˆscripts\|\.py$') --count --select=E9,F63,F7,F82 --show-source --statistics
+
+.PHONY: version
+version: ## Create/update VERSION file
+	@git describe --tags > VERSION
 
 .PHONY: autopep
 autopep: ## Run autopep8
@@ -19,27 +22,17 @@ clean: ## Remove temporary file holding the app settings
 	rm -rf dist/
 
 .PHONY: run
-run: ## Start uvicorn app on port 8080
-	poetry run uvicorn \
+run: version ## Start uvicorn app on port 8080
+	. env/bin/activate
+	uvicorn \
 		--host 127.0.0.1 \
 		--port 8080 \
 		armada_agent.main:app --reload
 
 .PHONY: test
-test: ## Run tests against the application
-	poetry run pytest -v
-
-.PHONY: publish
-publish: clean ## Publish package to pypicloud
+test: version ## Run tests against the application
 	. env/bin/activate
-	poetry build
-
-	poetry config repositories.pypicloud ${PYPI_URL}
-
-	poetry publish \
-		--repository pypicloud \
-		--username ${PYPI_USERNAME} \
-		--password ${PYPI_PASSWORD}
+	pytest -v
 
 # Display target comments in 'make help'
 .PHONY: help

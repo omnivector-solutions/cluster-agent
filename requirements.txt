@@ -9,3 +9,7 @@ fastapi-utils==0.2.1
 python-dotenv==0.16.0
 grequests==0.6.0
 toml==0.10.2
+flake8==3.9.2
+pytest==6.2.4
+autopep8==1.5.7
+pytest-asyncio==0.15.1
