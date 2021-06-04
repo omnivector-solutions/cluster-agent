@@ -6,6 +6,7 @@ dependencies: ## Install project dependencies needed to run the application
 
 .PHONY: lint
 lint: ## Run flake8 linter. It will checks syntax errors or undefined names
+	. env/bin/activate
 	flake8 $(git ls-files | grep 'ˆscripts\|\.py$') --count --select=E9,F63,F7,F82 --show-source --statistics
 
 .PHONY: version
@@ -14,12 +15,30 @@ version: ## Create/update VERSION file
 
 .PHONY: autopep
 autopep: ## Run autopep8
+	. env/bin/activate
 	autopep8 --in-place $(git ls-files | grep 'ˆscripts\|\.py$')
 
 .PHONY: clean
-clean: ## Remove temporary file holding the app settings
-	rm .env
-	rm -rf dist/
+clean: clean-eggs clean-build## Remove temporary file holding the app settings
+	@rm .env
+	@rm VERSION
+	@rm -rf env/
+	@find . -iname '*.pyc' -delete
+	@find . -iname '*.pyo' -delete
+	@find . -iname '*~' -delete
+	@find . -iname '*.swp' -delete
+	@find . -iname '__pycache__' -delete
+
+.PHONY: clean-eggs
+clean-eggs: ## Clean eggs
+	@find . -name '*.egg' -print0|xargs -0 rm -rf --
+	@rm -rf .eggs/
+
+.PHONY: clean-build
+clean-build: ## Clean build folders
+	@rm -fr build/
+	@rm -fr dist/
+	@rm -fr *.egg-info
 
 .PHONY: run
 run: version ## Start uvicorn app on port 8080
