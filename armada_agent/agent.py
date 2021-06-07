@@ -85,7 +85,7 @@ async def upsert_partition_and_node_records():
 
     responses = future.result()
 
-    # return a list container just the responses' status, e.g. [200, 400]
+    # return a list containing just the responses' status, e.g. [200, 400]
     return list(map(lambda response: response.status, responses))
 
 
