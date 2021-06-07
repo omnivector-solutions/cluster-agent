@@ -20,25 +20,25 @@ autopep: ## Run autopep8
 
 .PHONY: clean
 clean: clean-eggs clean-build## Remove temporary file holding the app settings
-	@rm .env
-	@rm VERSION
-	@rm -rf env/
-	@find . -iname '*.pyc' -delete
-	@find . -iname '*.pyo' -delete
-	@find . -iname '*~' -delete
-	@find . -iname '*.swp' -delete
-	@find . -iname '__pycache__' -delete
+	rm .env
+	rm VERSION
+	rm -rf env/
+	find . -iname '*.pyc' -delete
+	find . -iname '*.pyo' -delete
+	find . -iname '*~' -delete
+	find . -iname '*.swp' -delete
+	find . -iname '__pycache__' -delete
 
 .PHONY: clean-eggs
 clean-eggs: ## Clean eggs
-	@find . -name '*.egg' -delete
-	@rm -rf .eggs/
+	find . -name '*.egg' -delete
+	rm -rf .eggs/
 
 .PHONY: clean-build
 clean-build: ## Clean build folders
-	@rm -fr build/
-	@rm -fr dist/
-	@rm -fr *.egg-info
+	rm -fr build/
+	rm -fr dist/
+	rm -fr *.egg-info
 
 .PHONY: run
 run: version ## Start uvicorn app on port 8080
