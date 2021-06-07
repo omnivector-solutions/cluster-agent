@@ -31,7 +31,7 @@ clean: clean-eggs clean-build## Remove temporary file holding the app settings
 
 .PHONY: clean-eggs
 clean-eggs: ## Clean eggs
-	@find . -name '*.egg' -print0|xargs -0 rm -rf --
+	@find . -name '*.egg' -delete
 	@rm -rf .eggs/
 
 .PHONY: clean-build
