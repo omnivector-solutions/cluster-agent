@@ -1,0 +1,52 @@
+{
+    "meta": {
+        "plugin": {
+            "type": "openapi/v0.0.36",
+            "name": "REST v0.0.36"
+        },
+        "Slurm": {
+            "version": {
+                "major": 20,
+                "micro": 4,
+                "minor": 11
+            },
+            "release": "20.11.4"
+        }
+    },
+    "errors": [],
+    "partitions": [
+        {
+            "flags": [],
+            "preemption_mode": [
+                "requeue",
+                "gang_schedule"
+            ],
+            "allowed_allocation_nodes": "",
+            "allowed_accounts": "",
+            "allowed_groups": "",
+            "allowed_qos": "",
+            "alternative": "",
+            "billing_weights": "",
+            "default_memory_per_cpu": 0,
+            "default_time_limit": null,
+            "denied_accounts": "",
+            "denied_qos": "",
+            "preemption_grace_time": 0,
+            "maximum_cpus_per_node": -1,
+            "maximum_memory_per_node": 0,
+            "maximum_nodes_per_job": -1,
+            "max_time_limit": -1,
+            "min_nodes_per_job": 0,
+            "name": "juju-compute-ZUTU",
+            "nodes": "ip-172-31-83-139",
+            "over_time_limit": null,
+            "priority_job_factor": 1,
+            "priority_tier": 1,
+            "qos": "",
+            "nodes_online": 3,
+            "total_cpus": 2,
+            "total_nodes": 1,
+            "tres": "cpu=2,mem=3876M,node=1,billing=2"
+        }
+    ]
+}

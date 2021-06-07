@@ -62,6 +62,9 @@ async def upsert_partition_and_node_records():
 
     for partition in partitions["partitions"]:
 
+        # run through nodes' list and select those that
+        # belog to the partition in this case
+        # For more information, see the JSON examples in /examples folder
         payload = {
             "partition": partition,
             "nodes": list(map(
