@@ -1,13 +1,12 @@
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_utils.tasks import repeat_every
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 
-from functools import lru_cache
 import logging
 
-from armada_agent.agent import SlurmrestdScraperAgent
 from armada_agent.utils.logging import logger
 from armada_agent.utils import response
+from armada_agent import agent
 
 
 app = FastAPI(
@@ -28,11 +27,6 @@ async def health():
     Healthcheck, for health monitors in the deployed environment
     """
     return response.OK()
-
-
-@lru_cache()
-def get_agent():
-    return SlurmrestdScraperAgent()
 
 
 @app.on_event("startup")
@@ -61,8 +55,6 @@ async def collect_diagnostics():
     Periodically get diagnostics data and report them to the backend
     """
 
-    agent = get_agent()
-
     logger.info("##### Calling insertion of cluster diagnostics #####")
 
     res = await agent.update_cluster_diagnostics()
@@ -84,8 +76,6 @@ async def collect_partition_and_nodes():
     Periodically get partition data and node data then
     report them to the backend
     """
-
-    agent = get_agent()
 
     logger.info("##### Calling upsertion of cluster partitions and nodes #####")
 
