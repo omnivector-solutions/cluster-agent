@@ -19,7 +19,7 @@ async def slurmrestd_header():
     x_slurm_user_token = await generate_jwt_token(test=False)
 
     return {
-        "X-SLURM-USER-NAME": SETTINGS.ARMADA_AGENT_X_SLURM_USER_NAME,
+        "X-SLURM-USER-NAME": SETTINGS.X_SLURM_USER_NAME,
         "X-SLURM-USER-TOKEN": x_slurm_user_token
     }
 
@@ -27,7 +27,7 @@ def armada_api_header():
 
     return {
         "Content-Type": "application/json",
-        "Authorization": SETTINGS.ARMADA_AGENT_API_KEY
+        "Authorization": SETTINGS.API_KEY
     }
 
 async def upsert_partition_and_node_records():
@@ -37,7 +37,7 @@ async def upsert_partition_and_node_records():
 
     # get partition data
     response = requests.get(
-        SETTINGS.ARMADA_AGENT_BASE_SLURMRESTD_URL + partition_endpoint,
+        SETTINGS.BASE_SLURMRESTD_URL + partition_endpoint,
         headers=await slurmrestd_header(),
         data={}
     )
@@ -46,7 +46,7 @@ async def upsert_partition_and_node_records():
 
     # get node data
     response = requests.get(
-        SETTINGS.ARMADA_AGENT_BASE_SLURMRESTD_URL + node_endpoint,
+        SETTINGS.BASE_SLURMRESTD_URL + node_endpoint,
         headers=await slurmrestd_header(),
         data={}
     )
@@ -76,7 +76,7 @@ async def upsert_partition_and_node_records():
             ))
         }
 
-        urls.append(SETTINGS.ARMADA_AGENT_BASE_API_URL +
+        urls.append(SETTINGS.BASE_API_URL +
                     "/agent/upsert/partition")
         methods.append("POST")
         params.append(None)
@@ -100,14 +100,14 @@ async def update_cluster_diagnostics():
 
     logger.info("##### {}".format(header))
     response = requests.get(
-        SETTINGS.ARMADA_AGENT_BASE_SLURMRESTD_URL + endpoint,
+        SETTINGS.BASE_SLURMRESTD_URL + endpoint,
         headers=header
     )
 
     diagnostics = check_request_status(response)
 
     response = requests.post(
-        SETTINGS.ARMADA_AGENT_BASE_API_URL + "/agent/insert/diagnostics",
+        SETTINGS.BASE_API_URL + "/agent/insert/diagnostics",
         headers=armada_api_header(),
         data=json.dumps(diagnostics)
     )
