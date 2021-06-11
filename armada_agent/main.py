@@ -1,13 +1,29 @@
+from sentry_sdk.integrations.aiohttp import AioHttpIntegration
+from sentry_sdk.integrations.logging import LoggingIntegration
+from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_utils.tasks import repeat_every
 from fastapi import FastAPI
+import sentry_sdk
 
 import logging
 
 from armada_agent.utils.logging import logger
+from armada_agent.settings import SETTINGS
 from armada_agent.utils import response
 from armada_agent import agent
 
+
+sentry_logging = LoggingIntegration(
+    level=logging.INFO,
+    event_level=logging.ERROR
+)
+
+sentry_sdk.init(
+    dsn=SETTINGS.ARMADA_AGENT_SENTRY_DSN,
+    integrations=[sentry_logging, AioHttpIntegration()],
+    traces_sample_rate=1.0,
+)
 
 app = FastAPI(
     title="Armada Agent",
@@ -48,7 +64,7 @@ def begin_logging():
 @repeat_every(
     seconds=60,
     logger=logger,
-    raise_exceptions=True,
+    raise_exceptions=False,
 )
 async def collect_diagnostics():
     """
@@ -69,7 +85,7 @@ async def collect_diagnostics():
 @repeat_every(
     seconds=60,
     logger=logger,
-    raise_exceptions=True,
+    raise_exceptions=False,
 )
 async def collect_partition_and_nodes():
     """
@@ -86,3 +102,5 @@ async def collect_partition_and_nodes():
 
     logger.info(
         f"##### {collect_partition_and_nodes.__name__} run successfully #####")
+
+app = SentryAsgiMiddleware(app)

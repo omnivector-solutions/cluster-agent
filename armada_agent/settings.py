@@ -22,6 +22,8 @@ class Settings(BaseSettings):
         "https://rats.omnivector.solutions", regex=_URL_REGEX)
     ARMADA_AGENT_API_KEY: str = Field("ratsratsrats", regex=_API_KEY_REGEX)
 
+    ARMADA_AGENT_SENTRY_DSN: str = Field("https://rats.sentry.com", regex=_URL_REGEX)
+
     class Config:
 
         env_file = ".env"
