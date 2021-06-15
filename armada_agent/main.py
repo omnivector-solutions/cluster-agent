@@ -14,16 +14,16 @@ from armada_agent.utils import response
 from armada_agent import agent
 
 
-# sentry_logging = LoggingIntegration(
-#     level=logging.INFO,
-#     event_level=logging.ERROR
-# )
+sentry_logging = LoggingIntegration(
+    level=logging.INFO,
+    event_level=logging.ERROR
+)
 
-# sentry_sdk.init(
-#     dsn=SETTINGS.SENTRY_DSN,
-#     integrations=[sentry_logging, AioHttpIntegration()],
-#     traces_sample_rate=1.0,
-# )
+sentry_sdk.init(
+    dsn=SETTINGS.SENTRY_DSN,
+    integrations=[sentry_logging, AioHttpIntegration()],
+    traces_sample_rate=1.0,
+)
 
 app = FastAPI(
     title="Armada Agent",
@@ -61,47 +61,47 @@ def begin_logging():
         logger.addHandler(uvicorn.handlers[0])
 
 
-# @app.on_event("startup")
-# @repeat_every(
-#     seconds=60,
-#     logger=logger,
-#     raise_exceptions=False,
-# )
-# async def collect_diagnostics():
-#     """
-#     Periodically get diagnostics data and report them to the backend
-#     """
+@app.on_event("startup")
+@repeat_every(
+    seconds=60,
+    logger=logger,
+    raise_exceptions=False,
+)
+async def collect_diagnostics():
+    """
+    Periodically get diagnostics data and report them to the backend
+    """
 
-#     logger.info("##### Calling insertion of cluster diagnostics #####")
+    logger.info("##### Calling insertion of cluster diagnostics #####")
 
-#     res = await agent.update_cluster_diagnostics()
+    res = await agent.update_cluster_diagnostics()
 
-#     logger.info("##### Response information ({}): {} #####".format(
-#         collect_diagnostics.__name__, res))
+    logger.info("##### Response information ({}): {} #####".format(
+        collect_diagnostics.__name__, res))
 
-#     logger.info(f"##### {collect_diagnostics.__name__} run successfully #####")
+    logger.info(f"##### {collect_diagnostics.__name__} run successfully #####")
 
 
-# @app.on_event("startup")
-# @repeat_every(
-#     seconds=60,
-#     logger=logger,
-#     raise_exceptions=False,
-# )
-# async def collect_partition_and_nodes():
-#     """
-#     Periodically get partition data and node data then
-#     report them to the backend
-#     """
+@app.on_event("startup")
+@repeat_every(
+    seconds=60,
+    logger=logger,
+    raise_exceptions=False,
+)
+async def collect_partition_and_nodes():
+    """
+    Periodically get partition data and node data then
+    report them to the backend
+    """
 
-#     logger.info("##### Calling upsertion of cluster partitions and nodes #####")
+    logger.info("##### Calling upsertion of cluster partitions and nodes #####")
 
-#     res = await agent.upsert_partition_and_node_records()
+    res = await agent.upsert_partition_and_node_records()
 
-#     logger.info("##### Response information ({}): {} #####".format(
-#         collect_partition_and_nodes.__name__, res))
+    logger.info("##### Response information ({}): {} #####".format(
+        collect_partition_and_nodes.__name__, res))
 
-#     logger.info(
-#         f"##### {collect_partition_and_nodes.__name__} run successfully #####")
+    logger.info(
+        f"##### {collect_partition_and_nodes.__name__} run successfully #####")
 
 app = SentryAsgiMiddleware(app)
