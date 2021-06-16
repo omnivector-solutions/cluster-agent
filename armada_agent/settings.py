@@ -14,7 +14,7 @@ _API_KEY_REGEX = r"([a-zA-Z0-9])\w+"
 class Settings(BaseSettings):
     # slurmrestd info
     BASE_SLURMRESTD_URL: str = Field(
-        "http://127.1:6820", regex=_URL_REGEX)
+        "http://127.0.0.1:6820", regex=_URL_REGEX)
     X_SLURM_USER_NAME: str = Field("root")
 
     # armada api info
