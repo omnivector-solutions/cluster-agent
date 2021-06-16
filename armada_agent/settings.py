@@ -40,3 +40,8 @@ def init_settings() -> Settings:
 
 
 SETTINGS = init_settings()
+
+ARMADA_API_HEADER = {
+    "Content-Type": "application/json",
+    "Authorization": SETTINGS.API_KEY
+}

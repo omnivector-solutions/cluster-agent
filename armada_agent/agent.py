@@ -1,8 +1,8 @@
+from armada_agent.settings import SETTINGS, ARMADA_API_HEADER
 from armada_agent.utils.request import check_request_status
 from armada_agent.utils.request import async_req, LOOP
 from armada_agent.utils.jwt import generate_jwt_token
 from armada_agent.utils.logging import logger
-from armada_agent.settings import SETTINGS
 
 import requests
 import asyncio
@@ -59,7 +59,7 @@ async def upsert_partition_and_node_records():
     methods = list()
     params = list()
     data = list()
-    header = armada_api_header()
+    header = ARMADA_API_HEADER
 
     for partition in partitions["partitions"]:
 
@@ -109,7 +109,7 @@ async def update_cluster_diagnostics():
 
     response = requests.post(
         SETTINGS.BASE_API_URL + "/agent/insert/diagnostics",
-        headers=armada_api_header(),
+        headers=ARMADA_API_HEADER,
         data=json.dumps(diagnostics)
     )
 
