@@ -49,7 +49,7 @@ run: version ## Start uvicorn app on port 8080
 		armada_agent.main:app --reload
 
 .PHONY: test
-test: version ## Run tests against the application
+test: ## Run tests against the application
 	. env/bin/activate
 	pytest -v
 
