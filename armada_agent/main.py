@@ -3,6 +3,7 @@ from fastapi_utils.tasks import repeat_every
 from fastapi import FastAPI, Depends
 
 from functools import lru_cache
+from pathlib import Path
 import logging
 
 from armada_agent.agent import SlurmrestdScraperAgent
@@ -13,7 +14,7 @@ from armada_agent.utils import response
 
 app = FastAPI(
     title="Armada Agent",
-    version="0.1.0"
+    version=Path('VERSION').read_text().strip()
 )
 app.add_middleware(
     CORSMiddleware,
