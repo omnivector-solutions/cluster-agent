@@ -42,7 +42,6 @@ async def health():
     """
     Healthcheck, for health monitors in the deployed environment
     """
-    print(SETTINGS.dict())
     return response.OK()
 
 
