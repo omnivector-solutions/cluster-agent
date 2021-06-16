@@ -13,7 +13,6 @@ import nest_asyncio
 nest_asyncio.apply()
 
 
-
 async def slurmrestd_header():
 
     x_slurm_user_token = await generate_jwt_token(test=False)
@@ -23,12 +22,14 @@ async def slurmrestd_header():
         "X-SLURM-USER-TOKEN": x_slurm_user_token
     }
 
+
 def armada_api_header():
 
     return {
         "Content-Type": "application/json",
         "Authorization": SETTINGS.API_KEY
     }
+
 
 async def upsert_partition_and_node_records():
 
