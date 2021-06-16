@@ -2,7 +2,7 @@ dependencies: ## Install project dependencies needed to run the application
 	python3 -m venv env
 	. env/bin/activate
 	pip3 install -U pip wheel
-	pip3 install -r requirements.txt
+	pip3 install .
 
 .PHONY: lint
 lint: ## Run flake8 linter. It will checks syntax errors or undefined names
