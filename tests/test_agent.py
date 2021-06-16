@@ -17,7 +17,7 @@ async def test_update_cluster_diagnostics(
     generate_jwt_token_mock
 ):
     header = {
-        "X-SLURM-USER-NAME": SETTINGS.ARMADA_AGENT_X_SLURM_USER_NAME,
+        "X-SLURM-USER-NAME": SETTINGS.X_SLURM_USER_NAME,
         "X-SLURM-USER-TOKEN": "test_token"
     }
     generate_jwt_token_mock.return_value = "test_token"
@@ -31,15 +31,15 @@ async def test_update_cluster_diagnostics(
     test_response = await update_cluster_diagnostics()
 
     requests_mock.get.assert_called_once_with(
-        SETTINGS.ARMADA_AGENT_BASE_SLURMRESTD_URL + "/slurm/v0.0.36/diag/",
+        SETTINGS.BASE_SLURMRESTD_URL + "/slurm/v0.0.36/diag/",
         headers=header,
     )
 
     requests_mock.post.assert_called_once_with(
-        SETTINGS.ARMADA_AGENT_BASE_API_URL + "/agent/insert/diagnostics",
+        SETTINGS.BASE_API_URL + "/agent/insert/diagnostics",
         headers={
             "Content-Type": "application/json",
-            "Authorization": SETTINGS.ARMADA_AGENT_API_KEY
+            "Authorization": SETTINGS.API_KEY
         },
         data="{}",
     )
@@ -62,7 +62,7 @@ async def test_upsert_partition_and_node_records(
     check_request_status_mock
 ):
     header = {
-        "X-SLURM-USER-NAME": SETTINGS.ARMADA_AGENT_X_SLURM_USER_NAME,
+        "X-SLURM-USER-NAME": SETTINGS.X_SLURM_USER_NAME,
         "X-SLURM-USER-TOKEN": "test_token"
     }
     generate_jwt_token_mock.return_value = "test_token"
@@ -96,12 +96,12 @@ async def test_upsert_partition_and_node_records(
 
     calls = [
         mock.call(
-            SETTINGS.ARMADA_AGENT_BASE_SLURMRESTD_URL + "/slurm/v0.0.36/partitions",
+            SETTINGS.BASE_SLURMRESTD_URL + "/slurm/v0.0.36/partitions",
             headers=header,
             data={}
         ),
         mock.call(
-            SETTINGS.ARMADA_AGENT_BASE_SLURMRESTD_URL + "/slurm/v0.0.36/nodes",
+            SETTINGS.BASE_SLURMRESTD_URL + "/slurm/v0.0.36/nodes",
             headers=header,
             data={},
         )
