@@ -1,9 +1,10 @@
 from setuptools import setup, find_packages
 from os.path import dirname
+from pathlib import Path
 
 here = dirname(__file__)
 
-_VERSION = '0.1.4'
+_VERSION = Path('VERSION').read_text().strip()
 
 setup(
     name='armada-agent',
@@ -20,6 +21,15 @@ setup(
         lambda string: string.strip("\n"),
         open("requirements.txt", "r")
     )),
+    extras_require={
+        "dev": [
+            "pytest~=6.2.4",
+            "pytest-asyncio~=0.15.1",
+            "autopep8~=1.5.7",
+            "flake8~=3.9.2",
+            "uvicorn~=0.13.4"
+        ]
+    },
     packages=find_packages(),
     keywords=['armada', 'hpc'],
     classifiers=[
@@ -34,7 +44,7 @@ setup(
         'Topic :: Utilities',
         'License :: Other/Proprietary License',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Operating System :: OS Independent',
     ],
     entry_points={

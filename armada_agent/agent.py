@@ -1,8 +1,8 @@
+from armada_agent.settings import SETTINGS, ARMADA_API_HEADER
 from armada_agent.utils.request import check_request_status
 from armada_agent.utils.request import async_req, LOOP
 from armada_agent.utils.jwt import generate_jwt_token
 from armada_agent.utils.logging import logger
-from armada_agent.settings import SETTINGS
 
 import requests
 import asyncio
@@ -13,106 +13,105 @@ import nest_asyncio
 nest_asyncio.apply()
 
 
-class SlurmrestdScraperAgent:
+async def slurmrestd_header():
 
-    def __init__(self) -> None:
+    x_slurm_user_token = await generate_jwt_token(test=False)
 
-        pass
+    return {
+        "X-SLURM-USER-NAME": SETTINGS.X_SLURM_USER_NAME,
+        "X-SLURM-USER-TOKEN": x_slurm_user_token
+    }
 
-    async def slurmrestd_header(self):
 
-        x_slurm_user_token = await generate_jwt_token(test=False)
+def armada_api_header():
 
-        return {
-            "X-SLURM-USER-NAME": SETTINGS.ARMADA_AGENT_X_SLURM_USER_NAME,
-            "X-SLURM-USER-TOKEN": x_slurm_user_token
+    return {
+        "Content-Type": "application/json",
+        "Authorization": SETTINGS.API_KEY
+    }
+
+
+async def upsert_partition_and_node_records():
+
+    partition_endpoint = "/slurm/v0.0.36/partitions"
+    node_endpoint = "/slurm/v0.0.36/nodes"
+
+    # get partition data
+    response = requests.get(
+        SETTINGS.BASE_SLURMRESTD_URL + partition_endpoint,
+        headers=await slurmrestd_header(),
+        data={}
+    )
+
+    partitions = check_request_status(response)
+
+    # get node data
+    response = requests.get(
+        SETTINGS.BASE_SLURMRESTD_URL + node_endpoint,
+        headers=await slurmrestd_header(),
+        data={}
+    )
+
+    nodes = check_request_status(response)
+
+    # arguments passed to async request handler
+    urls = list()
+    methods = list()
+    params = list()
+    data = list()
+    header = ARMADA_API_HEADER
+
+    for partition in partitions["partitions"]:
+
+        # run through nodes' list and select those that
+        # belog to the partition in this case
+        # For more information, see the JSON examples in /examples folder
+        payload = {
+            "partition": partition,
+            "nodes": list(map(
+                lambda _node: _node,
+                filter(
+                    lambda node: node["name"] in partition["nodes"],
+                    nodes["nodes"]
+                )
+            ))
         }
 
-    def armada_api_header(self):
+        urls.append(SETTINGS.BASE_API_URL +
+                    "/agent/upsert/partition")
+        methods.append("POST")
+        params.append(None)
+        data.append(json.dumps(payload))
 
-        return {
-            "Content-Type": "application/json",
-            "Authorization": SETTINGS.ARMADA_AGENT_API_KEY
-        }
+    future = asyncio.ensure_future(
+        async_req(urls, methods, header, params, data), loop=LOOP)
+    LOOP.run_until_complete(future)
 
-    async def upsert_partition_and_node_records(self):
+    responses = future.result()
 
-        partition_endpoint = "/slurm/v0.0.36/partitions"
-        node_endpoint = "/slurm/v0.0.36/nodes"
+    # return a list containing just the responses' status, e.g. [200, 400]
+    return [response.status for response in responses]
 
-        # get partition data
-        response = requests.get(
-            SETTINGS.ARMADA_AGENT_BASE_SLURMRESTD_URL + partition_endpoint,
-            headers=await self.slurmrestd_header(),
-            data={}
-        )
 
-        partitions = check_request_status(response)
+async def update_cluster_diagnostics():
 
-        # get node data
-        response = requests.get(
-            SETTINGS.ARMADA_AGENT_BASE_SLURMRESTD_URL + node_endpoint,
-            headers=await self.slurmrestd_header(),
-            data={}
-        )
+    endpoint = "/slurm/v0.0.36/diag/"
 
-        nodes = check_request_status(response)
+    header = await slurmrestd_header()
 
-        # arguments passed to async request handler
-        urls = list()
-        methods = list()
-        params = list()
-        data = list()
-        header = self.armada_api_header()
+    logger.info("##### {}".format(header))
+    response = requests.get(
+        SETTINGS.BASE_SLURMRESTD_URL + endpoint,
+        headers=header
+    )
 
-        for partition in partitions["partitions"]:
+    diagnostics = check_request_status(response)
 
-            payload = {
-                "partition": partition,
-                "nodes": list(map(
-                    lambda _node: _node,
-                    filter(
-                        lambda node: node["name"] in partition["nodes"],
-                        nodes["nodes"]
-                    )
-                ))
-            }
+    response = requests.post(
+        SETTINGS.BASE_API_URL + "/agent/insert/diagnostics",
+        headers=ARMADA_API_HEADER,
+        data=json.dumps(diagnostics)
+    )
 
-            urls.append(SETTINGS.ARMADA_AGENT_BASE_API_URL +
-                        "/agent/upsert/partition")
-            methods.append("POST")
-            params.append(None)
-            data.append(json.dumps(payload))
-
-        future = asyncio.ensure_future(
-            async_req(urls, methods, header, params, data), loop=LOOP)
-        LOOP.run_until_complete(future)
-
-        responses = future.result()
-
-        # return a list container just the responses' status, e.g. [200, 400]
-        return list(map(lambda response: response.status, responses))
-
-    async def update_cluster_diagnostics(self):
-
-        endpoint = "/slurm/v0.0.36/diag/"
-
-        header = await self.slurmrestd_header()
-
-        logger.info("##### {}".format(header))
-
-        response = requests.get(
-            SETTINGS.ARMADA_AGENT_BASE_SLURMRESTD_URL + endpoint,
-            headers=await self.slurmrestd_header(),
-            data={}
-        )
-
-        diagnostics = check_request_status(response)
-
-        response = requests.post(
-            SETTINGS.ARMADA_AGENT_BASE_API_URL + "/agent/insert/diagnostics",
-            headers=self.armada_api_header(),
-            data=json.dumps(diagnostics)
-        )
-
-        return response
+    # return a list container the status code response, e.g. [200]
+    return [response.status_code]
