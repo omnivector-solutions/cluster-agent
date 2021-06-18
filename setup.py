@@ -21,6 +21,15 @@ setup(
         lambda string: string.strip("\n"),
         open("requirements.txt", "r")
     )),
+    extras_require={
+        "dev": [
+            "pytest~=6.2.4",
+            "pytest-asyncio~=0.15.1",
+            "autopep8~=1.5.7",
+            "flake8~=3.9.2",
+            "uvicorn~=0.13.4"
+        ]
+    },
     packages=find_packages(),
     keywords=['armada', 'hpc'],
     classifiers=[
