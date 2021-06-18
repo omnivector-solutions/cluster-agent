@@ -8,7 +8,7 @@ dependencies: ## Install project dependencies needed to run the application
 .PHONY: lint
 lint: ## Run flake8 linter. It will checks syntax errors or undefined names
 	. env/bin/activate
-	flake8 $(git ls-files | grep 'ˆscripts\|\.py$') --count --select=E9,F63,F7,F82 --show-source --statistics
+	flake8 $(git ls-files | grep 'ˆscripts\|\.py$') --count --select=E9,F63,F7,F82 --show-source --statistics --exclude env/
 
 .PHONY: version
 version: ## Create/update VERSION file
