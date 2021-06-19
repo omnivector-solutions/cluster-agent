@@ -13,13 +13,11 @@ _API_KEY_REGEX = r"([a-zA-Z0-9])\w+"
 
 class Settings(BaseSettings):
     # slurmrestd info
-    BASE_SLURMRESTD_URL: str = Field(
-        "http://127.0.0.1:6820", regex=_URL_REGEX)
+    BASE_SLURMRESTD_URL: str = Field("http://127.0.0.1:6820", regex=_URL_REGEX)
     X_SLURM_USER_NAME: str = Field("root")
 
     # armada api info
-    BASE_API_URL: str = Field(
-        "https://rats.omnivector.solutions", regex=_URL_REGEX)
+    BASE_API_URL: str = Field("https://rats.omnivector.solutions", regex=_URL_REGEX)
     API_KEY: str = Field("ratsratsrats", regex=_API_KEY_REGEX)
 
     SENTRY_DSN: str = Field("https://rats.sentry.com", regex=_URL_REGEX)
@@ -43,5 +41,5 @@ SETTINGS = init_settings()
 
 ARMADA_API_HEADER = {
     "Content-Type": "application/json",
-    "Authorization": SETTINGS.API_KEY
+    "Authorization": SETTINGS.API_KEY,
 }

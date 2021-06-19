@@ -14,10 +14,7 @@ from armada_agent.utils import response
 from armada_agent import agent
 
 
-sentry_logging = LoggingIntegration(
-    level=logging.INFO,
-    event_level=logging.ERROR
-)
+sentry_logging = LoggingIntegration(level=logging.INFO, event_level=logging.ERROR)
 
 sentry_sdk.init(
     dsn=SETTINGS.SENTRY_DSN,
@@ -74,8 +71,9 @@ async def collect_diagnostics():
 
     res = await agent.update_cluster_diagnostics()
 
-    logger.info("##### Response information ({}): {} #####".format(
-        collect_diagnostics.__name__, res))
+    logger.info(
+        "##### Response information ({}): {} #####".format(collect_diagnostics.__name__, res)
+    )
 
     logger.info(f"##### {collect_diagnostics.__name__} run successfully #####")
 
@@ -96,10 +94,13 @@ async def collect_partition_and_nodes():
 
     res = await agent.upsert_partition_and_node_records()
 
-    logger.info("##### Response information ({}): {} #####".format(
-        collect_partition_and_nodes.__name__, res))
-
     logger.info(
-        f"##### {collect_partition_and_nodes.__name__} run successfully #####")
+        "##### Response information ({}): {} #####".format(
+            collect_partition_and_nodes.__name__, res
+        )
+    )
+
+    logger.info(f"##### {collect_partition_and_nodes.__name__} run successfully #####")
+
 
 app = SentryAsgiMiddleware(app)

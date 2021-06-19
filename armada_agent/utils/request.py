@@ -60,21 +60,20 @@ async def safe_fetch(url: str, method: str, param: Dict, data: Dict, session: Cl
 
 
 async def async_req(
-        urls: List[str],
-        methods: List[str],
-        header: Dict[str, str],
-        params: List,
-        data: List):
+    urls: List[str],
+    methods: List[str],
+    header: Dict[str, str],
+    params: List,
+    data: List,
+):
 
-    assert len(urls) == len(params) == len(
-        data), "You must set params for each URL"
+    assert len(urls) == len(params) == len(data), "You must set params for each URL"
 
     tasks = []
 
     async with ClientSession(headers=header) as session:
         for url, method, param, _data in zip(urls, methods, params, data):
-            task = asyncio.ensure_future(safe_fetch(
-                url, method, param, _data, session))
+            task = asyncio.ensure_future(safe_fetch(url, method, param, _data, session))
             tasks.append(task)
 
         responses = await asyncio.gather(*tasks)

@@ -12,8 +12,8 @@ def error(detail):
         detail=detail,
         headers={
             "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*"
-        }
+            "Access-Control-Allow-Origin": "*",
+        },
     )
 
 
@@ -24,8 +24,8 @@ def success(body):
         status_code=200,
         headers={
             "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*"
-        }
+            "Access-Control-Allow-Origin": "*",
+        },
     )
 
 
@@ -36,8 +36,8 @@ def unauthorized(body):
         status_code=fastapi.status.HTTP_401_UNAUTHORIZED,
         headers={
             "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*"
-        }
+            "Access-Control-Allow-Origin": "*",
+        },
     )
 
 
