@@ -1,13 +1,5 @@
 """
-For now, the tests pass on python 3.8 but do not pass on 3.6 due to
-incompatibility. Some error occurs when trying to mock requests. For
-the future, we're supposed to mock requests using an especific mocker:
-[requests-mock](https://requests-mock.readthedocs.io/en/latest/index.html).
-
-Despite the tests not passing, it doesn't mean the application does not work.
-Indeed, it works and was tested by [Matheus Tosta](https://github.com/matheushent)
-
-TODO: mock requests using requests-mock
+placeholder for future tests
 """
 
 from subprocess import call
