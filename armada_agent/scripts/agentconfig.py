@@ -22,6 +22,7 @@ PARAM_KEYS = (
     "ARMADA_AGENT_BASE_SLURMRESTD_URL",
     "ARMADA_AGENT_X_SLURM_USER_NAME",
     "ARMADA_AGENT_BASE_API_URL",
+    "ARMADA_AGENT_SENTRY_DSN",
     "ARMADA_AGENT_API_KEY"
 )
 
@@ -30,6 +31,7 @@ PARAM_TEMPLATE = inspect.cleandoc(
     ARMADA_AGENT_BASE_SLURMRESTD_URL = {ARMADA_AGENT_BASE_SLURMRESTD_URL!a}
     ARMADA_AGENT_X_SLURM_USER_NAME = {ARMADA_AGENT_X_SLURM_USER_NAME!a}
     ARMADA_AGENT_BASE_API_URL = {ARMADA_AGENT_BASE_API_URL!a}
+    ARMADA_AGENT_SENTRY_DSN = {ARMADA_AGENT_SENTRY_DSN!a}
     ARMADA_AGENT_API_KEY = {ARMADA_AGENT_API_KEY!a}
     """
 )
@@ -45,6 +47,7 @@ def read_upstream():
         ARMADA_AGENT_BASE_SLURMRESTD_URL="http://172.31.80.90:6820",
         ARMADA_AGENT_X_SLURM_USER_NAME="ubuntu",
         ARMADA_AGENT_BASE_API_URL="https://...",
+        ARMADA_AGENT_SENTRY_DSN="https://...",
         ARMADA_AGENT_API_KEY=""
     )
 
@@ -86,7 +89,8 @@ def parameters(ctx: click.Context):
 
     while True:
         try:
-            new_file = hotedit.hotedit(initial=orig_file, validate_unchanged=True)
+            new_file = hotedit.hotedit(
+                initial=orig_file, validate_unchanged=True)
         except hotedit.Unchanged:
             click.echo("** Parameters were unchanged", file=sys.stderr)
             if click.confirm("Try again?"):
@@ -98,12 +102,14 @@ def parameters(ctx: click.Context):
         # sanity check that we've only seen the keys we want to see
         check_keys = sorted(new_data.keys())
         if not check_keys == sorted(PARAM_KEYS):
-            click.echo(f"** Error: some unexpected parameters (saw: {check_keys})")
+            click.echo(
+                f"** Error: some unexpected parameters (saw: {check_keys})")
             if click.confirm("Try again?"):
                 orig_file = new_file
                 continue
             else:
-                raise ValueError("Please install the application again and provide only expected keys")
+                raise ValueError(
+                    "Please install the application again and provide only expected keys")
 
         break
 

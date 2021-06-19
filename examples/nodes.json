@@ -1,0 +1,56 @@
+{
+    "meta": {
+        "plugin": {
+            "type": "openapi/v0.0.36",
+            "name": "REST v0.0.36"
+        },
+        "Slurm": {
+            "version": {
+                "major": 20,
+                "micro": 4,
+                "minor": 11
+            },
+            "release": "20.11.4"
+        }
+    },
+    "errors": [],
+    "nodes": [
+        {
+            "architecture": "x86_64",
+            "burstbuffer_network_address": "",
+            "boards": 1,
+            "boot_time": 1615265607,
+            "comment": "",
+            "cores": 1,
+            "cpu_binding": 0,
+            "cpu_load": 0,
+            "free_memory": 2476,
+            "cpus": 2,
+            "features": "",
+            "active_features": "",
+            "gres": "",
+            "gres_drained": "N/A",
+            "gres_used": "gpu:0",
+            "mcs_label": "",
+            "name": "ip-172-31-81-142",
+            "next_state_after_reboot": "invalid",
+            "address": "ip-172-31-81-142",
+            "hostname": "ip-172-31-81-142",
+            "state": "idle",
+            "operating_system": "Linux 5.4.0-1038-aws #40-Ubuntu SMP Fri Feb 5 23:50:40 UTC 2021",
+            "owner": null,
+            "port": 6818,
+            "real_memory": 3876,
+            "reason": "",
+            "reason_changed_at": 0,
+            "reason_set_by_user": "root",
+            "slurmd_start_time": 1615265778,
+            "sockets": 1,
+            "threads": 2,
+            "temporary_disk": 0,
+            "weight": 1,
+            "tres": "cpu=2,mem=3876M,billing=2",
+            "slurmd_version": "20.11.4"
+        }
+    ]
+}

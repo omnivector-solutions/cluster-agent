@@ -1,99 +1,117 @@
+from armada_agent.settings import SETTINGS, ARMADA_API_HEADER
 from armada_agent.utils.request import check_request_status
-from armada_agent.utils.request import request_exception
+from armada_agent.utils.request import async_req, LOOP
 from armada_agent.utils.jwt import generate_jwt_token
+from armada_agent.utils.logging import logger
 
+import requests
+import asyncio
 import json
 
-import grequests
-import requests
+# [nest-asyncio docs](https://pypi.org/project/nest-asyncio/)
+import nest_asyncio
+nest_asyncio.apply()
 
-class SlurmrestdScraperAgent:
 
-    def __init__(self, config) -> None:
+async def slurmrestd_header():
 
-        self.config = config
+    x_slurm_user_token = await generate_jwt_token(test=False)
 
-    def slurmrestd_header(self):
+    return {
+        "X-SLURM-USER-NAME": SETTINGS.X_SLURM_USER_NAME,
+        "X-SLURM-USER-TOKEN": x_slurm_user_token
+    }
 
-        x_slurm_user_token = generate_jwt_token()
 
-        return {
-            "X-SLURM-USER-NAME": self.config.ARMADA_AGENT_X_SLURM_USER_NAME,
-            "X-SLURM-USER-TOKEN": x_slurm_user_token
-        }
-    
-    def armada_api_header(self):
+def armada_api_header():
 
-        return {
-            "Content-Type": "application/json",
-            "Authorization": self.config.ARMADA_AGENT_API_KEY
-        }
+    return {
+        "Content-Type": "application/json",
+        "Authorization": SETTINGS.API_KEY
+    }
 
-    def upsert_partition_and_node_records(self):
 
-        partition_endpoint = "/slurm/v0.0.36/partitions"
-        node_endpoint = "/slurm/v0.0.36/nodes"
+async def upsert_partition_and_node_records():
 
-        # get partition data
-        response = requests.get(
-            self.config.ARMADA_AGENT_BASE_SLURMRESTD_URL + partition_endpoint,
-            headers=self.slurmrestd_header(),
-            data={}
-        )
+    partition_endpoint = "/slurm/v0.0.36/partitions"
+    node_endpoint = "/slurm/v0.0.36/nodes"
 
-        partitions = check_request_status(response)
+    # get partition data
+    response = requests.get(
+        SETTINGS.BASE_SLURMRESTD_URL + partition_endpoint,
+        headers=await slurmrestd_header(),
+        data={}
+    )
 
-        # get node data
-        response = requests.get(
-            self.config.ARMADA_AGENT_BASE_SLURMRESTD_URL + node_endpoint,
-            headers=self.slurmrestd_header(),
-            data={}
-        )
+    partitions = check_request_status(response)
 
-        nodes = check_request_status(response)
+    # get node data
+    response = requests.get(
+        SETTINGS.BASE_SLURMRESTD_URL + node_endpoint,
+        headers=await slurmrestd_header(),
+        data={}
+    )
 
-        # [docs for grequests](https://github.com/spyoungtech/grequests)
-        reqs = list()
+    nodes = check_request_status(response)
 
-        for partition in partitions["partitions"]:
+    # arguments passed to async request handler
+    urls = list()
+    methods = list()
+    params = list()
+    data = list()
+    header = ARMADA_API_HEADER
 
-            payload = {
-                "partition": partition,
-                "nodes": list(map(
-                    lambda _node: _node,
-                    filter(
-                        lambda node: node["name"] in partition["nodes"],
-                        nodes["nodes"]
-                    )
-                ))
-            }
+    for partition in partitions["partitions"]:
 
-            reqs.append(grequests.post(
-                self.config.ARMADA_AGENT_BASE_API_URL + "/agent/upsert/partition",
-                headers=self.armada_api_header(),
-                data=json.dumps(payload)
+        # run through nodes' list and select those that
+        # belog to the partition in this case
+        # For more information, see the JSON examples in /examples folder
+        payload = {
+            "partition": partition,
+            "nodes": list(map(
+                lambda _node: _node,
+                filter(
+                    lambda node: node["name"] in partition["nodes"],
+                    nodes["nodes"]
+                )
             ))
+        }
 
-        responses = list(grequests.imap(reqs, exception_handler=request_exception))
+        urls.append(SETTINGS.BASE_API_URL +
+                    "/agent/upsert/partition")
+        methods.append("POST")
+        params.append(None)
+        data.append(json.dumps(payload))
 
-        return responses
+    future = asyncio.ensure_future(
+        async_req(urls, methods, header, params, data), loop=LOOP)
+    LOOP.run_until_complete(future)
 
-    def update_cluster_diagnostics(self):
+    responses = future.result()
 
-        endpoint = "/slurm/v0.0.36/diag/"
+    # return a list containing just the responses' status, e.g. [200, 400]
+    return [response.status for response in responses]
 
-        response = requests.get(
-            self.config.ARMADA_AGENT_BASE_SLURMRESTD_URL + endpoint,
-            headers=self.slurmrestd_header(),
-            data={}
-        )
 
-        diagnostics = check_request_status(response)
+async def update_cluster_diagnostics():
 
-        response = requests.post(
-            self.config.ARMADA_AGENT_BASE_API_URL + "/agent/insert/diagnostics",
-            headers=self.armada_api_header(),
-            data=json.dumps(diagnostics)
-        )
+    endpoint = "/slurm/v0.0.36/diag/"
 
-        return response
+    header = await slurmrestd_header()
+
+    logger.info("##### {}".format(header))
+    response = requests.get(
+        SETTINGS.BASE_SLURMRESTD_URL + endpoint,
+        headers=header
+    )
+
+    diagnostics = check_request_status(response)
+
+    response = requests.post(
+        SETTINGS.BASE_API_URL + "/agent/insert/diagnostics",
+        headers=ARMADA_API_HEADER,
+        data=json.dumps(diagnostics)
+    )
+
+    # return a list container the status code response, e.g. [200]
+    return [response.status_code]
