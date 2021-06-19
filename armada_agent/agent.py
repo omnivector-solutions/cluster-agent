@@ -98,8 +98,6 @@ async def update_cluster_diagnostics():
     endpoint = "/slurm/v0.0.36/diag/"
 
     header = await slurmrestd_header()
-
-    logger.info("##### {}".format(header))
     response = requests.get(
         SETTINGS.BASE_SLURMRESTD_URL + endpoint,
         headers=header
