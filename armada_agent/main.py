@@ -6,7 +6,6 @@ from fastapi_utils.tasks import repeat_every
 from fastapi import FastAPI
 import sentry_sdk
 
-from pathlib import Path
 import logging
 
 from armada_agent.utils.logging import logger
@@ -28,7 +27,6 @@ sentry_sdk.init(
 
 app = FastAPI(
     title="Armada Agent",
-    version=Path('VERSION').read_text().strip()
 )
 app.add_middleware(
     CORSMiddleware,
