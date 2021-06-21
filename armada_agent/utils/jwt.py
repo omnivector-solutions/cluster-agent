@@ -8,7 +8,7 @@ from armada_agent.settings import SETTINGS
 async def generate_jwt_token(test: bool = True):
 
     proc = await asyncio.create_subprocess_shell(
-        "scontrol token" if not test else "juju run --unit slurmctld/3 scontrol token",
+        "scontrol token" if not test else "juju run --unit slurmctld/leader scontrol token",
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
