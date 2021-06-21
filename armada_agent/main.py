@@ -14,14 +14,6 @@ from armada_agent.utils import response
 from armada_agent import agent
 
 
-sentry_logging = LoggingIntegration(level=logging.INFO, event_level=logging.ERROR)
-
-sentry_sdk.init(
-    dsn=SETTINGS.SENTRY_DSN,
-    integrations=[sentry_logging, AioHttpIntegration()],
-    traces_sample_rate=1.0,
-)
-
 app = FastAPI(
     title="Armada Agent",
 )
@@ -103,4 +95,16 @@ async def collect_partition_and_nodes():
     logger.info(f"##### {collect_partition_and_nodes.__name__} run successfully #####")
 
 
-app = SentryAsgiMiddleware(app)
+try:
+    sentry_logging = LoggingIntegration(level=logging.INFO, event_level=logging.ERROR)
+
+    sentry_sdk.init(
+        dsn=SETTINGS.SENTRY_DSN,
+        integrations=[sentry_logging, AioHttpIntegration()],
+        traces_sample_rate=1.0,
+    )
+
+    app = SentryAsgiMiddleware(app)
+except:
+
+    pass
