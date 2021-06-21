@@ -1,13 +1,14 @@
 dependencies: ## Install project dependencies needed to run the application
+	echo "0.1.0-ci" > VERSION # create VERSION file for avoinding the CI to break
 	python3 -m venv env
 	. env/bin/activate
 	pip3 install -U pip wheel
-	pip3 install -r requirements.txt
+	pip3 install -e .[dev]
 
 .PHONY: lint
 lint: ## Run flake8 linter. It will checks syntax errors or undefined names
 	. env/bin/activate
-	flake8 $(git ls-files | grep 'ˆscripts\|\.py$') --count --select=E9,F63,F7,F82 --show-source --statistics
+	flake8 $(git ls-files | grep 'ˆscripts\|\.py$') --count --select=E9,F63,F7,F82 --show-source --statistics --exclude env/
 
 .PHONY: version
 version: ## Create/update VERSION file
@@ -19,7 +20,7 @@ autopep: ## Run autopep8
 	autopep8 --in-place $(git ls-files | grep 'ˆscripts\|\.py$')
 
 .PHONY: clean
-clean: clean-eggs clean-build## Remove temporary file holding the app settings
+clean: clean-eggs clean-build ## Remove temporary file holding the app settings
 	rm .env
 	rm VERSION
 	rm -rf env/
@@ -49,7 +50,7 @@ run: version ## Start uvicorn app on port 8080
 		armada_agent.main:app --reload
 
 .PHONY: test
-test: version ## Run tests against the application
+test: ## Run tests against the application
 	. env/bin/activate
 	pytest -v
 

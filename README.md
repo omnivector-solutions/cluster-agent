@@ -35,6 +35,7 @@
   ARMADA_AGENT_API_KEY="<api-key>"
   ARMADA_AGENT_BASE_SLURMRESTD_URL="<slurmrestd-endpoint>"
   ARMADA_AGENT_X_SLURM_USER_NAME="<slurmrestd-user-name>"
+  ARMADA_AGENT_SENTRY_DSN="<sentry-dsn-key>"
   ```
 
 ## Local usage example

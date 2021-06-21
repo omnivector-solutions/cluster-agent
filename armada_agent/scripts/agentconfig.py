@@ -19,31 +19,24 @@ import toml
 PASSWORD_CHARS = string.ascii_letters + string.digits
 
 PARAM_KEYS = (
-    "BASE_SCRAPER_URL",
-    "X_SLURM_USER_NAME",
-    "X_SLURM_USER_TOKEN",
-    "BASE_API_URL",
-    "API_KEY"
+    "ARMADA_AGENT_BASE_SLURMRESTD_URL",
+    "ARMADA_AGENT_X_SLURM_USER_NAME",
+    "ARMADA_AGENT_BASE_API_URL",
+    "ARMADA_AGENT_SENTRY_DSN",
+    "ARMADA_AGENT_API_KEY",
 )
 
 PARAM_TEMPLATE = inspect.cleandoc(
     """
-    BASE_SCRAPER_URL = {BASE_SCRAPER_URL!a}
-    X_SLURM_USER_NAME = {X_SLURM_USER_NAME!a}
-    X_SLURM_USER_TOKEN = {X_SLURM_USER_TOKEN!a}
-    BASE_API_URL = {BASE_API_URL!a}
-    API_KEY = {API_KEY!a}
+    ARMADA_AGENT_BASE_SLURMRESTD_URL = {ARMADA_AGENT_BASE_SLURMRESTD_URL!a}
+    ARMADA_AGENT_X_SLURM_USER_NAME = {ARMADA_AGENT_X_SLURM_USER_NAME!a}
+    ARMADA_AGENT_BASE_API_URL = {ARMADA_AGENT_BASE_API_URL!a}
+    ARMADA_AGENT_SENTRY_DSN = {ARMADA_AGENT_SENTRY_DSN!a}
+    ARMADA_AGENT_API_KEY = {ARMADA_AGENT_API_KEY!a}
     """
 )
 
 CONFIG = dict(dotenv_values(".env"))
-
-
-def make_token(charset=PASSWORD_CHARS):
-    """
-    Generate a secure token
-    """
-    return "".join(secrets.choice(charset) for i in range(20))
 
 
 def read_upstream():
@@ -51,11 +44,11 @@ def read_upstream():
     Get a bunch of SSM Parameters from AWS
     """
     defaults = dict(
-        BASE_SCRAPER_URL="http://172.31.80.90:6820",
-        X_SLURM_USER_NAME="ubuntu",
-        X_SLURM_USER_TOKEN=make_token(),
-        BASE_API_URL="https://...",
-        API_KEY=""
+        ARMADA_AGENT_BASE_SLURMRESTD_URL="http://172.31.80.90:6820",
+        ARMADA_AGENT_X_SLURM_USER_NAME="ubuntu",
+        ARMADA_AGENT_BASE_API_URL="https://...",
+        ARMADA_AGENT_SENTRY_DSN="https://...",
+        ARMADA_AGENT_API_KEY="",
     )
 
     for k in PARAM_KEYS:
@@ -113,7 +106,9 @@ def parameters(ctx: click.Context):
                 orig_file = new_file
                 continue
             else:
-                raise ValueError("Please install the application again and provide only expected keys")
+                raise ValueError(
+                    "Please install the application again and provide only expected keys"
+                )
 
         break
 
