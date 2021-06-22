@@ -38,8 +38,8 @@ jobs:
       - name: Publish to pypicloud
         run: |
           twine upload --repository-url ${{ secrets.PYPI_URL }} \
-          -u ${{ secrets.PYPI_USERNAME }} \
-          -p ${{ secrets.PYPI_PASSWORD }} dist/* --verbose
+                       -u ${{ secrets.PYPI_USERNAME }} \
+                       -p ${{ secrets.PYPI_PASSWORD }} dist/* --verbose
 
   release:
     name: Release armada-agent
