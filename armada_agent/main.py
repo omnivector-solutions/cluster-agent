@@ -3,6 +3,7 @@ from sentry_sdk.integrations.logging import LoggingIntegration
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_utils.tasks import repeat_every
+from sentry_sdk.utils import BadDsn
 from fastapi import FastAPI
 import sentry_sdk
 
@@ -105,6 +106,10 @@ try:
     )
 
     app = SentryAsgiMiddleware(app)
-except:
+
+    logger.info("##### Found valid DSN key for Sentry, enabling it.")
+except BadDsn as e:
+
+    logger.error("##### Sentry: {}, disabling it.".format(e))
 
     pass
