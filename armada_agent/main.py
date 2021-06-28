@@ -107,9 +107,7 @@ try:
 
     app = SentryAsgiMiddleware(app)
 
-    logger.info("##### Found valid DSN key for Sentry, enabling it.")
+    logger.info("##### Enabled Sentry since a valid DSN key was provided.")
 except BadDsn as e:
 
-    logger.error("##### Sentry: {}, disabling it.".format(e))
-
-    pass
+    logger.error("##### Sentry could not be enabled: {}".format(e))
