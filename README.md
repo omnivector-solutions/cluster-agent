@@ -38,6 +38,8 @@
   ARMADA_AGENT_SENTRY_DSN="<sentry-dsn-key>"
   ```
 
+  NOTE: `ARMADA_AGENT_SENTRY_DSN` is optional. If you do not pass it the agent understands Sentry will not be used.
+
 ## Local usage example
 
 1. Run app

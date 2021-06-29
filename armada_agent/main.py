@@ -3,6 +3,7 @@ from sentry_sdk.integrations.logging import LoggingIntegration
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_utils.tasks import repeat_every
+from sentry_sdk.utils import BadDsn
 from fastapi import FastAPI
 import sentry_sdk
 
@@ -13,14 +14,6 @@ from armada_agent.settings import SETTINGS
 from armada_agent.utils import response
 from armada_agent import agent
 
-
-sentry_logging = LoggingIntegration(level=logging.INFO, event_level=logging.ERROR)
-
-sentry_sdk.init(
-    dsn=SETTINGS.SENTRY_DSN,
-    integrations=[sentry_logging, AioHttpIntegration()],
-    traces_sample_rate=1.0,
-)
 
 app = FastAPI(
     title="Armada Agent",
@@ -103,4 +96,18 @@ async def collect_partition_and_nodes():
     logger.info(f"##### {collect_partition_and_nodes.__name__} run successfully #####")
 
 
-app = SentryAsgiMiddleware(app)
+try:
+    sentry_logging = LoggingIntegration(level=logging.INFO, event_level=logging.ERROR)
+
+    sentry_sdk.init(
+        dsn=SETTINGS.SENTRY_DSN,
+        integrations=[sentry_logging, AioHttpIntegration()],
+        traces_sample_rate=1.0,
+    )
+
+    app = SentryAsgiMiddleware(app)
+
+    logger.info("##### Enabled Sentry since a valid DSN key was provided.")
+except BadDsn as e:
+
+    logger.error("##### Sentry could not be enabled: {}".format(e))
