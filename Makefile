@@ -1,13 +1,10 @@
 dependencies: ## Install project dependencies needed to run the application
 	echo "0.1.0-ci" > VERSION # create VERSION file for avoinding the CI to break
-	python3 -m venv env
-	. env/bin/activate
 	pip3 install -U pip wheel
 	pip3 install -e .[dev]
 
 .PHONY: lint
 lint: ## Run flake8 linter. It will checks syntax errors or undefined names
-	. env/bin/activate
 	flake8 $(git ls-files | grep 'ˆscripts\|\.py$') --count --select=E9,F63,F7,F82 --show-source --statistics --exclude env/
 
 .PHONY: version
@@ -16,7 +13,6 @@ version: ## Create/update VERSION file
 
 .PHONY: autopep
 autopep: ## Run autopep8
-	. env/bin/activate
 	autopep8 --in-place $(git ls-files | grep 'ˆscripts\|\.py$')
 
 .PHONY: clean
@@ -43,7 +39,6 @@ clean-build: ## Clean build folders
 
 .PHONY: run
 run: version ## Start uvicorn app on port 8080
-	. env/bin/activate
 	uvicorn \
 		--host 127.0.0.1 \
 		--port 8080 \
@@ -51,7 +46,6 @@ run: version ## Start uvicorn app on port 8080
 
 .PHONY: test
 test: ## Run tests against the application
-	. env/bin/activate
 	pytest -v
 
 # Display target comments in 'make help'
