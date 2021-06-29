@@ -1,0 +1,81 @@
+name: Create Release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Code version. It follows semantic versioning pattern
+        required: true
+      branch:
+        description: Branch which carries the code to be released
+        required: true
+
+jobs:
+  publish:
+    name: Publish armada-agent
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install twine
+        run: |
+          pip3 install -U pip wheel twine
+
+      - name: Build package
+        run: |
+          echo ${{ github.event.inputs.version }} > VERSION
+          python3 setup.py sdist bdist_wheel
+
+      - name: Publish to pypicloud
+        run: |
+          twine upload --repository-url ${{ secrets.PYPI_URL }} \
+                       -u ${{ secrets.PYPI_USERNAME }} \
+                       -p ${{ secrets.PYPI_PASSWORD }} dist/* --verbose
+
+  release:
+    name: Release armada-agent
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Zip code
+        run: |
+          zip -r source.zip armada_agent
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          release_name: Release ${{ github.ref }}
+          body:  ${{ github.event.head_commit.message }} # get commit message
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the step above
+          asset_path: ./source.zip
+          asset_name: source.zip
+          asset_content_type: application/zip

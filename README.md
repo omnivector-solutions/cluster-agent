@@ -69,20 +69,16 @@ Outputs:
 
 ## Release
 
-For publishing you need first to export some credentials:
+Once the pypicloud credentials are set on the repository secrets, pushing a tag will trigger a workflow for pushing the package to pypicloud and releasing on the repository as well. Example:
 
 ```bash
-export PYPI_URL="https://link-to-pypicloud.com"
-export PYPI_USERNAME="rats"
-export PYPI_PASSWORD="ratsratsrats"
+git tag -a <version> -m "some message" # e.g. git tag -a 1.0.0 -m "Release"
+
+git push origin <version> # e.g. git push origin 1.0.0
 ```
 
-Then, run:
-
-```bash
-TODO
-```
+NOTE: the workflow won't be triggered if the commit message preceding the tag release contains `release-skip` statement. e.g. `git commit -m "some description here - release-skip"`
 
 ## Future work
 
-- [ ] Implement script to push package to pypicloud
+- [x] Implement script to push package to pypicloud
