@@ -24,7 +24,9 @@
 
 ## Setup parameters
 
-1. Setup env
+1. Setup dependencies
+  You can use whenever dependency manager you want to. Just run the command below (and the ones following) on behalf of the manager you prefer.
+
   ```bash
   make dependencies
   ```
@@ -69,15 +71,15 @@ Outputs:
 
 ## Release
 
-Once the pypicloud credentials are set on the repository secrets, pushing a tag will trigger a workflow for pushing the package to pypicloud and releasing on the repository as well. Example:
+There is a GitHub action to publish the package to the pypicloud. Since it is triggered manually, it is prefered you tag the code first. So, at the command line:
 
 ```bash
-git tag -a <version> -m "some message" # e.g. git tag -a 1.0.0 -m "Release"
+git tag -a <version> -m "<message>" # e.g. git tag -a 1.0.0 -m "Message"
 
 git push origin <version> # e.g. git push origin 1.0.0
 ```
 
-NOTE: the workflow won't be triggered if the commit message preceding the tag release contains `release-skip` statement. e.g. `git commit -m "some description here - release-skip"`
+* NOTE: For development releases, add `rc*` (release candidate) to the end of the tag, e.g. `git tag -a 1.0.0rc1`
 
 ## Future work
 
