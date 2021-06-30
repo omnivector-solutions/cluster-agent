@@ -65,7 +65,7 @@ async def upsert_partition_and_node_records():
         # transform nodes names string into a list
         # e.g. "juju-54c58e-[67,45]" -> ["juju-54c58e-67", "juju-54c58e-45"]
         for partition in partitions["partitions"]:
-            partition['nodes'] = hostlist.expand_hostlist(partitions['nodes'])
+            partition['nodes'] = hostlist.expand_hostlist(partition['nodes'])
 
         # run through nodes' list and select those that
         # belog to the partition in this case
