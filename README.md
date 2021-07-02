@@ -79,7 +79,7 @@ git tag -a <version> -m "<message>" # e.g. git tag -a 1.0.0 -m "Message"
 git push origin <version> # e.g. git push origin 1.0.0
 ```
 
-* NOTE: For development releases, add `rc*` (release candidate) to the end of the tag, e.g. `git tag -a 1.0.0rc1`
+* NOTE: For pre-releases, add `rc*` (release candidate) to the end of the tag, e.g. `git tag -a 1.0.0rc1`.
 
 ## Future work
 
