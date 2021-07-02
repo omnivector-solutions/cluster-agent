@@ -4,6 +4,7 @@ from armada_agent.utils.request import async_req, LOOP
 from armada_agent.utils.jwt import generate_jwt_token
 from armada_agent.utils.logging import logger
 
+import hostlist
 import requests
 import asyncio
 import json
@@ -60,6 +61,10 @@ async def upsert_partition_and_node_records():
     header = ARMADA_API_HEADER
 
     for partition in partitions["partitions"]:
+
+        # transform nodes names string into a list
+        # e.g. "juju-54c58e-[67,45]" -> ["juju-54c58e-67", "juju-54c58e-45"]
+        partition['nodes'] = hostlist.expand_hostlist(partition['nodes'])
 
         # run through nodes' list and select those that
         # belog to the partition in this case
