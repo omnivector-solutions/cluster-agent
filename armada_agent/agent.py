@@ -79,7 +79,7 @@ async def upsert_partition_and_node_records():
             ),
         }
 
-        urls.append(SETTINGS.BASE_API_URL + "/agent/upsert/partition")
+        urls.append(SETTINGS.BASE_API_URL + "/agent/partition")
         methods.append("POST")
         params.append(None)
         data.append(json.dumps(payload))
@@ -103,7 +103,7 @@ async def update_cluster_diagnostics():
     diagnostics = check_request_status(response)
 
     response = requests.post(
-        SETTINGS.BASE_API_URL + "/agent/insert/diagnostics",
+        SETTINGS.BASE_API_URL + "/agent/diagnostics",
         headers=ARMADA_API_HEADER,
         data=json.dumps(diagnostics),
     )
