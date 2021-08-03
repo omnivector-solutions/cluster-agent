@@ -96,6 +96,31 @@ async def collect_partition_and_nodes():
     logger.info(f"##### {collect_partition_and_nodes.__name__} run successfully #####")
 
 
+@app.on_event("startup")
+@repeat_every(
+    seconds=60,
+    logger=logger,
+    raise_exceptions=False,
+)
+async def collect_jobs():
+    """
+    Periodically get jobs data then
+    report them to the backend
+    """
+
+    logger.info("##### Calling upsertion of cluster jobs #####")
+
+    res = await agent.upsert_partition_and_node_records()
+
+    logger.info(
+        "##### Response information ({}): {} #####".format(
+            collect_jobs.__name__, res
+        )
+    )
+
+    logger.info(f"##### {collect_jobs.__name__} run successfully #####")
+
+
 try:
     sentry_logging = LoggingIntegration(level=logging.INFO, event_level=logging.ERROR)
 

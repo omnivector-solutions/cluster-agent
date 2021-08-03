@@ -110,3 +110,45 @@ async def update_cluster_diagnostics():
 
     # return a list container the status code response, e.g. [200]
     return [response.status_code]
+
+
+async def update_cluster_jobs():
+
+    endpoint = "/slurm/v0.0.36/jobs"
+
+    # get jobs data
+    response = requests.get(
+        SETTINGS.BASE_SLURMRESTD_URL + endpoint,
+        headers=await slurmrestd_header(),
+        data={},
+    )
+
+    jobs = check_request_status(response)
+
+    # arguments passed to async request handler
+    urls = list()
+    methods = list()
+    params = list()
+    data = list()
+    header = ARMADA_API_HEADER
+
+    for job in jobs["jobs"]:
+
+        payload = {
+            "meta": jobs["meta"],
+            "errors": jobs["errors"],
+            "job": job,
+        }
+
+        urls.append(SETTINGS.BASE_API_URL + f"/agent/jobs/{job['job_id']}")
+        methods.append("PUT")
+        params.append(None)
+        data.append(json.dumps(payload))
+
+    future = asyncio.ensure_future(async_req(urls, methods, header, params, data), loop=LOOP)
+    LOOP.run_until_complete(future)
+
+    responses = future.result()
+
+    # return a list container the status code response, e.g. [200]
+    return [response.status_code]
