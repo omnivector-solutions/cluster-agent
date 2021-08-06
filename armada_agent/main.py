@@ -87,9 +87,7 @@ async def collect_partitions():
     res = await agent.upsert_partitions()
 
     logger.info(
-        "##### Response information ({}): {} #####".format(
-            collect_partitions.__name__, res
-        )
+        "##### Response information ({}): {} #####".format(collect_partitions.__name__, res)
     )
 
     logger.info(f"##### {collect_partitions.__name__} run successfully #####")
@@ -110,11 +108,7 @@ async def collect_nodes():
 
     res = await agent.upsert_nodes()
 
-    logger.info(
-        "##### Response information ({}): {} #####".format(
-            collect_nodes.__name__, res
-        )
-    )
+    logger.info("##### Response information ({}): {} #####".format(collect_nodes.__name__, res))
 
     logger.info(f"##### {collect_nodes.__name__} run successfully #####")
 
@@ -134,11 +128,7 @@ async def collect_jobs():
 
     res = await agent.upsert_jobs()
 
-    logger.info(
-        "##### Response information ({}): {} #####".format(
-            collect_jobs.__name__, res
-        )
-    )
+    logger.info("##### Response information ({}): {} #####".format(collect_jobs.__name__, res))
 
     logger.info(f"##### {collect_jobs.__name__} run successfully #####")
 

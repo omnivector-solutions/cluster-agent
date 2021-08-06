@@ -3,7 +3,7 @@ from armada_agent.utils.request import (
     async_req,
     check_request_status,
     general_slurmrestd_request,
-    LOOP
+    LOOP,
 )
 from armada_agent.utils.logging import logger
 
@@ -38,7 +38,7 @@ async def upsert_partitions():
 
         # transform nodes names string into a list
         # e.g. "juju-54c58e-[67,45]" -> ["juju-54c58e-67", "juju-54c58e-45"]
-        partition['nodes'] = hostlist.expand_hostlist(partition['nodes'])
+        partition["nodes"] = hostlist.expand_hostlist(partition["nodes"])
 
         payload = {
             "meta": partitions["meta"],
@@ -137,4 +137,4 @@ async def upsert_jobs():
     responses = future.result()
 
     # return a list container the status code response, e.g. [200]
-    return [response.status_code]
+    return [response.status for response in responses]
