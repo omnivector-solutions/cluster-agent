@@ -62,7 +62,7 @@ async def collect_diagnostics():
 
     logger.info("##### Calling insertion of cluster diagnostics #####")
 
-    res = await agent.update_cluster_diagnostics()
+    res = await agent.update_diagnostics()
 
     logger.info(
         "##### Response information ({}): {} #####".format(collect_diagnostics.__name__, res)
@@ -77,23 +77,46 @@ async def collect_diagnostics():
     logger=logger,
     raise_exceptions=False,
 )
-async def collect_partition_and_nodes():
+async def collect_partitions():
     """
-    Periodically get partition data and node data then
-    report them to the backend
+    Periodically get partition data then report them to the backend
     """
 
-    logger.info("##### Calling upsertion of cluster partitions and nodes #####")
+    logger.info("##### Calling upsertion of cluster partitions #####")
 
-    res = await agent.upsert_partition_and_node_records()
+    res = await agent.upsert_partitions()
 
     logger.info(
         "##### Response information ({}): {} #####".format(
-            collect_partition_and_nodes.__name__, res
+            collect_partitions.__name__, res
         )
     )
 
-    logger.info(f"##### {collect_partition_and_nodes.__name__} run successfully #####")
+    logger.info(f"##### {collect_partitions.__name__} run successfully #####")
+
+
+@app.on_event("startup")
+@repeat_every(
+    seconds=60,
+    logger=logger,
+    raise_exceptions=False,
+)
+async def collect_nodes():
+    """
+    Periodically get node data then report them to the backend
+    """
+
+    logger.info("##### Calling upsertion of cluster nodes #####")
+
+    res = await agent.upsert_nodes()
+
+    logger.info(
+        "##### Response information ({}): {} #####".format(
+            collect_nodes.__name__, res
+        )
+    )
+
+    logger.info(f"##### {collect_nodes.__name__} run successfully #####")
 
 
 @app.on_event("startup")
@@ -104,13 +127,12 @@ async def collect_partition_and_nodes():
 )
 async def collect_jobs():
     """
-    Periodically get jobs data then
-    report them to the backend
+    Periodically get jobs data then report them to the backend
     """
 
     logger.info("##### Calling upsertion of cluster jobs #####")
 
-    res = await agent.upsert_partition_and_node_records()
+    res = await agent.upsert_jobs()
 
     logger.info(
         "##### Response information ({}): {} #####".format(
