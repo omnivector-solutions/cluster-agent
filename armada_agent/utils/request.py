@@ -3,6 +3,7 @@ from armada_agent.settings import SETTINGS
 from armada_agent.utils.logging import logger
 from armada_agent.utils.slurmrestd import slurmrestd_header
 
+from urllib.parse import urljoin
 from typing import Dict, List
 import requests
 import asyncio
@@ -64,7 +65,7 @@ async def general_slurmrestd_request(endpoint: str):
     """
 
     response = requests.get(
-        SETTINGS.BASE_SLURMRESTD_URL + endpoint,
+        urljoin(SETTINGS.BASE_SLURMRESTD_URL, endpoint),
         headers=await slurmrestd_header(),
         data={},
     )
