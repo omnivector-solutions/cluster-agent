@@ -57,7 +57,7 @@ def begin_logging():
 )
 async def collect_diagnostics():
     """
-    Periodically get diagnostics data and report them to the backend
+    Periodically (T=60s) get diagnostics data and report them to the backend
     """
 
     logger.info("##### Calling insertion of cluster diagnostics #####")
@@ -79,7 +79,7 @@ async def collect_diagnostics():
 )
 async def collect_partitions():
     """
-    Periodically get partition data then report them to the backend
+    Periodically (T=60s) get partition data then report them to the backend
     """
 
     logger.info("##### Calling upsertion of cluster partitions #####")
@@ -101,7 +101,7 @@ async def collect_partitions():
 )
 async def collect_nodes():
     """
-    Periodically get node data then report them to the backend
+    Periodically (T=60s) get node data then report them to the backend
     """
 
     logger.info("##### Calling upsertion of cluster nodes #####")
@@ -121,7 +121,7 @@ async def collect_nodes():
 )
 async def collect_jobs():
     """
-    Periodically get jobs data then report them to the backend
+    Periodically (T=60s) get jobs data then report them to the backend
     """
 
     logger.info("##### Calling upsertion of cluster jobs #####")
