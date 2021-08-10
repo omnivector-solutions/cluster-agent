@@ -64,7 +64,7 @@ async def collect_diagnostics():
 
     res = await agent.update_diagnostics()
 
-    logger.info(
+    logger.debug(
         "##### Response information ({}): {} #####".format(collect_diagnostics.__name__, res)
     )
 
@@ -86,7 +86,7 @@ async def collect_partitions():
 
     res = await agent.upsert_partitions()
 
-    logger.info(
+    logger.debug(
         "##### Response information ({}): {} #####".format(collect_partitions.__name__, res)
     )
 
@@ -108,7 +108,7 @@ async def collect_nodes():
 
     res = await agent.upsert_nodes()
 
-    logger.info("##### Response information ({}): {} #####".format(collect_nodes.__name__, res))
+    logger.debug("##### Response information ({}): {} #####".format(collect_nodes.__name__, res))
 
     logger.info(f"##### {collect_nodes.__name__} run successfully #####")
 
@@ -128,7 +128,7 @@ async def collect_jobs():
 
     res = await agent.upsert_jobs()
 
-    logger.info("##### Response information ({}): {} #####".format(collect_jobs.__name__, res))
+    logger.debug("##### Response information ({}): {} #####".format(collect_jobs.__name__, res))
 
     logger.info(f"##### {collect_jobs.__name__} run successfully #####")
 
@@ -144,7 +144,7 @@ try:
 
     app = SentryAsgiMiddleware(app)
 
-    logger.info("##### Enabled Sentry since a valid DSN key was provided.")
+    logger.debug("##### Enabled Sentry since a valid DSN key was provided.")
 except BadDsn as e:
 
-    logger.error("##### Sentry could not be enabled: {}".format(e))
+    logger.debug("##### Sentry could not be enabled: {}".format(e))
