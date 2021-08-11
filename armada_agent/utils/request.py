@@ -67,7 +67,6 @@ async def general_slurmrestd_request(endpoint: str):
     response = requests.get(
         urljoin(SETTINGS.BASE_SLURMRESTD_URL, endpoint),
         headers=await slurmrestd_header(),
-        data={},
     )
 
     data = check_request_status(response)
