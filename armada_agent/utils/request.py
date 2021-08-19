@@ -1,6 +1,9 @@
 """Core module for request processing operations"""
+from armada_agent.settings import SETTINGS
 from armada_agent.utils.logging import logger
+from armada_agent.utils.slurmrestd import slurmrestd_header
 
+from urllib.parse import urljoin
 from typing import Dict, List
 import requests
 import asyncio
@@ -47,6 +50,28 @@ def check_request_status(request):
         raise requests.RequestException("Unknown error.")
 
     return payload
+
+
+async def general_slurmrestd_request(endpoint: str):
+    """
+    Utility function to call a generic slurmrestd endpoint and
+    get its payload response
+
+    Args:
+        endpoint (str): Slurmrestd endpoint, e.g. /slurm/v0.0.36/partitions
+
+    Returns:
+        Dict: response payload from slurmrestd endpoint
+    """
+
+    response = requests.get(
+        urljoin(SETTINGS.BASE_SLURMRESTD_URL, endpoint),
+        headers=await slurmrestd_header(),
+    )
+
+    data = check_request_status(response)
+
+    return data
 
 
 async def fetch(url: str, method: str, param: Dict, data: Dict, session: ClientSession):

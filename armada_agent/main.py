@@ -57,14 +57,14 @@ def begin_logging():
 )
 async def collect_diagnostics():
     """
-    Periodically get diagnostics data and report them to the backend
+    Periodically (T=60s) get diagnostics data and report them to the backend
     """
 
     logger.info("##### Calling insertion of cluster diagnostics #####")
 
-    res = await agent.update_cluster_diagnostics()
+    res = await agent.update_diagnostics()
 
-    logger.info(
+    logger.debug(
         "##### Response information ({}): {} #####".format(collect_diagnostics.__name__, res)
     )
 
@@ -77,23 +77,40 @@ async def collect_diagnostics():
     logger=logger,
     raise_exceptions=False,
 )
-async def collect_partition_and_nodes():
+async def collect_partitions():
     """
-    Periodically get partition data and node data then
-    report them to the backend
+    Periodically (T=60s) get partition data then report them to the backend
     """
 
-    logger.info("##### Calling upsertion of cluster partitions and nodes #####")
+    logger.info("##### Calling upsertion of cluster partitions #####")
 
-    res = await agent.upsert_partition_and_node_records()
+    res = await agent.upsert_partitions()
 
-    logger.info(
-        "##### Response information ({}): {} #####".format(
-            collect_partition_and_nodes.__name__, res
-        )
+    logger.debug(
+        "##### Response information ({}): {} #####".format(collect_partitions.__name__, res)
     )
 
-    logger.info(f"##### {collect_partition_and_nodes.__name__} run successfully #####")
+    logger.info(f"##### {collect_partitions.__name__} run successfully #####")
+
+
+@app.on_event("startup")
+@repeat_every(
+    seconds=60,
+    logger=logger,
+    raise_exceptions=False,
+)
+async def collect_nodes():
+    """
+    Periodically (T=60s) get node data then report them to the backend
+    """
+
+    logger.info("##### Calling upsertion of cluster nodes #####")
+
+    res = await agent.upsert_nodes()
+
+    logger.debug("##### Response information ({}): {} #####".format(collect_nodes.__name__, res))
+
+    logger.info(f"##### {collect_nodes.__name__} run successfully #####")
 
 
 @app.on_event("startup")
@@ -104,19 +121,14 @@ async def collect_partition_and_nodes():
 )
 async def collect_jobs():
     """
-    Periodically get jobs data then
-    report them to the backend
+    Periodically (T=60s) get jobs data then report them to the backend
     """
 
     logger.info("##### Calling upsertion of cluster jobs #####")
 
-    res = await agent.upsert_partition_and_node_records()
+    res = await agent.upsert_jobs()
 
-    logger.info(
-        "##### Response information ({}): {} #####".format(
-            collect_jobs.__name__, res
-        )
-    )
+    logger.debug("##### Response information ({}): {} #####".format(collect_jobs.__name__, res))
 
     logger.info(f"##### {collect_jobs.__name__} run successfully #####")
 
@@ -132,7 +144,7 @@ try:
 
     app = SentryAsgiMiddleware(app)
 
-    logger.info("##### Enabled Sentry since a valid DSN key was provided.")
+    logger.debug("##### Enabled Sentry since a valid DSN key was provided.")
 except BadDsn as e:
 
-    logger.error("##### Sentry could not be enabled: {}".format(e))
+    logger.debug("##### Sentry could not be enabled: {}".format(e))
