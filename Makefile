@@ -4,16 +4,12 @@ dependencies: ## Install project dependencies needed to run the application
 	pip3 install -e .[dev]
 
 .PHONY: lint
-lint: ## Run flake8 linter. It will checks syntax errors or undefined names
-	flake8 $(git ls-files | grep 'ˆscripts\|\.py$') --count --select=E9,F63,F7,F82 --show-source --statistics --exclude env/
+lint: ## Run flake8 linter
+	tox -e lint
 
 .PHONY: version
 version: ## Create/update VERSION file
 	@git describe --tags > VERSION
-
-.PHONY: autopep
-autopep: ## Run autopep8
-	autopep8 --in-place $(git ls-files | grep 'ˆscripts\|\.py$')
 
 .PHONY: clean
 clean: clean-eggs clean-build ## Remove temporary file holding the app settings
@@ -46,7 +42,7 @@ run: version ## Start uvicorn app on port 8080
 
 .PHONY: test
 test: ## Run tests against the application
-	pytest -v
+	tox -e unit
 
 # Display target comments in 'make help'
 .PHONY: help
