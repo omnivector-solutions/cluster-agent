@@ -5,6 +5,7 @@ dependencies: ## Install project dependencies needed to run the application
 
 .PHONY: lint
 lint: ## Run flake8 linter
+	echo "0.1.0-ci" > VERSION # create VERSION file for avoinding the CI to break
 	tox -e lint
 
 .PHONY: version
@@ -42,6 +43,7 @@ run: version ## Start uvicorn app on port 8080
 
 .PHONY: test
 test: ## Run tests against the application
+	echo "0.1.0-ci" > VERSION # create VERSION file for avoinding the CI to break
 	tox -e unit
 
 # Display target comments in 'make help'
