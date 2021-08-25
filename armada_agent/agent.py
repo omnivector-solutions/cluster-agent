@@ -1,15 +1,11 @@
 from armada_agent.settings import SETTINGS, ARMADA_API_HEADER
 from armada_agent.utils.request import (
     async_req,
-    check_request_status,
     general_slurmrestd_request,
-    LOOP,
 )
-from armada_agent.utils.logging import logger
 
 import hostlist
 import requests
-import asyncio
 import json
 
 # [nest-asyncio docs](https://pypi.org/project/nest-asyncio/)
@@ -25,7 +21,7 @@ def armada_api_header():
 
 async def upsert_partitions():
 
-    partitions = general_slurmrestd_request("/slurm/v0.0.36/partitions")
+    partitions = await general_slurmrestd_request("/slurm/v0.0.36/partitions")
 
     # arguments passed to async request handler
     urls = list()
@@ -51,10 +47,7 @@ async def upsert_partitions():
         params.append(None)
         data.append(json.dumps(payload))
 
-    future = asyncio.ensure_future(async_req(urls, methods, header, params, data), loop=LOOP)
-    LOOP.run_until_complete(future)
-
-    responses = future.result()
+    responses = await async_req(urls, methods, header, params, data)
 
     # return a list containing just the responses' status, e.g. [200, 400]
     return [response.status for response in responses]
@@ -62,7 +55,7 @@ async def upsert_partitions():
 
 async def upsert_nodes():
 
-    nodes = general_slurmrestd_request("/slurm/v0.0.36/nodes")
+    nodes = await general_slurmrestd_request("/slurm/v0.0.36/nodes")
 
     # arguments passed to async request handler
     urls = list()
@@ -84,10 +77,7 @@ async def upsert_nodes():
         params.append(None)
         data.append(json.dumps(payload))
 
-    future = asyncio.ensure_future(async_req(urls, methods, header, params, data), loop=LOOP)
-    LOOP.run_until_complete(future)
-
-    responses = future.result()
+    responses = await async_req(urls, methods, header, params, data)
 
     # return a list containing just the responses' status, e.g. [200, 400]
     return [response.status for response in responses]
@@ -95,7 +85,7 @@ async def upsert_nodes():
 
 async def update_diagnostics():
 
-    diagnostics = general_slurmrestd_request("/slurm/v0.0.36/diag/")
+    diagnostics = await general_slurmrestd_request("/slurm/v0.0.36/diag/")
 
     response = requests.post(
         SETTINGS.BASE_API_URL + "/agent/diagnostics",
@@ -109,7 +99,7 @@ async def update_diagnostics():
 
 async def upsert_jobs():
 
-    jobs = general_slurmrestd_request("/slurm/v0.0.36/jobs")
+    jobs = await general_slurmrestd_request("/slurm/v0.0.36/jobs")
 
     # arguments passed to async request handler
     urls = list()
@@ -131,10 +121,7 @@ async def upsert_jobs():
         params.append(None)
         data.append(json.dumps(payload))
 
-    future = asyncio.ensure_future(async_req(urls, methods, header, params, data), loop=LOOP)
-    LOOP.run_until_complete(future)
-
-    responses = future.result()
+    responses = await async_req(urls, methods, header, params, data)
 
     # return a list container the status code response, e.g. [200]
     return [response.status for response in responses]
