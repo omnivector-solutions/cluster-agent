@@ -5,7 +5,6 @@
 Edit .env parameters in a text editor and save them
 """
 import inspect
-import secrets
 import string
 import sys
 
