@@ -3,6 +3,7 @@ placeholder for future tests
 """
 import json
 import random
+from urllib.parse import urljoin
 from unittest import mock
 
 from hostlist import expand_hostlist
@@ -18,7 +19,7 @@ from armada_agent.settings import SETTINGS, ARMADA_API_HEADER
         ("ip-172-31-81-142,ip-172-25-81-172"),
         ("juju-54c58e-[48,49,50],ip-172-25-81-172,ip-172-25-81-[172,183,183]"),
         ("juju-54c58e-[48,49,50]"),
-        ("")
+        (""),
     ],
 )
 @mock.patch("armada_agent.agent.async_req")
@@ -45,18 +46,18 @@ async def test_upsert_partitions(
     """
 
     partition_name = random_word()
-    body_payload = {
+    mock_response_body = {
         "meta": dict(),
         "errors": list(),
         "partitions": [{"nodes": nodes_names_string, "name": partition_name}],
     }
-    final_body_payload = {
+    request_body = {
         "meta": dict(),
         "errors": list(),
         "partition": {"nodes": expand_hostlist(nodes_names_string), "name": partition_name},
     }
 
-    general_slurmrestd_request_mock.return_value = body_payload
+    general_slurmrestd_request_mock.return_value = mock_response_body
 
     response_status_mock = mock.Mock()
     response_status_mock.status = 200
@@ -66,11 +67,16 @@ async def test_upsert_partitions(
     test_response = await upsert_partitions()
 
     async_req_mock.assert_awaited_once_with(
-        [SETTINGS.BASE_API_URL + f"/agent/partition/{partition_name}"],
+        [
+            urljoin(
+                SETTINGS.BASE_API_URL,
+                "/agent/partition/{partition_name}".format(partition_name=partition_name),
+            )
+        ],
         ["PUT"],
         ARMADA_API_HEADER,
         [None],
-        [json.dumps(final_body_payload)],
+        [json.dumps(request_body)],
     )
 
     assert test_response == [200]
@@ -98,18 +104,18 @@ async def test_upsert_nodes(
     """
 
     node_name = random_word()
-    body_payload = {
+    mock_response_body = {
         "meta": dict(),
         "errors": list(),
         "nodes": [{"node": dict(), "name": node_name}],
     }
-    final_body_payload = {
+    request_body = {
         "meta": dict(),
         "errors": list(),
         "node": {"node": dict(), "name": node_name},
     }
 
-    general_slurmrestd_request_mock.return_value = body_payload
+    general_slurmrestd_request_mock.return_value = mock_response_body
 
     response_status_mock = mock.Mock()
     response_status_mock.status = 200
@@ -119,11 +125,11 @@ async def test_upsert_nodes(
     test_response = await upsert_nodes()
 
     async_req_mock.assert_awaited_once_with(
-        [SETTINGS.BASE_API_URL + f"/agent/nodes/{node_name}"],
+        [urljoin(SETTINGS.BASE_API_URL, "/agent/nodes/{node_name}".format(node_name=node_name))],
         ["PUT"],
         ARMADA_API_HEADER,
         [None],
-        [json.dumps(final_body_payload)],
+        [json.dumps(request_body)],
     )
 
     assert test_response == [200], ""
@@ -136,6 +142,13 @@ async def test_update_diagnostics(
     requests_mock,
     general_slurmrestd_request_mock,
 ):
+    """
+    Verify whether when collecting diagnostics data
+    from slurmrestd the app meet the requirements:
+
+        1. The correct request is made to armada-api in order to send the data;
+        2. The return response is a list of HTTP codes
+    """
 
     general_slurmrestd_request_mock.return_value = dict()
 
@@ -148,7 +161,7 @@ async def test_update_diagnostics(
     test_response = await update_diagnostics()
 
     requests_mock.post.assert_called_once_with(
-        SETTINGS.BASE_API_URL + "/agent/diagnostics",
+        urljoin(SETTINGS.BASE_API_URL, "/agent/diagnostics"),
         headers=ARMADA_API_HEADER,
         data="{}",
     )
@@ -178,18 +191,18 @@ async def test_upsert_jobs(
     """
 
     job_id = random.randint(1, 1000000)
-    body_payload = {
+    mock_response_body = {
         "meta": dict(),
         "errors": list(),
         "jobs": [{"job_id": job_id}],
     }
-    final_body_payload = {
+    request_body = {
         "meta": dict(),
         "errors": list(),
         "job": {"job_id": job_id},
     }
 
-    general_slurmrestd_request_mock.return_value = body_payload
+    general_slurmrestd_request_mock.return_value = mock_response_body
 
     response_status_mock = mock.Mock()
     response_status_mock.status = 200
@@ -199,11 +212,11 @@ async def test_upsert_jobs(
     test_response = await upsert_jobs()
 
     async_req_mock.assert_awaited_once_with(
-        [SETTINGS.BASE_API_URL + f"/agent/jobs/{job_id}"],
+        [urljoin(SETTINGS.BASE_API_URL, "/agent/jobs/{job_id}".format(job_id=job_id))],
         ["PUT"],
         ARMADA_API_HEADER,
         [None],
-        [json.dumps(final_body_payload)],
+        [json.dumps(request_body)],
     )
 
     assert test_response == [200], ""

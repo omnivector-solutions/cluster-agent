@@ -5,7 +5,7 @@ import string
 
 
 @pytest.fixture
-def random_word(length: int = 30):
+def random_word():
     """
     Fixture to provide a helper method to return a
     random string containing a fixed number of chars
