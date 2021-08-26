@@ -23,7 +23,7 @@ setup(
         "dev": [
             "pytest~=6.2.4",
             "pytest-asyncio~=0.15.1",
-            "autopep8~=1.5.7",
+            "black~=21.6b0",
             "flake8~=3.9.2",
             "uvicorn~=0.13.4",
         ]
