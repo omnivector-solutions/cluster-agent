@@ -2,7 +2,6 @@
 placeholder for future tests
 """
 import json
-import random
 from urllib.parse import urljoin
 from unittest import mock
 
@@ -190,7 +189,7 @@ async def test_upsert_jobs(
         3. The return response is a list of HTTP codes
     """
 
-    job_id = random.randint(1, 1000000)
+    job_id = 123456
     mock_response_body = {
         "meta": dict(),
         "errors": list(),
