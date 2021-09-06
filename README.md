@@ -3,18 +3,14 @@
 # Table of contents
 
 - [Project setup](#project-setup)
-  - [Dependencies](#dependencies)
   - [Github secrets](#github-secrets)
+  - [Dependencies](#dependencies)
 - [Setup parameters](#setup-parameters)
 - [Local usage example](#local-usage-exemple)
 - [Release](#release)
 - [Install the package](#install-the-package)
 
 ## Project Setup
-
-### Dependencies
-
-* python3-venv
 
 ### Github Secrets
 
@@ -25,6 +21,13 @@
 **NOTE**: AWS keys must have the `codeartifact:PublishPackageVersion` and `codeartifact:GetRepositoryEndpoint` permissions on resource identified by the `PYPI_URL`.
 
 To get the `PYPI_URL` run `aws codeartifact get-repository-endpoint --domain private --repository armada-agent --format pypi`
+
+### Dependencies
+
+* python3-venv
+* AWS CLI (>= 2.1.10)
+
+Configure the aws credentials running `aws configure`. To know which permissions do you must have check the [github secrets](#github-secrets) section.
 
 ## Setup parameters
 
