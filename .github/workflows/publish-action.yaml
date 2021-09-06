@@ -11,6 +11,9 @@ on:
       region:
         description: AWS region to which upload the package
         required: true
+      domain:
+        description: AWS codeartifact domain name
+        required: true
 
 jobs:
   publish:
@@ -47,7 +50,7 @@ jobs:
 
       - name: Publish to codeartifact
         run: |
-          token=$(aws codeartifact get-authorization-token --domain private --query authorizationToken --output text)
+          token=$(aws codeartifact get-authorization-token --domain ${{ github.event.inputs.domain }} --query authorizationToken --output text)
           twine upload --repository-url ${{ secrets.PYPI_URL }} \
                        -u aws \
                        -p $token dist/* --verbose
