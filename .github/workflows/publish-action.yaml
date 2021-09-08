@@ -8,6 +8,12 @@ on:
       branch:
         description: Branch which carries the code to be released
         required: true
+      region:
+        description: AWS region to which upload the package
+        required: true
+      domain:
+        description: AWS codeartifact domain name
+        required: true
 
 jobs:
   publish:
@@ -26,6 +32,13 @@ jobs:
         with:
           python-version: 3.8
 
+      - name: Setup AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id    : ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_ID }}
+          aws-region           : ${{ github.event.inputs.region }}
+
       - name: Install twine
         run: |
           pip3 install -U pip wheel twine
@@ -35,11 +48,12 @@ jobs:
           echo ${{ github.event.inputs.version }} > VERSION
           python3 setup.py sdist bdist_wheel
 
-      - name: Publish to pypicloud
+      - name: Publish to codeartifact
         run: |
+          token=$(aws codeartifact get-authorization-token --domain ${{ github.event.inputs.domain }} --query authorizationToken --output text)
           twine upload --repository-url ${{ secrets.PYPI_URL }} \
-                       -u ${{ secrets.PYPI_USERNAME }} \
-                       -p ${{ secrets.PYPI_PASSWORD }} dist/* --verbose
+                       -u aws \
+                       -p $token dist/* --verbose
 
   release:
     name: Release armada-agent

@@ -3,24 +3,31 @@
 # Table of contents
 
 - [Project setup](#project-setup)
-  - [Dependencies](#dependencies)
   - [Github secrets](#github-secrets)
+  - [Dependencies](#dependencies)
 - [Setup parameters](#setup-parameters)
 - [Local usage example](#local-usage-exemple)
 - [Release](#release)
-- [Future work](#future-work)
+- [Install the package](#install-the-package)
 
 ## Project Setup
-
-### Dependencies
-
-* python3-venv
 
 ### Github Secrets
 
 * PYPI_URL
-* PYPI_USERNAME
-* PYPI_PASSWORD
+* AWS_ACCESS_KEY_ID
+* AWS_SECRET_ACCESS_KEY_ID
+
+**NOTE**: AWS keys must have the `codeartifact:PublishPackageVersion` and `codeartifact:GetRepositoryEndpoint` permissions on resource identified by the `PYPI_URL`.
+
+To get the `PYPI_URL` run `aws codeartifact get-repository-endpoint --domain private --repository armada-agent --format pypi`
+
+### Dependencies
+
+* python3-venv
+* AWS CLI (>= 2.1.10)
+
+Configure the aws credentials running `aws configure`. To know which permissions do you must have check the [github secrets](#github-secrets) section.
 
 ## Setup parameters
 
@@ -71,16 +78,22 @@ Outputs:
 
 ## Release
 
-There is a GitHub action to publish the package to the pypicloud. Since it is triggered manually, it is prefered you tag the code first. So, at the command line:
+There is a GitHub action to publish the package to the codeartifact repository. Trigger it manually when a GitHub release will also be created.
+
+## Install the package
+
+Before trying to install make sure your IAM user has the following permissions:
+
+* `codeartifact:GetAuthorizationToken`
+* `codeartifact:GetRepositoryEndpoint`
+* `codeartifact:ReadFromRepository`
+
+**NOTE**: if you're planning to install the package on codebuild make sure codebuild also has the `sts:GetServiceBearerToken` permission.
+
+Then, run:
 
 ```bash
-git tag -a <version> -m "<message>" # e.g. git tag -a 1.0.0 -m "Message"
+CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain private --query authorizationToken --output text`
 
-git push origin <version> # e.g. git push origin 1.0.0
+pip3 install armada-agent==<version> -i https://aws:$CODEARTIFACT_AUTH_TOKEN@private-<aws account id>.d.codeartifact.<aws region>.amazonaws.com/pypi/armada-agent/simple/
 ```
-
-* NOTE: For pre-releases, add `rc*` (release candidate) to the end of the tag, e.g. `git tag -a 1.0.0rc1`.
-
-## Future work
-
-- [x] Implement script to push package to pypicloud
