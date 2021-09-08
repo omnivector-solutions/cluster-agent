@@ -78,7 +78,7 @@ Outputs:
 
 ## Release
 
-There is a GitHub action to publish the package to the codeartifact repository. Trigger it manually when a GitHub release will also be created.
+There is a GitHub action to publish the package to the codeartifact repository. Trigger it manually hence a GitHub release will also be created.
 
 ## Install the package
 
