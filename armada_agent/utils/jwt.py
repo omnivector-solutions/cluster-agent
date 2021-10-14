@@ -7,8 +7,10 @@ from armada_agent.settings import SETTINGS
 
 async def generate_jwt_token():
 
+    # note the username isn't passed in the scontrol command line
+    # it's responsability of who is running the code to run it with the specified user
     proc = await asyncio.create_subprocess_shell(
-        f"scontrol token username={SETTINGS.X_SLURM_USER_NAME}",
+        f"scontrol token",
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
