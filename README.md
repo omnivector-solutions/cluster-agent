@@ -66,6 +66,8 @@ Outputs:
   INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
   ```
 
+**NOTE**: beware you should care about having the same user name you're using to run the code in the slurmctld node. For example, if `armada_agent` will run the `make run` command then the slurmctld node also must have a user called `armada_agent`.
+
 2. Make local request
   ```bash
   curl http://localhost:8080/health
