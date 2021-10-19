@@ -7,6 +7,11 @@ This file keeps track of all notable changes to the Armada agent.
 Unreleased
 ----------
 
+0.2.1 - 2021-10-19
+------------------
+
+- changed the logging stack to use `Loguru`_.
+
 0.2.0 - 2021-10-14
 ------------------
 
@@ -17,3 +22,5 @@ Unreleased
 
 - implemented the core functionalities of the agent: scrape slurmrestd for diagnostics, jobs, partitions and nodes data;
 - implemented GitHub workflows for testing and linting the code, as well as publishing it to AWS CodeArtifact.
+
+.. _Loguru: https://pypi.org/project/loguru/
