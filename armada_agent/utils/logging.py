@@ -1,6 +1,2 @@
 """Core module for logging operations"""
-
-import logging
-
-
-logger = logging.getLogger("armadaagent.backend")
+from loguru import logger # noqa

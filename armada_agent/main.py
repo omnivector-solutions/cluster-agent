@@ -35,21 +35,6 @@ async def health():
 
 
 @app.on_event("startup")
-def begin_logging():
-    """
-    Configure logging
-    """
-    level = getattr(logging, "INFO")
-    logger.setLevel(level)
-
-    # as a developer you'll run this with uvicorn,
-    # which takes over logging.
-    uvicorn = logging.getLogger("uvicorn")
-    if uvicorn.handlers:  # pragma: nocover
-        logger.addHandler(uvicorn.handlers[0])
-
-
-@app.on_event("startup")
 @repeat_every(
     seconds=60,
     logger=logger,

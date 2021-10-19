@@ -12,3 +12,4 @@ toml==0.10.2
 sentry-sdk~=1.1.0
 aiocontextvars~=0.2.2
 python-hostlist==1.21
+loguru~=0.5.3
