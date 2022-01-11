@@ -69,7 +69,7 @@ async def test_upsert_partitions(
         [
             urljoin(
                 SETTINGS.BASE_API_URL,
-                "/agent/partition/{partition_name}".format(partition_name=partition_name),
+                "/agent/partitions/{partition_name}".format(partition_name=partition_name),
             )
         ],
         ["PUT"],
