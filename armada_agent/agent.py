@@ -42,7 +42,7 @@ async def upsert_partitions():
             "partition": partition,
         }
 
-        urls.append(SETTINGS.BASE_API_URL + f"/agent/partition/{partition['name']}")
+        urls.append(SETTINGS.BASE_API_URL + f"/agent/partitions/{partition['name']}")
         methods.append("PUT")
         params.append(None)
         data.append(json.dumps(payload))

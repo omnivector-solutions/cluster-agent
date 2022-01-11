@@ -7,6 +7,11 @@ This file keeps track of all notable changes to the Armada agent.
 Unreleased
 ----------
 
+0.2.2 - 2022-01-11
+------------------
+
+- fixed backend's partition route.
+
 0.2.1 - 2021-10-19
 ------------------
 
