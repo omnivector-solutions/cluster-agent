@@ -17,7 +17,7 @@ on:
 
 jobs:
   publish:
-    name: Publish armada-agent
+    name: Publish cluster-agent
 
     runs-on: ubuntu-latest
 
@@ -56,7 +56,7 @@ jobs:
                        -p $token dist/* --verbose
 
   release:
-    name: Release armada-agent
+    name: Release cluster-agent
 
     runs-on: ubuntu-latest
 
@@ -69,7 +69,7 @@ jobs:
 
       - name: Zip code
         run: |
-          zip -r source.zip armada_agent
+          zip -r source.zip cluster_agent
 
       - name: Create Release
         id: create_release

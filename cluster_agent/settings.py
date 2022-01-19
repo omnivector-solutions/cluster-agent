@@ -1,7 +1,7 @@
 from pydantic.error_wrappers import ValidationError
 from pydantic import BaseSettings, Field
 
-from armada_agent.utils.logging import logger
+from cluster_agent.utils.logging import logger
 
 from functools import lru_cache
 import sys
@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     BASE_SLURMRESTD_URL: str = Field("http://127.0.0.1:6820", regex=_URL_REGEX)
     X_SLURM_USER_NAME: str = Field("root")
 
-    # armada api info
+    # cluster api info
     BASE_API_URL: str = Field("https://rats.omnivector.solutions", regex=_URL_REGEX)
     API_KEY: str = Field("ratsratsrats", regex=_API_KEY_REGEX)
 
@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     class Config:
 
         env_file = ".env"
-        env_prefix = "ARMADA_AGENT_"
+        env_prefix = "CLUSTER_AGENT_"
 
 
 @lru_cache()
@@ -39,7 +39,7 @@ def init_settings() -> Settings:
 
 SETTINGS = init_settings()
 
-ARMADA_API_HEADER = {
+CLUSTER_API_HEADER = {
     "Content-Type": "application/json",
     "Authorization": SETTINGS.API_KEY,
 }

@@ -1,5 +1,5 @@
-from armada_agent.settings import SETTINGS
-from armada_agent.utils.jwt import generate_jwt_token
+from cluster_agent.settings import SETTINGS
+from cluster_agent.utils.jwt import generate_jwt_token
 
 
 async def slurmrestd_header():

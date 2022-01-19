@@ -1,7 +1,7 @@
 """Core module for JWT related operations"""
 import asyncio
 
-from armada_agent.utils.exception import ProcessExecutionError
+from cluster_agent.utils.exception import ProcessExecutionError
 
 
 async def generate_jwt_token():

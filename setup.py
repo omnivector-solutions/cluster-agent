@@ -7,15 +7,15 @@ here = dirname(__file__)
 _VERSION = Path("VERSION").read_text().strip()
 
 setup(
-    name="armada-agent",
+    name="cluster-agent",
     version=_VERSION,
-    description="Armada data aggregator",
+    description="Cluster API data aggregator",
     long_description=open(join(here, "README.md")).read(),
     license="MIT",
     author="omnivector-solutions",
     author_email="info@omnivector.solutions",
-    url="https://github.com/omnivector-solutions/armada-agent/",
-    download_url="https://github.com/omnivector-solutions/armada-agent/dist/armada-agent-"
+    url="https://github.com/omnivector-solutions/cluster-agent/",
+    download_url="https://github.com/omnivector-solutions/cluster-agent/dist/cluster-agent-"
     + _VERSION
     + "tar.gz",
     install_requires=list(map(lambda string: string.strip("\n"), open("requirements.txt", "r"))),
@@ -47,8 +47,8 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "agentconfig=armada_agent.scripts.agentconfig:parameters",
-            "agentrun=armada_agent.scripts.agentrun:run",
+            "agentconfig=cluster_agent.scripts.agentconfig:parameters",
+            "agentrun=cluster_agent.scripts.agentrun:run",
         ]
     },
 )

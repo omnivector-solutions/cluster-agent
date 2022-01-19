@@ -1,4 +1,4 @@
-# armada-agent
+# cluster-agent
 
 # Table of contents
 
@@ -20,7 +20,7 @@
 
 **NOTE**: AWS keys must have the `codeartifact:PublishPackageVersion` and `codeartifact:GetRepositoryEndpoint` permissions on resource identified by the `PYPI_URL`.
 
-To get the `PYPI_URL` run `aws codeartifact get-repository-endpoint --domain private --repository armada-agent --format pypi`
+To get the `PYPI_URL` run `aws codeartifact get-repository-endpoint --domain private --repository cluster-agent --format pypi`
 
 ### Dependencies
 
@@ -40,14 +40,14 @@ Configure the aws credentials running `aws configure`. To know which permissions
 
 2. Setup `.env` parameters
   ```bash
-  ARMADA_AGENT_BASE_API_URL="<base-api-url>"
-  ARMADA_AGENT_API_KEY="<api-key>"
-  ARMADA_AGENT_BASE_SLURMRESTD_URL="<slurmrestd-endpoint>"
-  ARMADA_AGENT_X_SLURM_USER_NAME="<slurmrestd-user-name>"
-  ARMADA_AGENT_SENTRY_DSN="<sentry-dsn-key>"
+  CLUSTER_AGENT_BASE_API_URL="<base-api-url>"
+  CLUSTER_AGENT_API_KEY="<api-key>"
+  CLUSTER_AGENT_BASE_SLURMRESTD_URL="<slurmrestd-endpoint>"
+  CLUSTER_AGENT_X_SLURM_USER_NAME="<slurmrestd-user-name>"
+  CLUSTER_AGENT_SENTRY_DSN="<sentry-dsn-key>"
   ```
 
-  NOTE: `ARMADA_AGENT_SENTRY_DSN` is optional. If you do not pass it the agent understands Sentry will not be used.
+  NOTE: `CLUSTER_AGENT_SENTRY_DSN` is optional. If you do not pass it the agent understands Sentry will not be used.
 
 ## Local usage example
 
@@ -66,7 +66,7 @@ Outputs:
   INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
   ```
 
-**NOTE**: beware you should care about having the same user name you're using to run the code in the slurmctld node. For example, if `armada_agent` will run the `make run` command then the slurmctld node also must have a user called `armada_agent`.
+**NOTE**: beware you should care about having the same user name you're using to run the code in the slurmctld node. For example, if `cluster_agent` will run the `make run` command then the slurmctld node also must have a user called `cluster_agent`.
 
 2. Make local request
   ```bash
@@ -97,5 +97,5 @@ Then, run:
 ```bash
 CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain private --query authorizationToken --output text`
 
-pip3 install armada-agent==<version> -i https://aws:$CODEARTIFACT_AUTH_TOKEN@private-<aws account id>.d.codeartifact.<aws region>.amazonaws.com/pypi/armada-agent/simple/
+pip3 install cluster-agent==<version> -i https://aws:$CODEARTIFACT_AUTH_TOKEN@private-<aws account id>.d.codeartifact.<aws region>.amazonaws.com/pypi/cluster-agent/simple/
 ```

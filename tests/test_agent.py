@@ -8,8 +8,8 @@ from unittest import mock
 from hostlist import expand_hostlist
 import pytest
 
-from armada_agent.agent import update_diagnostics, upsert_partitions, upsert_nodes, upsert_jobs
-from armada_agent.settings import SETTINGS, ARMADA_API_HEADER
+from cluster_agent.agent import update_diagnostics, upsert_partitions, upsert_nodes, upsert_jobs
+from cluster_agent.settings import SETTINGS, CLUSTER_API_HEADER
 
 
 @pytest.mark.parametrize(
@@ -21,8 +21,8 @@ from armada_agent.settings import SETTINGS, ARMADA_API_HEADER
         (""),
     ],
 )
-@mock.patch("armada_agent.agent.async_req")
-@mock.patch("armada_agent.agent.general_slurmrestd_request")
+@mock.patch("cluster_agent.agent.async_req")
+@mock.patch("cluster_agent.agent.general_slurmrestd_request")
 @pytest.mark.asyncio
 async def test_upsert_partitions(
     general_slurmrestd_request_mock,
@@ -33,7 +33,7 @@ async def test_upsert_partitions(
     """
     Verify whether given a list of nodes names the app meet the requirements:
 
-        1. Mount the input body required for armada-api correctly;
+        1. Mount the input body required for the Cluster API correctly;
         2. Handle different cases of the nodes names list;
         3. Await the `async_req` coroutine with the right parameters:
             - endpoint;
@@ -73,7 +73,7 @@ async def test_upsert_partitions(
             )
         ],
         ["PUT"],
-        ARMADA_API_HEADER,
+        CLUSTER_API_HEADER,
         [None],
         [json.dumps(request_body)],
     )
@@ -81,8 +81,8 @@ async def test_upsert_partitions(
     assert test_response == [200]
 
 
-@mock.patch("armada_agent.agent.async_req")
-@mock.patch("armada_agent.agent.general_slurmrestd_request")
+@mock.patch("cluster_agent.agent.async_req")
+@mock.patch("cluster_agent.agent.general_slurmrestd_request")
 @pytest.mark.asyncio
 async def test_upsert_nodes(
     general_slurmrestd_request_mock,
@@ -92,7 +92,7 @@ async def test_upsert_nodes(
     """
     Verify whether the app meet the requirements:
 
-        1. Mount the input body required for armada-api correctly;
+        1. Mount the input body required for the Cluster API correctly;
         2. Await the `async_req` coroutine with the right parameters:
             - endpoint;
             - HTTP method;
@@ -126,7 +126,7 @@ async def test_upsert_nodes(
     async_req_mock.assert_awaited_once_with(
         [urljoin(SETTINGS.BASE_API_URL, "/agent/nodes/{node_name}".format(node_name=node_name))],
         ["PUT"],
-        ARMADA_API_HEADER,
+        CLUSTER_API_HEADER,
         [None],
         [json.dumps(request_body)],
     )
@@ -134,8 +134,8 @@ async def test_upsert_nodes(
     assert test_response == [200], ""
 
 
-@mock.patch("armada_agent.agent.general_slurmrestd_request")
-@mock.patch("armada_agent.agent.requests")
+@mock.patch("cluster_agent.agent.general_slurmrestd_request")
+@mock.patch("cluster_agent.agent.requests")
 @pytest.mark.asyncio
 async def test_update_diagnostics(
     requests_mock,
@@ -145,7 +145,7 @@ async def test_update_diagnostics(
     Verify whether when collecting diagnostics data
     from slurmrestd the app meet the requirements:
 
-        1. The correct request is made to armada-api in order to send the data;
+        1. The correct request is made to the Cluster API in order to send the data;
         2. The return response is a list of HTTP codes
     """
 
@@ -161,15 +161,15 @@ async def test_update_diagnostics(
 
     requests_mock.post.assert_called_once_with(
         urljoin(SETTINGS.BASE_API_URL, "/agent/diagnostics"),
-        headers=ARMADA_API_HEADER,
+        headers=CLUSTER_API_HEADER,
         data="{}",
     )
 
     assert test_response == [200]
 
 
-@mock.patch("armada_agent.agent.async_req")
-@mock.patch("armada_agent.agent.general_slurmrestd_request")
+@mock.patch("cluster_agent.agent.async_req")
+@mock.patch("cluster_agent.agent.general_slurmrestd_request")
 @pytest.mark.asyncio
 async def test_upsert_jobs(
     general_slurmrestd_request_mock,
@@ -179,7 +179,7 @@ async def test_upsert_jobs(
     """
     Verify whether the app meet the requirements:
 
-        1. Mount the input body required for armada-api correctly;
+        1. Mount the input body required for the Cluster API correctly;
         2. Await the `async_req` coroutine with the right parameters:
             - endpoint;
             - HTTP method;
@@ -213,7 +213,7 @@ async def test_upsert_jobs(
     async_req_mock.assert_awaited_once_with(
         [urljoin(SETTINGS.BASE_API_URL, "/agent/jobs/{job_id}".format(job_id=job_id))],
         ["PUT"],
-        ARMADA_API_HEADER,
+        CLUSTER_API_HEADER,
         [None],
         [json.dumps(request_body)],
     )

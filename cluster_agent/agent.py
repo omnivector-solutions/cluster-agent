@@ -1,5 +1,5 @@
-from armada_agent.settings import SETTINGS, ARMADA_API_HEADER
-from armada_agent.utils.request import (
+from cluster_agent.settings import SETTINGS, CLUSTER_API_HEADER
+from cluster_agent.utils.request import (
     async_req,
     general_slurmrestd_request,
 )
@@ -14,7 +14,7 @@ import nest_asyncio
 nest_asyncio.apply()
 
 
-def armada_api_header():
+def cluster_api_header():
 
     return {"Content-Type": "application/json", "Authorization": SETTINGS.API_KEY}
 
@@ -28,7 +28,7 @@ async def upsert_partitions():
     methods = list()
     params = list()
     data = list()
-    header = ARMADA_API_HEADER
+    header = CLUSTER_API_HEADER
 
     for partition in partitions["partitions"]:
 
@@ -62,7 +62,7 @@ async def upsert_nodes():
     methods = list()
     params = list()
     data = list()
-    header = ARMADA_API_HEADER
+    header = CLUSTER_API_HEADER
 
     for node in nodes["nodes"]:
 
@@ -89,7 +89,7 @@ async def update_diagnostics():
 
     response = requests.post(
         SETTINGS.BASE_API_URL + "/agent/diagnostics",
-        headers=ARMADA_API_HEADER,
+        headers=CLUSTER_API_HEADER,
         data=json.dumps(diagnostics),
     )
 
@@ -106,7 +106,7 @@ async def upsert_jobs():
     methods = list()
     params = list()
     data = list()
-    header = ARMADA_API_HEADER
+    header = CLUSTER_API_HEADER
 
     for job in jobs["jobs"]:
 

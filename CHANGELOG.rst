@@ -2,10 +2,15 @@
 Changelog
 =========
 
-This file keeps track of all notable changes to the Armada agent.
+This file keeps track of all notable changes to the Cluster Agent.
 
 Unreleased
 ----------
+
+1.0.0 - 2022-01-19
+------------------
+
+- bump project name from *armada-agent*  to *cluster-agent*.
 
 0.2.2 - 2022-01-11
 ------------------
