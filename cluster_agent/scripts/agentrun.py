@@ -1,6 +1,6 @@
 import uvicorn
 
-from armada_agent.main import app
+from cluster_agent.main import app
 
 
 def run():

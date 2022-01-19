@@ -9,14 +9,14 @@ import sentry_sdk
 
 import logging
 
-from armada_agent.utils.logging import logger
-from armada_agent.settings import SETTINGS
-from armada_agent.utils import response
-from armada_agent import agent
+from cluster_agent.utils.logging import logger
+from cluster_agent.settings import SETTINGS
+from cluster_agent.utils import response
+from cluster_agent import agent
 
 
 app = FastAPI(
-    title="Armada Agent",
+    title="Cluster Agent",
 )
 app.add_middleware(
     CORSMiddleware,

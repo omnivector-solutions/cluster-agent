@@ -39,7 +39,7 @@ run: version ## Start uvicorn app on port 8080
 	uvicorn \
 		--host 127.0.0.1 \
 		--port 8080 \
-		armada_agent.main:app --reload
+		cluster_agent.main:app --reload
 
 .PHONY: test
 test: ## Run tests against the application

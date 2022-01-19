@@ -1,6 +1,6 @@
 """Core module for request processing operations"""
-from armada_agent.settings import SETTINGS
-from armada_agent.utils.slurmrestd import slurmrestd_header
+from cluster_agent.settings import SETTINGS
+from cluster_agent.utils.slurmrestd import slurmrestd_header
 
 from urllib.parse import urljoin
 from typing import Dict, List
