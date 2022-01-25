@@ -1,15 +1,13 @@
 """
 placeholder for future tests
 """
-import json
-from urllib.parse import urljoin
 from unittest import mock
 
-from hostlist import expand_hostlist
+import asynctest
 import pytest
+from hostlist import expand_hostlist
 
 from cluster_agent.agent import update_diagnostics, upsert_partitions, upsert_nodes, upsert_jobs
-from cluster_agent.settings import SETTINGS, CLUSTER_API_HEADER
 
 
 @pytest.mark.parametrize(
@@ -21,27 +19,20 @@ from cluster_agent.settings import SETTINGS, CLUSTER_API_HEADER
         (""),
     ],
 )
-@mock.patch("cluster_agent.agent.async_req")
-@mock.patch("cluster_agent.agent.general_slurmrestd_request")
+@mock.patch("cluster_agent.agent.asyncio")
+@mock.patch("cluster_agent.agent.cluster_api_client")
+@mock.patch("cluster_agent.agent.slurmrestd_client")
 @pytest.mark.asyncio
 async def test_upsert_partitions(
-    general_slurmrestd_request_mock,
-    async_req_mock,
+    mock_slurmrestd_client,
+    mock_cluster_api_client,
+    mock_asyncio,
     random_word,
     nodes_names_string,
 ):
     """
-    Verify whether given a list of nodes names the app meet the requirements:
-
-        1. Mount the input body required for the Cluster API correctly;
-        2. Handle different cases of the nodes names list;
-        3. Await the `async_req` coroutine with the right parameters:
-            - endpoint;
-            - HTTP method;
-            - request header;
-            - query string parameters;
-            - body paylpad;
-        4. The return response is a list of HTTP codes
+    Verify whether the partitions are upserted correctly. Also, checks if the
+    function returns a list of integers.
     """
 
     partition_name = random_word()
@@ -50,56 +41,47 @@ async def test_upsert_partitions(
         "errors": list(),
         "partitions": [{"nodes": nodes_names_string, "name": partition_name}],
     }
-    request_body = {
-        "meta": dict(),
-        "errors": list(),
-        "partition": {"nodes": expand_hostlist(nodes_names_string), "name": partition_name},
-    }
 
-    general_slurmrestd_request_mock.return_value = mock_response_body
+    mock_slurmrestd_client.get = asynctest.CoroutineMock()
+    mock_slurmrestd_client.get.return_value.json.return_value = mock_response_body
 
-    response_status_mock = mock.Mock()
-    response_status_mock.status = 200
+    mock_response_status = mock.Mock()
+    mock_response_status.status_code = 200
 
-    async_req_mock.return_value = [response_status_mock]
+    mock_asyncio.gather = asynctest.CoroutineMock()
+    mock_asyncio.gather.return_value = [mock_response_status]
+
+    mock_cluster_api_client.put = asynctest.CoroutineMock()
 
     test_response = await upsert_partitions()
 
-    async_req_mock.assert_awaited_once_with(
-        [
-            urljoin(
-                SETTINGS.BASE_API_URL,
-                "/agent/partitions/{partition_name}".format(partition_name=partition_name),
+    assert mock_cluster_api_client.put.mock_calls == [mock.call(
+            f"/cluster/agent/partitions/{partition_name}",
+            json=dict(
+                meta=dict(),
+                errors=list(),
+                partition=dict(nodes=expand_hostlist(nodes_names_string), name=partition_name),
             )
-        ],
-        ["PUT"],
-        CLUSTER_API_HEADER,
-        [None],
-        [json.dumps(request_body)],
-    )
-
+        )
+    ]
+    mock_slurmrestd_client.get.assert_awaited_with("/slurm/v0.0.36/partitions")
+    mock_asyncio.gather.assert_awaited_once()
     assert test_response == [200]
 
 
-@mock.patch("cluster_agent.agent.async_req")
-@mock.patch("cluster_agent.agent.general_slurmrestd_request")
+@mock.patch("cluster_agent.agent.asyncio")
+@mock.patch("cluster_agent.agent.cluster_api_client")
+@mock.patch("cluster_agent.agent.slurmrestd_client")
 @pytest.mark.asyncio
 async def test_upsert_nodes(
-    general_slurmrestd_request_mock,
-    async_req_mock,
+    mock_slurmrestd_client,
+    mock_cluster_api_client,
+    mock_asyncio,
     random_word,
 ):
     """
-    Verify whether the app meet the requirements:
-
-        1. Mount the input body required for the Cluster API correctly;
-        2. Await the `async_req` coroutine with the right parameters:
-            - endpoint;
-            - HTTP method;
-            - request header;
-            - query string parameters;
-            - body paylpad;
-        3. The return response is a list of HTTP codes
+    Verify whether nodes are upserted correctly. Also, check is the
+    function returns a list of integers
     """
 
     node_name = random_word()
@@ -108,85 +90,77 @@ async def test_upsert_nodes(
         "errors": list(),
         "nodes": [{"node": dict(), "name": node_name}],
     }
-    request_body = {
-        "meta": dict(),
-        "errors": list(),
-        "node": {"node": dict(), "name": node_name},
-    }
 
-    general_slurmrestd_request_mock.return_value = mock_response_body
+    mock_slurmrestd_client.get = asynctest.CoroutineMock()
+    mock_slurmrestd_client.get.return_value.json.return_value = mock_response_body
 
-    response_status_mock = mock.Mock()
-    response_status_mock.status = 200
+    mock_response_status = mock.Mock()
+    mock_response_status.status_code = 200
 
-    async_req_mock.return_value = [response_status_mock]
+    mock_asyncio.gather = asynctest.CoroutineMock()
+    mock_asyncio.gather.return_value = [mock_response_status]
+
+    mock_cluster_api_client.put = asynctest.CoroutineMock()
 
     test_response = await upsert_nodes()
 
-    async_req_mock.assert_awaited_once_with(
-        [urljoin(SETTINGS.BASE_API_URL, "/agent/nodes/{node_name}".format(node_name=node_name))],
-        ["PUT"],
-        CLUSTER_API_HEADER,
-        [None],
-        [json.dumps(request_body)],
-    )
-
-    assert test_response == [200], ""
-
-
-@mock.patch("cluster_agent.agent.general_slurmrestd_request")
-@mock.patch("cluster_agent.agent.requests")
-@pytest.mark.asyncio
-async def test_update_diagnostics(
-    requests_mock,
-    general_slurmrestd_request_mock,
-):
-    """
-    Verify whether when collecting diagnostics data
-    from slurmrestd the app meet the requirements:
-
-        1. The correct request is made to the Cluster API in order to send the data;
-        2. The return response is a list of HTTP codes
-    """
-
-    general_slurmrestd_request_mock.return_value = dict()
-
-    response_mock = mock.Mock()
-    response_mock.status_code = 200
-    response_mock.json.return_value = {}
-
-    requests_mock.post.return_value = response_mock
-
-    test_response = await update_diagnostics()
-
-    requests_mock.post.assert_called_once_with(
-        urljoin(SETTINGS.BASE_API_URL, "/agent/diagnostics"),
-        headers=CLUSTER_API_HEADER,
-        data="{}",
-    )
-
+    assert mock_cluster_api_client.put.mock_calls == [mock.call(
+            f"/cluster/agent/nodes/{node_name}",
+            json=dict(
+                meta=dict(),
+                errors=list(),
+                node=dict(node=dict(), name=node_name),
+            )
+        )
+    ]
+    mock_slurmrestd_client.get.assert_awaited_with("/slurm/v0.0.36/nodes")
+    mock_asyncio.gather.assert_awaited_once()
     assert test_response == [200]
 
 
-@mock.patch("cluster_agent.agent.async_req")
-@mock.patch("cluster_agent.agent.general_slurmrestd_request")
+@mock.patch("cluster_agent.agent.cluster_api_client")
+@mock.patch("cluster_agent.agent.slurmrestd_client")
 @pytest.mark.asyncio
-async def test_upsert_jobs(
-    general_slurmrestd_request_mock,
-    async_req_mock,
-    random_word,
+async def test_update_diagnostics(
+    mock_slurmrestd_client,
+    mock_cluster_api_client,
 ):
     """
-    Verify whether the app meet the requirements:
+    Verify whether diagnostics are upserted correctly. Also, checks if the
+    return value is a integer matching the response code from Cluster API call
+    """
 
-        1. Mount the input body required for the Cluster API correctly;
-        2. Await the `async_req` coroutine with the right parameters:
-            - endpoint;
-            - HTTP method;
-            - request header;
-            - query string parameters;
-            - body paylpad;
-        3. The return response is a list of HTTP codes
+    mock_diagnostics_response_body = dict(
+        meta=dict(),
+        errors=dict(),
+        statistics=dict(parts_packed=1)
+    )
+
+    mock_slurmrestd_client.get = asynctest.CoroutineMock()
+    mock_slurmrestd_client.get.return_value.json.return_value = mock_diagnostics_response_body
+
+    mock_cluster_api_client.post = asynctest.CoroutineMock()
+    mock_cluster_api_client.post.return_value.status_code = 200
+
+    test_response = await update_diagnostics()
+
+    mock_cluster_api_client.post.assert_awaited_once_with(
+        "/cluster/agent/diagnostics",
+        json=mock_diagnostics_response_body
+    )
+    mock_slurmrestd_client.get.assert_awaited_once_with("/slurm/v0.0.36/diag/")
+
+    assert test_response == 200
+
+
+@mock.patch("cluster_agent.agent.asyncio")
+@mock.patch("cluster_agent.agent.cluster_api_client")
+@mock.patch("cluster_agent.agent.slurmrestd_client")
+@pytest.mark.asyncio
+async def test_upsert_jobs(mock_slurmrestd_client, mock_cluster_api_client, mock_asyncio):
+    """
+    Verify whether nodes are upserted correctly. Also, check is the
+    function returns a list of integers
     """
 
     job_id = 123456
@@ -195,27 +169,29 @@ async def test_upsert_jobs(
         "errors": list(),
         "jobs": [{"job_id": job_id}],
     }
-    request_body = {
-        "meta": dict(),
-        "errors": list(),
-        "job": {"job_id": job_id},
-    }
 
-    general_slurmrestd_request_mock.return_value = mock_response_body
+    mock_slurmrestd_client.get = asynctest.CoroutineMock()
+    mock_slurmrestd_client.get.return_value.json.return_value = mock_response_body
 
-    response_status_mock = mock.Mock()
-    response_status_mock.status = 200
+    mock_response_status = mock.Mock()
+    mock_response_status.status_code = 200
 
-    async_req_mock.return_value = [response_status_mock]
+    mock_asyncio.gather = asynctest.CoroutineMock()
+    mock_asyncio.gather.return_value = [mock_response_status]
+
+    mock_cluster_api_client.put = asynctest.CoroutineMock()
 
     test_response = await upsert_jobs()
 
-    async_req_mock.assert_awaited_once_with(
-        [urljoin(SETTINGS.BASE_API_URL, "/agent/jobs/{job_id}".format(job_id=job_id))],
-        ["PUT"],
-        CLUSTER_API_HEADER,
-        [None],
-        [json.dumps(request_body)],
-    )
-
-    assert test_response == [200], ""
+    assert mock_cluster_api_client.put.mock_calls == [mock.call(
+            f"/cluster/agent/jobs/{job_id}",
+            json=dict(
+                meta=dict(),
+                errors=list(),
+                job=dict(job_id=job_id),
+            )
+        )
+    ]
+    mock_slurmrestd_client.get.assert_awaited_with("/slurm/v0.0.36/jobs")
+    mock_asyncio.gather.assert_awaited_once()
+    assert test_response == [200]
