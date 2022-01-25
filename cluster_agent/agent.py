@@ -55,7 +55,7 @@ async def upsert_nodes():
 
         tasks.append(
             cluster_api_client.put(
-                f"/cluster/agent/partitions/{node['name']}",
+                f"/cluster/agent/nodes/{node['name']}",
                 json=payload,
             )
         )
