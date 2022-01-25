@@ -41,10 +41,13 @@ Configure the aws credentials running `aws configure`. To know which permissions
 2. Setup `.env` parameters
   ```bash
   CLUSTER_AGENT_BASE_API_URL="<base-api-url>"
-  CLUSTER_AGENT_API_KEY="<api-key>"
   CLUSTER_AGENT_BASE_SLURMRESTD_URL="<slurmrestd-endpoint>"
   CLUSTER_AGENT_X_SLURM_USER_NAME="<slurmrestd-user-name>"
   CLUSTER_AGENT_SENTRY_DSN="<sentry-dsn-key>"
+  CLUSTER_AGENT_AUTH0_DOMAIN="<auth0-domain>"
+  CLUSTER_AGENT_AUTH0_AUDIENCE="<auth0-audience>"
+  CLUSTER_AGENT_AUTH0_CLIENT_ID="<auth0-app-client-id>"
+  CLUSTER_AGENT_AUTH0_CLIENT_SECRET="<auth0-app-client-secret>"
   ```
 
   NOTE: `CLUSTER_AGENT_SENTRY_DSN` is optional. If you do not pass it the agent understands Sentry will not be used.
