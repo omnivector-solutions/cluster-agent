@@ -1,7 +1,6 @@
 """Core module for Jobbergate API identity management"""
 import subprocess
 import typing
-from pathlib import Path
 
 import httpx
 import jwt
@@ -10,7 +9,7 @@ from cluster_agent.settings import SETTINGS
 from cluster_agent.utils.exception import ProcessExecutionError
 from cluster_agent.utils.logging import logger
 
-CACHE_DIR = Path.home() / ".cache/cluster-agent"
+CACHE_DIR = SETTINGS.CACHE_DIR / "slurmrestd"
 
 
 def _load_token_from_cache() -> typing.Union[str, None]:
@@ -21,7 +20,7 @@ def _load_token_from_cache() -> typing.Union[str, None]:
     * Can't read the token
     * The token is expired (or will expire within 10 seconds)
     """
-    token_path = CACHE_DIR / "slurmrestd/token"
+    token_path = CACHE_DIR / "token"
     if not token_path.exists():
         return None
 
@@ -52,7 +51,7 @@ def _write_token_to_cache(token: str):
             logger.warning(f"Couldn't create missing cache directory {CACHE_DIR}. Token will not be saved.") # noqa
             return
 
-    token_path = CACHE_DIR / "slurmrestd/token"
+    token_path = CACHE_DIR / "token"
     try:
         token_path.write_text(token)
     except Exception:

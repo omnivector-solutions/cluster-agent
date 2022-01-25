@@ -1,10 +1,11 @@
-from pydantic.error_wrappers import ValidationError
+import sys
+from functools import lru_cache
+from pathlib import Path
+
 from pydantic import BaseSettings, Field
+from pydantic.error_wrappers import ValidationError
 
 from cluster_agent.utils.logging import logger
-
-from functools import lru_cache
-import sys
 
 
 _URL_REGEX = r"http[s]?://.+"
@@ -21,10 +22,12 @@ class Settings(BaseSettings):
     SENTRY_DSN: str = Field("https://rats.sentry.com", regex=_URL_REGEX)
 
     # Auth0 config for machine-to-machine security
-    AUTH0_DOMAIN: str
-    AUTH0_AUDIENCE: str
-    AUTH0_CLIENT_ID: str
-    AUTH0_CLIENT_SECRET: str
+    AUTH0_DOMAIN: str = Field("omnivector.auth0.com")
+    AUTH0_AUDIENCE: str = Field("https://domain.omnivector.solutions")
+    AUTH0_CLIENT_ID: str = Field("abcde12345")
+    AUTH0_CLIENT_SECRET: str = Field("abcde12345")
+
+    CACHE_DIR = Path.home() / ".cache/cluster-agent"
 
     class Config:
 
