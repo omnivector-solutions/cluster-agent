@@ -22,7 +22,9 @@ setup(
     extras_require={
         "dev": [
             "pytest~=6.2.4",
-            "pytest-asyncio~=0.15.1",
+            "pytest-asyncio~=0.17.2",
+            "asynctest~=0.13.0",
+            "respx~=0.17.1",
             "black~=21.6b0",
             "flake8~=3.9.2",
             "uvicorn~=0.13.4",
