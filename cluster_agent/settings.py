@@ -8,7 +8,6 @@ import sys
 
 
 _URL_REGEX = r"http[s]?://.+"
-_API_KEY_REGEX = r"([a-zA-Z0-9])\w+"
 
 
 class Settings(BaseSettings):
@@ -18,9 +17,14 @@ class Settings(BaseSettings):
 
     # cluster api info
     BASE_API_URL: str = Field("https://rats.omnivector.solutions", regex=_URL_REGEX)
-    API_KEY: str = Field("ratsratsrats", regex=_API_KEY_REGEX)
 
     SENTRY_DSN: str = Field("https://rats.sentry.com", regex=_URL_REGEX)
+
+    # Auth0 config for machine-to-machine security
+    AUTH0_DOMAIN: str
+    AUTH0_AUDIENCE: str
+    AUTH0_CLIENT_ID: str
+    AUTH0_CLIENT_SECRET: str
 
     class Config:
 
@@ -38,8 +42,3 @@ def init_settings() -> Settings:
 
 
 SETTINGS = init_settings()
-
-CLUSTER_API_HEADER = {
-    "Content-Type": "application/json",
-    "Authorization": SETTINGS.API_KEY,
-}
