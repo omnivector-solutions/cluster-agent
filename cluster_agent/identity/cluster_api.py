@@ -53,7 +53,7 @@ def _write_token_to_cache(token: str):
     token_path = CACHE_DIR / "token"
     try:
         token_path.write_text(token)
-    except Exception as e:
+    except Exception:
         logger.warning(f"Couldn't save token to {token_path}")
 
 
