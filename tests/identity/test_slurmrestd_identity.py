@@ -180,4 +180,4 @@ def test_acquire_token__raise_error_if_subprocess_command_failed(
     with pytest.raises(ProcessExecutionError) as error:
         acquire_token()
 
-    assert "This is a dummy error message" in str(error)
+    assert "This is a dummy error message" in str(error.value)

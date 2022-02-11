@@ -76,8 +76,7 @@ def acquire_token() -> str:
             stderr=subprocess.PIPE,
         )
         stdout, stderr = proc.communicate()
-        if proc.returncode != 0:
-            raise ProcessExecutionError(stderr.decode().strip())
+        ProcessExecutionError.require_condition(proc.returncode == 0, stderr.decode().strip())
         token = stdout.decode().strip().split("=")[1]
         _write_token_to_cache(token)
 

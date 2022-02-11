@@ -2,7 +2,7 @@
 from buzz import Buzz
 
 
-class ProcessExecutionError(Exception):
+class ProcessExecutionError(Buzz):
     """Raise exception when execution command returns an error"""
 
 
