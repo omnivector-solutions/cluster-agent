@@ -8,3 +8,7 @@ class ProcessExecutionError(Exception):
 
 class AuthTokenError(Buzz):
     """Raise exception when there are connection issues with the backend"""
+
+
+class SlurmrestdError(Buzz):
+    """Raise exception when slurmrestd raises any error"""

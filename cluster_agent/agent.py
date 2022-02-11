@@ -1,5 +1,6 @@
 import asyncio
 
+from cluster_agent.utils.exception import SlurmrestdError
 from cluster_agent.identity.cluster_api import backend_client as cluster_api_client
 from cluster_agent.identity.slurmrestd import backend_client as slurmrestd_client
 
@@ -9,6 +10,9 @@ import hostlist
 async def upsert_partitions():
 
     r = await slurmrestd_client.get("/slurm/v0.0.36/partitions")
+    SlurmrestdError.require_condition(
+        r.status_code == 200, f"Slurmrestd returned {r.status_code} when calling {r.url}: {r.text}"
+    )
     partitions = r.json()
 
     tasks = list()
@@ -41,6 +45,9 @@ async def upsert_partitions():
 async def upsert_nodes():
 
     r = await slurmrestd_client.get("/slurm/v0.0.36/nodes")
+    SlurmrestdError.require_condition(
+        r.status_code == 200, f"Slurmrestd returned {r.status_code} when calling {r.url}: {r.text}"
+    )
     nodes = r.json()
 
     tasks = list()
@@ -69,6 +76,9 @@ async def upsert_nodes():
 async def update_diagnostics():
 
     r = await slurmrestd_client.get("/slurm/v0.0.36/diag/")
+    SlurmrestdError.require_condition(
+        r.status_code == 200, f"Slurmrestd returned {r.status_code} when calling {r.url}: {r.text}"
+    )
     diagnostics = r.json()
 
     response = await cluster_api_client.post("/cluster/agent/diagnostics", json=diagnostics)
@@ -79,6 +89,9 @@ async def update_diagnostics():
 async def upsert_jobs():
 
     r = await slurmrestd_client.get("/slurm/v0.0.36/jobs")
+    SlurmrestdError.require_condition(
+        r.status_code == 200, f"Slurmrestd returned {r.status_code} when calling {r.url}: {r.text}"
+    )
     jobs = r.json()
 
     tasks = list()

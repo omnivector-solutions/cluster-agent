@@ -23,7 +23,9 @@ def test__write_token_to_cache__caches_a_token(mock_slurmrestd_api_cache_dir):
     assert token_path.read_text() == "dummy-token"
 
 
-def test__write_token_to_cache__creates_cache_directory_if_does_not_exist(mock_slurmrestd_api_cache_dir): # noqa
+def test__write_token_to_cache__creates_cache_directory_if_does_not_exist(
+    mock_slurmrestd_api_cache_dir,
+):  # noqa
     """
     Verifies that the cache directory will be created if it does not already exist.
     """
@@ -49,7 +51,9 @@ def test__load_token_from_cache__loads_token_data_from_the_cache(mock_slurmrestd
     assert retrieved_token == created_token
 
 
-def test__load_token_from_cache__returns_none_if_cached_token_does_not_exist(mock_slurmrestd_api_cache_dir): # noqa
+def test__load_token_from_cache__returns_none_if_cached_token_does_not_exist(
+    mock_slurmrestd_api_cache_dir,
+):  # noqa
     """
     Verifies that None is returned if the cached token does not exist.
     """
@@ -59,7 +63,7 @@ def test__load_token_from_cache__returns_none_if_cached_token_does_not_exist(moc
 
 
 def test__load_token_from_cache__returns_none_if_cached_token_cannot_be_read(
-    mock_slurmrestd_api_cache_dir
+    mock_slurmrestd_api_cache_dir,
 ):
     """
     Verifies that None is returned if the token cannot be read.
@@ -74,7 +78,9 @@ def test__load_token_from_cache__returns_none_if_cached_token_cannot_be_read(
     assert retrieved_token is None
 
 
-def test__load_token_from_cache__returns_none_if_cached_token_is_expired(mock_slurmrestd_api_cache_dir): # noqa
+def test__load_token_from_cache__returns_none_if_cached_token_is_expired(
+    mock_slurmrestd_api_cache_dir,
+):  # noqa
     """
     Verifies that None is returned if the token is expired.
     """
@@ -90,7 +96,7 @@ def test__load_token_from_cache__returns_none_if_cached_token_is_expired(mock_sl
 
 
 def test__load_token_from_cache__returns_none_cached_token_will_expire_soon(
-    mock_slurmrestd_api_cache_dir
+    mock_slurmrestd_api_cache_dir,
 ):
     """
     Verifies that None is returned if the token will expired soon.
@@ -124,7 +130,9 @@ def test_acquire_token__gets_a_token_from_the_cache(mock_slurmrestd_api_cache_di
 
 
 @mock.patch("cluster_agent.identity.slurmrestd.subprocess.Popen")
-def test_acquire_token__gets_a_token_from_slurm_if_one_is_not_in_the_cache(mock_subprocess_popen, mock_slurmrestd_api_cache_dir): # noqa
+def test_acquire_token__gets_a_token_from_slurm_if_one_is_not_in_the_cache(
+    mock_subprocess_popen, mock_slurmrestd_api_cache_dir
+):  # noqa
     """
     Verifies that a token is pulled from Slurm if it is not found in the cache.
     Also checks to make sure the token is cached.
@@ -150,7 +158,9 @@ def test_acquire_token__gets_a_token_from_slurm_if_one_is_not_in_the_cache(mock_
 
 
 @mock.patch("cluster_agent.identity.slurmrestd.subprocess.Popen")
-def test_acquire_token__raise_error_if_subprocess_command_failed(mock_subprocess_popen, mock_slurmrestd_api_cache_dir): # noqa
+def test_acquire_token__raise_error_if_subprocess_command_failed(
+    mock_subprocess_popen, mock_slurmrestd_api_cache_dir
+):  # noqa
     """
     Verifies whether an error is raised or not in case "scontrol token" subprocess call fails.
     """

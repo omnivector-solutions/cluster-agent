@@ -47,7 +47,9 @@ def _write_token_to_cache(token: str):
         try:
             CACHE_DIR.mkdir(mode=0o700, parents=True, exist_ok=True)
         except Exception:
-            logger.warning(f"Couldn't create missing cache directory {CACHE_DIR}. Token will not be saved.") # noqa
+            logger.warning(
+                f"Couldn't create missing cache directory {CACHE_DIR}. Token will not be saved."
+            )  # noqa
             return
 
     token_path = CACHE_DIR / "token"

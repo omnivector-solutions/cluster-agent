@@ -1,2 +1,2 @@
 """Core module for logging operations"""
-from loguru import logger # noqa
+from loguru import logger  # noqa
