@@ -7,6 +7,14 @@ This file keeps track of all notable changes to the Cluster Agent.
 Unreleased
 ----------
 
+1.1.0 - 2022-01-25
+------------------
+
+- implemented logic to authenticate against the Cluster API by Auth0 tokens;
+- changed logic to issue Slurmrestd JWT;
+- removed *request* module;
+- created *identity* module to handle client logics for the APIs (Cluster APi and Slurmrestd).
+
 1.0.0 - 2022-01-19
 ------------------
 
