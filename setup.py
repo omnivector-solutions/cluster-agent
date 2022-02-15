@@ -27,7 +27,6 @@ setup(
             "respx~=0.17.1",
             "black~=21.6b0",
             "flake8~=3.9.2",
-            "uvicorn~=0.13.4",
         ]
     },
     packages=find_packages(),
@@ -50,7 +49,7 @@ setup(
     entry_points={
         "console_scripts": [
             "agentconfig=cluster_agent.scripts.agentconfig:parameters",
-            "agentrun=cluster_agent.scripts.agentrun:run",
+            "agentrun=cluster_agent.main:main",
         ]
     },
 )

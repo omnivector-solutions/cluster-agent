@@ -6,6 +6,12 @@ This file keeps track of all notable changes to the Cluster Agent.
 
 Unreleased
 ----------
+1.2.0 - 2022-02-15
+------------------
+
+- remove dependency on FastAPI and Uvicorn;
+- remove autoscheduling from the agent;
+- implement a function to call sequentially the functions that collect slurmrestd data.
 
 1.1.0 - 2022-01-25
 ------------------
