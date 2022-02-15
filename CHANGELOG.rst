@@ -9,9 +9,9 @@ Unreleased
 1.2.0 - 2022-02-15
 ------------------
 
-- remove dependency on FastAPI and Uvicorn;
-- remove autoscheduling from the agent;
-- implement a function to call sequentially the functions that collect slurmrestd data.
+- removed dependency on FastAPI and Uvicorn;
+- removed autoscheduling from the agent;
+- implemented a function to call sequentially the functions that collect slurmrestd data.
 
 1.1.0 - 2022-01-25
 ------------------
