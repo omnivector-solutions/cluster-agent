@@ -1,8 +1,14 @@
-import asynctest
 import pytest
 from unittest import mock
 
-from cluster_agent.main import collect_jobs, collect_diagnostics, collect_nodes, collect_partitions, main, run_agent
+from cluster_agent.main import (
+    collect_jobs,
+    collect_diagnostics,
+    collect_nodes,
+    collect_partitions,
+    main,
+    run_agent,
+)
 
 
 @mock.patch("cluster_agent.agent.update_diagnostics")
