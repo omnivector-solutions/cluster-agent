@@ -69,6 +69,7 @@ except BadDsn as e:
 
 
 async def run_agent():
+    """Await each coroutine to collect data from slurmrestd and send to the Cluster API"""
     logger.info("Starting Cluster Agent")
     await collect_diagnostics()
     await collect_partitions()
