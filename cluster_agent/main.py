@@ -1,50 +1,16 @@
-from sentry_sdk.integrations.aiohttp import AioHttpIntegration
-from sentry_sdk.integrations.logging import LoggingIntegration
-from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi_utils.tasks import repeat_every
-from sentry_sdk.utils import BadDsn
-from fastapi import FastAPI
-import sentry_sdk
-
+import asyncio
 import logging
+
+from sentry_sdk.integrations.logging import LoggingIntegration
+from sentry_sdk.utils import BadDsn
+import sentry_sdk
 
 from cluster_agent.utils.logging import logger
 from cluster_agent.settings import SETTINGS
-from cluster_agent.utils import response
 from cluster_agent import agent
 
 
-app = FastAPI(
-    title="Cluster Agent",
-)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-@app.get("/health")
-async def health():
-    """
-    Healthcheck, for health monitors in the deployed environment
-    """
-    return response.OK()
-
-
-@app.on_event("startup")
-@repeat_every(
-    seconds=60,
-    logger=logger,
-    raise_exceptions=False,
-)
 async def collect_diagnostics():
-    """
-    Periodically (T=60s) get diagnostics data and report them to the backend
-    """
-
     logger.info("##### Calling insertion of cluster diagnostics #####")
 
     res = await agent.update_diagnostics()
@@ -56,17 +22,7 @@ async def collect_diagnostics():
     logger.info(f"##### {collect_diagnostics.__name__} run successfully #####")
 
 
-@app.on_event("startup")
-@repeat_every(
-    seconds=60,
-    logger=logger,
-    raise_exceptions=False,
-)
 async def collect_partitions():
-    """
-    Periodically (T=60s) get partition data then report them to the backend
-    """
-
     logger.info("##### Calling upsertion of cluster partitions #####")
 
     res = await agent.upsert_partitions()
@@ -78,17 +34,7 @@ async def collect_partitions():
     logger.info(f"##### {collect_partitions.__name__} run successfully #####")
 
 
-@app.on_event("startup")
-@repeat_every(
-    seconds=60,
-    logger=logger,
-    raise_exceptions=False,
-)
 async def collect_nodes():
-    """
-    Periodically (T=60s) get node data then report them to the backend
-    """
-
     logger.info("##### Calling upsertion of cluster nodes #####")
 
     res = await agent.upsert_nodes()
@@ -98,17 +44,7 @@ async def collect_nodes():
     logger.info(f"##### {collect_nodes.__name__} run successfully #####")
 
 
-@app.on_event("startup")
-@repeat_every(
-    seconds=60,
-    logger=logger,
-    raise_exceptions=False,
-)
 async def collect_jobs():
-    """
-    Periodically (T=60s) get jobs data then report them to the backend
-    """
-
     logger.info("##### Calling upsertion of cluster jobs #####")
 
     res = await agent.upsert_jobs()
@@ -123,13 +59,24 @@ try:
 
     sentry_sdk.init(
         dsn=SETTINGS.SENTRY_DSN,
-        integrations=[sentry_logging, AioHttpIntegration()],
+        integrations=[sentry_logging],
         traces_sample_rate=1.0,
     )
 
-    app = SentryAsgiMiddleware(app)
-
     logger.debug("##### Enabled Sentry since a valid DSN key was provided.")
 except BadDsn as e:
-
     logger.debug("##### Sentry could not be enabled: {}".format(e))
+
+
+async def run_agent():
+    """Await each coroutine to collect data from slurmrestd and send to the Cluster API"""
+    logger.info("Starting Cluster Agent")
+    await collect_diagnostics()
+    await collect_partitions()
+    await collect_nodes()
+    await collect_jobs()
+    logger.info("Cluster Agent run successfully, exiting...")
+
+
+def main():
+    asyncio.run(run_agent())

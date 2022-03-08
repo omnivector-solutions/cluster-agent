@@ -56,30 +56,12 @@ Configure the aws credentials running `aws configure`. To know which permissions
 
 1. Run app
   ```bash
-  make run
+  agentrun
   ```
 
-Outputs:
-  ```bash
-  INFO:     Started server process [8798]
-  INFO:     Waiting for application startup.
-  INFO:     Run collecting
-  INFO:     Depends(get_agent)
-  INFO:     Application startup complete.
-  INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
-  ```
+**Note**: this command assumes you're inside a virtual environment in which the package is installed.
 
 **NOTE**: beware you should care about having the same user name you're using to run the code in the slurmctld node. For example, if `cluster_agent` will run the `make run` command then the slurmctld node also must have a user called `cluster_agent`.
-
-2. Make local request
-  ```bash
-  curl http://localhost:8080/health
-  ```
-
-Outputs:
-  ```json
-  {"status":"ok","message":""}
-  ```
 
 ## Release
 

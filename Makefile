@@ -34,13 +34,6 @@ clean-build: ## Clean build folders
 	rm -fr dist/
 	rm -fr *.egg-info
 
-.PHONY: run
-run: version ## Start uvicorn app on port 8080
-	uvicorn \
-		--host 127.0.0.1 \
-		--port 8080 \
-		cluster_agent.main:app --reload
-
 .PHONY: test
 test: ## Run tests against the application
 	echo "0.1.0-ci" > VERSION # create VERSION file for avoinding the CI to break
