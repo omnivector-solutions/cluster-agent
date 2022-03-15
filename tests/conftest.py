@@ -1,3 +1,4 @@
+import contextlib
 import random
 import string
 from unittest import mock
@@ -5,6 +6,7 @@ from unittest import mock
 import httpx
 import respx
 import pytest
+from loguru import logger
 
 from cluster_agent.settings import SETTINGS
 
@@ -53,3 +55,38 @@ def respx_mock():
             return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
         )
         yield mock
+
+
+@pytest.fixture
+def caplog(caplog):
+    """
+    Make the ``caplog`` fixture work with the loguru logger.
+    """
+    handler_id = logger.add(caplog.handler, format="{message}")
+    yield caplog
+    logger.remove(handler_id)
+
+
+@pytest.fixture
+def tweak_settings():
+    """
+    Provides a fixture to use as a context manager where the project settings may be
+    temporarily changed.
+    """
+
+    @contextlib.contextmanager
+    def _helper(**kwargs):
+        """
+        Context manager for tweaking app settings temporarily.
+        """
+        previous_values = {}
+        for (key, value) in kwargs.items():
+            previous_values[key] = getattr(SETTINGS, key)
+            setattr(SETTINGS, key, value)
+        try:
+            yield
+        finally:
+            for (key, value) in previous_values.items():
+                setattr(SETTINGS, key, value)
+
+    return _helper

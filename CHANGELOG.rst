@@ -6,6 +6,10 @@ This file keeps track of all notable changes to the Cluster Agent.
 
 Unreleased
 ----------
+- Added jobbergate section for retrieving, submitting, and updating jobs from Jobbergate
+- Added unit tests for jobbergate section
+- Added a dev-requirements.txt
+
 1.2.0 - 2022-02-15
 ------------------
 

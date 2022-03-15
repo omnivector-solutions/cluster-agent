@@ -48,6 +48,8 @@ Configure the aws credentials running `aws configure`. To know which permissions
   CLUSTER_AGENT_AUTH0_AUDIENCE="<auth0-audience>"
   CLUSTER_AGENT_AUTH0_CLIENT_ID="<auth0-app-client-id>"
   CLUSTER_AGENT_AUTH0_CLIENT_SECRET="<auth0-app-client-secret>"
+  CLUSTER_AGENT_JOBBERGATE_API_URL="<jobbergate-api-url>"
+  CLUSTER_AGENT_SBATCH_PATH="<path-to-sbatch>"
   ```
 
   NOTE: `CLUSTER_AGENT_SENTRY_DSN` is optional. If you do not pass it the agent understands Sentry will not be used.

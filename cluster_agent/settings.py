@@ -19,6 +19,12 @@ class Settings(BaseSettings):
     # cluster api info
     BASE_API_URL: str = Field("https://rats.omnivector.solutions", regex=_URL_REGEX)
 
+    # jobbergate api info
+    JOBBERGATE_API_URL: str = Field(
+        "https://localhost:8000/jobbergate", regex=_URL_REGEX
+    )
+    SBATCH_PATH: Path = Field("/usr/bin/sbatch")
+
     SENTRY_DSN: str = Field("https://rats.sentry.com", regex=_URL_REGEX)
 
     # Auth0 config for machine-to-machine security

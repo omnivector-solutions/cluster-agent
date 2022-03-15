@@ -8,6 +8,7 @@ import sentry_sdk
 from cluster_agent.utils.logging import logger
 from cluster_agent.settings import SETTINGS
 from cluster_agent import agent
+from cluster_agent.jobbergate.submit import submit_pending_jobs
 
 
 async def collect_diagnostics():
@@ -54,6 +55,14 @@ async def collect_jobs():
     logger.info(f"##### {collect_jobs.__name__} run successfully #####")
 
 
+def submit_jobs():
+    logger.info("##### Submitting pending Jobbergate jobs #####")
+
+    submit_pending_jobs
+
+    logger.info(f"##### Finished submitting pending Jobbergate jobs #####")
+
+
 try:
     sentry_logging = LoggingIntegration(level=logging.INFO, event_level=logging.ERROR)
 
@@ -69,12 +78,13 @@ except BadDsn as e:
 
 
 async def run_agent():
-    """Await each coroutine to collect data from slurmrestd and send to the Cluster API"""
+    """Run task functions for the agent"""
     logger.info("Starting Cluster Agent")
     await collect_diagnostics()
     await collect_partitions()
     await collect_nodes()
     await collect_jobs()
+    submit_jobs()
     logger.info("Cluster Agent run successfully, exiting...")
 
 
