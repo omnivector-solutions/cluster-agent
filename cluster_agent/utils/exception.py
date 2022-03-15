@@ -12,3 +12,11 @@ class AuthTokenError(Buzz):
 
 class SlurmrestdError(Buzz):
     """Raise exception when slurmrestd raises any error"""
+
+
+class JobbergateApiError(Buzz):
+    """Raise exception when communication with Jobbergate API fails"""
+
+
+class JobSubmissionError(Buzz):
+    """Raise exception when a job cannot be submitted raises any error"""
