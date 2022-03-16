@@ -1,17 +1,16 @@
 import json
 import subprocess
-from traceback import format_tb
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Optional
 
-from buzz import DoExceptParams
 from loguru import logger
-from snick import dedent_all
 
 from cluster_agent.jobbergate.schemas import PendingJobSubmission
 from cluster_agent.jobbergate.api import fetch_pending_submissions, mark_as_submitted
+from cluster_agent.jobbergate.constants import JobSubmissionStatus
 from cluster_agent.utils.exception import JobSubmissionError, JobbergateApiError
+from cluster_agent.utils.logging import log_error
 from cluster_agent.settings import SETTINGS
 
 
@@ -55,7 +54,7 @@ def submit_job_script(
 
     JobSubmissionError.require_condition(
         script_path is not None,
-        f"Could not find an executable script in retrieved job script data.",
+        "Could not find an executable script in retrieved job script data.",
     )
 
     # Make static type checkers happy
@@ -71,24 +70,6 @@ def submit_job_script(
     )
     slurm_job_id = int(proc.stdout.split()[-1])
     return slurm_job_id
-
-
-def log_error(params: DoExceptParams):
-    """
-    Provide a utility function to log a Buzz-based exception and the stack-trace of
-    the error's context.
-
-    :param: params: A DoExceptParams instance containing the original exception, a
-                    message describing it, and the stack trace of the error.
-    """
-    logger.error(
-        dedent_all(
-            params.final_message,
-            "--------",
-            "Traceback:",
-            "".join(format_tb(params.trace)),
-        )
-    )
 
 
 def submit_pending_jobs(
@@ -125,12 +106,14 @@ def submit_pending_jobs(
             )
 
         if slurm_job_id is None:
-            logger.debug(f"Submit failed...skipping update")
+            logger.debug("Submit failed...skipping update")
             continue
         else:
             logger.debug(f"Retrieved {slurm_job_id=}")
 
-        logger.debug(f"Updating job_submission with 'SUBMITTED' status")
+        logger.debug(
+            f"Updating job_submission with '{JobSubmissionStatus.SUBMITTED}' status"
+        )
 
         # Will only log errors. Does not re-raise
         with JobbergateApiError.handle_errors(

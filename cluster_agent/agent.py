@@ -11,7 +11,8 @@ async def upsert_partitions():
 
     r = await slurmrestd_client.get("/slurm/v0.0.36/partitions")
     SlurmrestdError.require_condition(
-        r.status_code == 200, f"Slurmrestd returned {r.status_code} when calling {r.url}: {r.text}"
+        r.status_code == 200,
+        f"Slurmrestd returned {r.status_code} when calling {r.url}: {r.text}",
     )
     partitions = r.json()
 
@@ -46,7 +47,8 @@ async def upsert_nodes():
 
     r = await slurmrestd_client.get("/slurm/v0.0.36/nodes")
     SlurmrestdError.require_condition(
-        r.status_code == 200, f"Slurmrestd returned {r.status_code} when calling {r.url}: {r.text}"
+        r.status_code == 200,
+        f"Slurmrestd returned {r.status_code} when calling {r.url}: {r.text}",
     )
     nodes = r.json()
 
@@ -77,11 +79,14 @@ async def update_diagnostics():
 
     r = await slurmrestd_client.get("/slurm/v0.0.36/diag/")
     SlurmrestdError.require_condition(
-        r.status_code == 200, f"Slurmrestd returned {r.status_code} when calling {r.url}: {r.text}"
+        r.status_code == 200,
+        f"Slurmrestd returned {r.status_code} when calling {r.url}: {r.text}",
     )
     diagnostics = r.json()
 
-    response = await cluster_api_client.post("/cluster/agent/diagnostics", json=diagnostics)
+    response = await cluster_api_client.post(
+        "/cluster/agent/diagnostics", json=diagnostics
+    )
 
     return response.status_code
 
@@ -90,7 +95,8 @@ async def upsert_jobs():
 
     r = await slurmrestd_client.get("/slurm/v0.0.36/jobs")
     SlurmrestdError.require_condition(
-        r.status_code == 200, f"Slurmrestd returned {r.status_code} when calling {r.url}: {r.text}"
+        r.status_code == 200,
+        f"Slurmrestd returned {r.status_code} when calling {r.url}: {r.text}",
     )
     jobs = r.json()
 

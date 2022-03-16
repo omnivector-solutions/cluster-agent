@@ -13,6 +13,7 @@ from cluster_agent.utils.exception import JobSubmissionError
 from cluster_agent.settings import SETTINGS
 from cluster_agent.jobbergate.schemas import PendingJobSubmission
 from cluster_agent.jobbergate.submit import submit_job_script, submit_pending_jobs
+from cluster_agent.jobbergate.constants import JobSubmissionStatus
 
 
 def test_submit_job_script__success(tweak_settings, tmp_path, dummy_pending_job_submission_data, mocker):
@@ -268,13 +269,13 @@ def test_submit_pending_jobs(tweak_settings, tmp_path, mocker, dummy_template_so
 
             assert update_1_route.call_count == 1
             assert update_1_route.calls.last.request.content == json.dumps(dict(
-                status="SUBMITTED",
+                status=JobSubmissionStatus.SUBMITTED,
                 slurm_job_id=11,
             )).encode("utf-8")
 
             assert update_2_route.call_count == 1
             assert update_2_route.calls.last.request.content == json.dumps(dict(
-                status="SUBMITTED",
+                status=JobSubmissionStatus.SUBMITTED,
                 slurm_job_id=22,
             )).encode("utf-8")
 

@@ -9,6 +9,7 @@ from cluster_agent.utils.logging import logger
 from cluster_agent.settings import SETTINGS
 from cluster_agent import agent
 from cluster_agent.jobbergate.submit import submit_pending_jobs
+from cluster_agent.jobbergate.finish import finish_active_jobs
 
 
 async def collect_diagnostics():
@@ -17,7 +18,9 @@ async def collect_diagnostics():
     res = await agent.update_diagnostics()
 
     logger.debug(
-        "##### Response information ({}): {} #####".format(collect_diagnostics.__name__, res)
+        "##### Response information ({}): {} #####".format(
+            collect_diagnostics.__name__, res
+        )
     )
 
     logger.info(f"##### {collect_diagnostics.__name__} run successfully #####")
@@ -29,7 +32,9 @@ async def collect_partitions():
     res = await agent.upsert_partitions()
 
     logger.debug(
-        "##### Response information ({}): {} #####".format(collect_partitions.__name__, res)
+        "##### Response information ({}): {} #####".format(
+            collect_partitions.__name__, res
+        )
     )
 
     logger.info(f"##### {collect_partitions.__name__} run successfully #####")
@@ -40,7 +45,9 @@ async def collect_nodes():
 
     res = await agent.upsert_nodes()
 
-    logger.debug("##### Response information ({}): {} #####".format(collect_nodes.__name__, res))
+    logger.debug(
+        "##### Response information ({}): {} #####".format(collect_nodes.__name__, res)
+    )
 
     logger.info(f"##### {collect_nodes.__name__} run successfully #####")
 
@@ -50,7 +57,9 @@ async def collect_jobs():
 
     res = await agent.upsert_jobs()
 
-    logger.debug("##### Response information ({}): {} #####".format(collect_jobs.__name__, res))
+    logger.debug(
+        "##### Response information ({}): {} #####".format(collect_jobs.__name__, res)
+    )
 
     logger.info(f"##### {collect_jobs.__name__} run successfully #####")
 
@@ -58,9 +67,19 @@ async def collect_jobs():
 def submit_jobs():
     logger.info("##### Submitting pending Jobbergate jobs #####")
 
-    submit_pending_jobs
+    submit_pending_jobs()
 
-    logger.info(f"##### Finished submitting pending Jobbergate jobs #####")
+    logger.info("##### Finished submitting pending Jobbergate jobs #####")
+
+
+def finish_jobs():
+    logger.info("##### Marking finished slurm jobs as finished in Jobbergate #####")
+
+    finish_active_jobs()
+
+    logger.info(
+        "##### Finished marking finished slurm jobs as finished in Jobbergate #####"
+    )
 
 
 try:
@@ -85,6 +104,7 @@ async def run_agent():
     await collect_nodes()
     await collect_jobs()
     submit_jobs()
+    finish_jobs()
     logger.info("Cluster Agent run successfully, exiting...")
 
 
