@@ -71,8 +71,12 @@ async def test_main__checks_if_main_file_calls_jobs_collection(
 @mock.patch("cluster_agent.main.collect_jobs")
 @mock.patch("cluster_agent.main.collect_nodes")
 @mock.patch("cluster_agent.main.collect_partitions")
+@mock.patch("cluster_agent.main.submit_jobs")
+@mock.patch("cluster_agent.main.finish_jobs")
 @pytest.mark.asyncio
 async def test_main__call_secondary_functions_to_collect_data(
+    mock_finish_jobs,
+    mock_submit_jobs,
     mock_collect_partitions,
     mock_collect_nodes,
     mock_collect_jobs,
@@ -86,6 +90,8 @@ async def test_main__call_secondary_functions_to_collect_data(
     mock_collect_nodes.assert_awaited_once()
     mock_collect_jobs.assert_awaited_once()
     mock_collect_diagnostics.assert_awaited_once()
+    mock_submit_jobs.assert_called_once()
+    mock_finish_jobs.assert_called_once()
 
 
 @mock.patch("cluster_agent.main.asyncio")
