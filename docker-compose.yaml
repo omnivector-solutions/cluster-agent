@@ -1,19 +1,35 @@
 services:
+  cluster-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./cluster_agent:/agent/cluster_agent
+      - cluster-agent-cache:/cache/
+    environment:
+      BASE_SLURMRESTD_URL: http://slurm-master:6820
+      X_SLURM_USER_NAME: root
+      BASE_API_URL: https://rats.omnivector.solutions
+      JOBBERGATE_API_URL: https://localhost:8000/jobbergate
+      SENTRY_DSN:
+      AUTH0_DOMAIN: omnivector.us.auth0.com
+      AUTH0_AUDIENCE: https://armada.omnivector.solutions
+      AUTH0_CLIENT_ID: "{AUTH0_CLIENT_ID}"
+      AUTH0_CLIENT_SECRET: "{AUTH0_CLIENT_SECRET}"
+      CACHE_DIR: /cache
+
+
   slurm-master:
     build:
       context: ./etc/docker-slurm
       dockerfile: Dockerfile.master
-    image: slurm-master:19.05.5-1
-    hostname: slurmmaster
-    user: admin
-    volumes:
-      - ./cluster_agent:/agent
     environment:
       - SLURM_CPUS_ON_NODE=2
     ports:
       - 6817:6817
       - 6818:6818
       - 6819:6819
+      - 6820:6820
 
 volumes:
-  shared-vol:
+  cluster-agent-cache:
