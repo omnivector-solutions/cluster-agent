@@ -90,8 +90,8 @@ async def test_main__call_secondary_functions_to_collect_data(
     mock_collect_nodes.assert_awaited_once()
     mock_collect_jobs.assert_awaited_once()
     mock_collect_diagnostics.assert_awaited_once()
-    mock_submit_jobs.assert_called_once()
-    mock_finish_jobs.assert_called_once()
+    mock_submit_jobs.assert_awaited_once()
+    mock_finish_jobs.assert_awaited_once()
 
 
 @mock.patch("cluster_agent.main.asyncio")

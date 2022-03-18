@@ -78,6 +78,7 @@ def acquire_token() -> str:
             client_secret=SETTINGS.AUTH0_CLIENT_SECRET,
             grant_type="client_credentials",
         )
+        logger.debug(f"BODY: {auth0_body}")
         auth0_url = f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token"
         logger.debug(f"Posting Auth0 request to {auth0_url}")
         response = httpx.post(auth0_url, data=auth0_body)

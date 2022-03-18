@@ -16,7 +16,8 @@ from cluster_agent.jobbergate.submit import submit_job_script, submit_pending_jo
 from cluster_agent.jobbergate.constants import JobSubmissionStatus
 
 
-def test_submit_job_script__success(dummy_pending_job_submission_data, dummy_template_source, mocker):
+@pytest.mark.asyncio
+async def test_submit_job_script__success(dummy_pending_job_submission_data, dummy_template_source, mocker):
     """
     Test that the ``submit_job_script()`` successfully submits a job.
 
@@ -26,7 +27,7 @@ def test_submit_job_script__success(dummy_pending_job_submission_data, dummy_tem
     mocker.patch("cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token")
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
 
-    with respx.mock:
+    async with respx.mock:
         submit_route = respx.post(f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/submit")
         submit_route.mock(
             return_value=httpx.Response(
@@ -35,7 +36,7 @@ def test_submit_job_script__success(dummy_pending_job_submission_data, dummy_tem
             )
         )
 
-        slurm_job_id = submit_job_script(pending_job_submission)
+        slurm_job_id = await submit_job_script(pending_job_submission)
 
         assert slurm_job_id == 13
         assert submit_route.call_count == 1
@@ -49,7 +50,8 @@ def test_submit_job_script__success(dummy_pending_job_submission_data, dummy_tem
         )
 
 
-def test_submit_job_script__raises_exception_if_no_executable_script_was_found(
+@pytest.mark.asyncio
+async def test_submit_job_script__raises_exception_if_no_executable_script_was_found(
     dummy_pending_job_submission_data
 ):
     """
@@ -62,10 +64,11 @@ def test_submit_job_script__raises_exception_if_no_executable_script_was_found(
     )
 
     with pytest.raises(JobSubmissionError, match="Could not find an executable"):
-        submit_job_script(pending_job_submission)
+        await submit_job_script(pending_job_submission)
 
 
-def test_submit_job_script__raises_exception_if_submit_call_response_is_not_200(
+@pytest.mark.asyncio
+async def test_submit_job_script__raises_exception_if_submit_call_response_is_not_200(
     dummy_pending_job_submission_data,
     mocker,
 ):
@@ -77,7 +80,7 @@ def test_submit_job_script__raises_exception_if_submit_call_response_is_not_200(
     mocker.patch("cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token")
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
 
-    with respx.mock:
+    async with respx.mock:
         submit_route = respx.post(f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/submit")
         submit_route.mock(
             return_value=httpx.Response(
@@ -99,10 +102,11 @@ def test_submit_job_script__raises_exception_if_submit_call_response_is_not_200(
             JobSubmissionError,
             match=match_regex,
         ):
-            submit_job_script(pending_job_submission)
+            await submit_job_script(pending_job_submission)
 
 
-def test_submit_job_script__raises_exception_if_response_cannot_be_unpacked(
+@pytest.mark.asyncio
+async def test_submit_job_script__raises_exception_if_response_cannot_be_unpacked(
     dummy_pending_job_submission_data,
     mocker,
 ):
@@ -114,7 +118,7 @@ def test_submit_job_script__raises_exception_if_response_cannot_be_unpacked(
     mocker.patch("cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token")
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
 
-    with respx.mock:
+    async with respx.mock:
         submit_route = respx.post(f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/submit")
         submit_route.mock(return_value=httpx.Response(
             status_code=200,
@@ -122,10 +126,11 @@ def test_submit_job_script__raises_exception_if_response_cannot_be_unpacked(
         ))
 
         with pytest.raises(JobSubmissionError, match="Couldn't unpack response"):
-            submit_job_script(pending_job_submission)
+            await submit_job_script(pending_job_submission)
 
 
-def test_submit_pending_jobs(dummy_template_source):
+@pytest.mark.asyncio
+async def test_submit_pending_jobs(dummy_template_source):
     """
     Test that the ``submit_pending_jobs()`` function can fetch pending job submissions,
     submit each to slurm via the Slurm REST API, and update the job submission via the
@@ -159,7 +164,10 @@ def test_submit_pending_jobs(dummy_template_source):
         ),
     ]
 
-    with respx.mock:
+    async with respx.mock:
+        respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
+            return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
+        )
         fetch_route = respx.get(f"{SETTINGS.JOBBERGATE_API_URL}/job-submissions/agent/pending")
         fetch_route.mock(
             return_value=httpx.Response(
@@ -194,7 +202,7 @@ def test_submit_pending_jobs(dummy_template_source):
         submit_route = respx.post(f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/submit")
         submit_route.mock(side_effect=_submit_side_effect)
 
-        submit_pending_jobs()
+        await submit_pending_jobs()
 
         assert update_1_route.call_count == 1
         assert update_1_route.calls.last.request.content == json.dumps(dict(

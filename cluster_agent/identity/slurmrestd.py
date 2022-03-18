@@ -101,7 +101,8 @@ class AsyncBackendClient(httpx.AsyncClient):
 
     def __init__(self):
         self._token = None
-        super().__init__(base_url=SETTINGS.BASE_SLURMRESTD_URL, auth=self._inject_token)
+        token_injector = None if SETTINGS.DISABLE_SLURM_AUTH else self._inject_token
+        super().__init__(base_url=SETTINGS.BASE_SLURMRESTD_URL, auth=token_injector)
 
     def _inject_token(self, request: httpx.Request) -> httpx.Request:
         if self._token is None:
@@ -112,28 +113,3 @@ class AsyncBackendClient(httpx.AsyncClient):
 
 
 backend_client = AsyncBackendClient()
-
-
-class SyncBackendClient(httpx.Client):
-    """
-    Extends the httpx.Client class with automatic token acquisition for requests.
-    The token is acquired lazily on the first httpx request issued.
-    This client should be used for synchronous agent actions.
-    """
-
-    _token: typing.Optional[str]
-
-    def __init__(self):
-        self._token = None
-        super().__init__(base_url=SETTINGS.BASE_SLURMRESTD_URL, auth=self._inject_token)
-
-    def _inject_token(self, request: httpx.Request) -> httpx.Request:
-        if self._token is None:
-            self._token = acquire_token()
-        request.headers["x-slurm-user-name"] = SETTINGS.X_SLURM_USER_NAME
-        request.headers["x-slurm-user-token"] = self._token
-        return request
-
-
-backend_client = AsyncBackendClient()
-sync_backend_client = SyncBackendClient()

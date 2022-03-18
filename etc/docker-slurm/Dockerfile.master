@@ -9,6 +9,7 @@ RUN apt install -y slurm-wlm mariadb-server
 COPY slurm.conf /etc/slurm-llnl/
 COPY cgroup.conf /etc/slurm-llnl/
 COPY master-entrypoint.sh /etc/slurm-llnl/entrypoint.sh
+RUN chmod +x /etc/slurm-llnl/entrypoint.sh
 
 VOLUME /agent
 

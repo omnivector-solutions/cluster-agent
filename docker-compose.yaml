@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   cluster-agent:
     build:
@@ -7,17 +9,17 @@ services:
       - ./cluster_agent:/agent/cluster_agent
       - cluster-agent-cache:/cache/
     environment:
-      BASE_SLURMRESTD_URL: http://slurm-master:6820
-      X_SLURM_USER_NAME: root
-      BASE_API_URL: https://rats.omnivector.solutions
-      JOBBERGATE_API_URL: https://localhost:8000/jobbergate
-      SENTRY_DSN:
-      AUTH0_DOMAIN: omnivector.us.auth0.com
-      AUTH0_AUDIENCE: https://armada.omnivector.solutions
-      AUTH0_CLIENT_ID: "{AUTH0_CLIENT_ID}"
-      AUTH0_CLIENT_SECRET: "{AUTH0_CLIENT_SECRET}"
-      CACHE_DIR: /cache
-
+      CLUSTER_AGENT_BASE_SLURMRESTD_URL: http://slurm-master:6820
+      CLUSTER_AGENT_DISABLE_SLURM_AUTH: 1
+      CLUSTER_AGENT_X_SLURM_USER_NAME: root
+      CLUSTER_AGENT_BASE_API_URL: https://armada-api
+      CLUSTER_AGENT_JOBBERGATE_API_URL: http://localhost:8000/jobbergate
+      CLUSTER_AGENT_SENTRY_DSN:
+      CLUSTER_AGENT_AUTH0_DOMAIN: omnivector.us.auth0.com
+      CLUSTER_AGENT_AUTH0_AUDIENCE: https://armada.omnivector.solutions
+      CLUSTER_AGENT_AUTH0_CLIENT_ID: "${AUTH0_CLIENT_ID}"
+      CLUSTER_AGENT_AUTH0_CLIENT_SECRET: "${AUTH0_CLIENT_SECRET}"
+      CLUSTER_AGENT_CACHE_DIR: /cache
 
   slurm-master:
     build:

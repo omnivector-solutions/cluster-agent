@@ -8,12 +8,12 @@ from loguru import logger
 from cluster_agent.jobbergate.schemas import PendingJobSubmission, SlurmSubmitResponse, SlurmJobSubmission, SlurmJobParams
 from cluster_agent.jobbergate.api import fetch_pending_submissions, mark_as_submitted
 from cluster_agent.jobbergate.constants import JobSubmissionStatus
-from cluster_agent.identity.slurmrestd import sync_backend_client as slurmrestd_client
+from cluster_agent.identity.slurmrestd import backend_client as slurmrestd_client
 from cluster_agent.utils.exception import JobSubmissionError, JobbergateApiError
 from cluster_agent.utils.logging import log_error
 
 
-def submit_job_script(pending_job_submission: PendingJobSubmission) -> int:
+async def submit_job_script(pending_job_submission: PendingJobSubmission) -> int:
     """
     Submit a Job Script to slurm via the Slurm REST API.
 
@@ -44,7 +44,7 @@ def submit_job_script(pending_job_submission: PendingJobSubmission) -> int:
             name=pending_job_submission.application_name,
         ),
     )
-    response = slurmrestd_client.post(f"/slurm/v0.0.36/job/submit", json=payload.dict())
+    response = await slurmrestd_client.post(f"/slurm/v0.0.36/job/submit", json=payload.dict())
 
     try:
         sub_data = SlurmSubmitResponse(**response.json())
@@ -70,7 +70,7 @@ def submit_job_script(pending_job_submission: PendingJobSubmission) -> int:
     return slurm_job_id
 
 
-def submit_pending_jobs():
+async def submit_pending_jobs():
     """
     Submit all pending jobs and update them with ``SUBMITTED`` status and slurm_job_id.
 
@@ -83,7 +83,7 @@ def submit_pending_jobs():
         "Could not retrieve pending job submissions",
         do_except=log_error,
     ):
-        pending_job_submissions = fetch_pending_submissions()
+        pending_job_submissions = await fetch_pending_submissions()
 
     for pending_job_submission in pending_job_submissions:
         logger.debug(f"Submitting pending job_submission {pending_job_submission.id}")
@@ -95,8 +95,7 @@ def submit_pending_jobs():
             do_except=log_error,
             re_raise=False,
         ):
-            print("SUBMITTING: ", pending_job_submission)
-            slurm_job_id = submit_job_script(pending_job_submission)
+            slurm_job_id = await submit_job_script(pending_job_submission)
 
         if slurm_job_id is None:
             logger.debug("Submit failed...skipping update")
@@ -114,5 +113,5 @@ def submit_pending_jobs():
             do_except=log_error,
             re_raise=False,
         ):
-            mark_as_submitted(pending_job_submission.id, slurm_job_id)
+            await mark_as_submitted(pending_job_submission.id, slurm_job_id)
     logger.debug("...Finished submitting pending jobs")

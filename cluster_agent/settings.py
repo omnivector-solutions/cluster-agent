@@ -18,10 +18,11 @@ class Settings(BaseSettings):
 
     # cluster api info
     BASE_API_URL: str = Field("https://rats.omnivector.solutions", regex=_URL_REGEX)
+    DISABLE_SLURM_AUTH: bool = False
 
     # jobbergate api info
     JOBBERGATE_API_URL: str = Field(
-        "https://localhost:8000/jobbergate", regex=_URL_REGEX
+        "http://localhost:8000/jobbergate", regex=_URL_REGEX
     )
 
     SENTRY_DSN: str = Field("https://rats.sentry.com", regex=_URL_REGEX)
