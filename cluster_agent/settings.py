@@ -23,7 +23,6 @@ class Settings(BaseSettings):
     JOBBERGATE_API_URL: str = Field(
         "https://localhost:8000/jobbergate", regex=_URL_REGEX
     )
-    SBATCH_PATH: Path = Field("/usr/bin/sbatch")
 
     SENTRY_DSN: str = Field("https://rats.sentry.com", regex=_URL_REGEX)
 

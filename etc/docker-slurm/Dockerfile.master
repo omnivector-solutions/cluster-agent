@@ -1,0 +1,21 @@
+FROM python:3.8.13-slim-bullseye
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt update -y
+RUN apt install -y slurm-wlm mariadb-server
+# munge
+
+COPY slurm.conf /etc/slurm-llnl/
+COPY cgroup.conf /etc/slurm-llnl/
+COPY master-entrypoint.sh /etc/slurm-llnl/entrypoint.sh
+
+COPY ../../cluster_agent/requirements.txt /agent/
+
+RUN pip install -r ../../cluster_agent/requirements.txt
+
+VOLUME /agent
+
+EXPOSE 6817 6818 6819 3306
+
+ENTRYPOINT ["/etc/slurm-llnl/entrypoint.sh"]u

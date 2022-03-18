@@ -1,0 +1,19 @@
+services:
+  slurm-master:
+    build:
+      context: ./etc/docker-slurm
+      dockerfile: Dockerfile.master
+    image: slurm-master:19.05.5-1
+    hostname: slurmmaster
+    user: admin
+    volumes:
+      - ./cluster_agent:/agent
+    environment:
+      - SLURM_CPUS_ON_NODE=2
+    ports:
+      - 6817:6817
+      - 6818:6818
+      - 6819:6819
+
+volumes:
+  shared-vol:
