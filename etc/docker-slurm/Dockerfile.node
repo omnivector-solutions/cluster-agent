@@ -1,0 +1,14 @@
+FROM ubuntu:20.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt update -y
+RUN apt install -y slurm-wlm
+
+COPY slurm.conf /etc/slurm-llnl/
+COPY cgroup.conf /etc/slurm-llnl/
+COPY node-entrypoint.sh /etc/slurm-llnl/entrypoint.sh
+
+EXPOSE 6817 6818 6819
+
+ENTRYPOINT ["/etc/slurm-llnl/entrypoint.sh"]

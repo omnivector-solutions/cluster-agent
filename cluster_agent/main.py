@@ -64,18 +64,18 @@ async def collect_jobs():
     logger.info(f"##### {collect_jobs.__name__} run successfully #####")
 
 
-def submit_jobs():
+async def submit_jobs():
     logger.info("##### Submitting pending Jobbergate jobs #####")
 
-    submit_pending_jobs()
+    await submit_pending_jobs()
 
     logger.info("##### Finished submitting pending Jobbergate jobs #####")
 
 
-def finish_jobs():
+async def finish_jobs():
     logger.info("##### Marking finished slurm jobs as finished in Jobbergate #####")
 
-    finish_active_jobs()
+    await finish_active_jobs()
 
     logger.info(
         "##### Finished marking finished slurm jobs as finished in Jobbergate #####"
@@ -103,10 +103,14 @@ async def run_agent():
     await collect_partitions()
     await collect_nodes()
     await collect_jobs()
-    submit_jobs()
-    finish_jobs()
+    await submit_jobs()
+    await finish_jobs()
     logger.info("Cluster Agent run successfully, exiting...")
 
 
 def main():
     asyncio.run(run_agent())
+
+
+if __name__ == "__main__":
+    main()

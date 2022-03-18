@@ -104,13 +104,28 @@ class AsyncBackendClient(httpx.AsyncClient):
 
     def __init__(self):
         self._token = None
-        super().__init__(base_url=SETTINGS.BASE_API_URL, auth=self._inject_token)
+        super().__init__(
+            base_url=SETTINGS.BASE_API_URL,
+            auth=self._inject_token,
+            event_hooks=dict(
+                request=[self._log_request],
+                response=[self._log_response],
+            ),
+        )
 
     def _inject_token(self, request: httpx.Request) -> httpx.Request:
         if self._token is None:
             self._token = acquire_token()
         request.headers["authorization"] = f"Bearer {self._token}"
         return request
+
+    @staticmethod
+    async def _log_request(request: httpx.Request):
+        logger.debug(f"Making request: {request.method} {request.url}")
+
+    @staticmethod
+    async def _log_response(response: httpx.Response):
+        logger.debug(f"Received response: {response.request.method} {response.request.url} {response.status_code}")
 
 
 backend_client = AsyncBackendClient()

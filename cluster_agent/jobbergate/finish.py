@@ -5,12 +5,14 @@ from cluster_agent.jobbergate.api import fetch_active_submissions, update_status
 from cluster_agent.jobbergate.constants import JobSubmissionStatus, status_map
 from cluster_agent.utils.exception import SlurmrestdError, JobbergateApiError
 from cluster_agent.utils.logging import log_error
-from cluster_agent.identity.slurmrestd import sync_backend_client as slurmrestd_client
+from cluster_agent.identity.slurmrestd import backend_client as slurmrestd_client
 
 
-def fetch_job_status(slurm_job_id: int) -> JobSubmissionStatus:
+async def fetch_job_status(slurm_job_id: int) -> JobSubmissionStatus:
 
-    response = slurmrestd_client.get(f"/slurm/v0.0.36/job/{slurm_job_id}")
+    logger.debug(f"Fetching slurm job status for slurm job {slurm_job_id}")
+
+    response = await slurmrestd_client.get(f"/slurm/v0.0.36/job/{slurm_job_id}")
     SlurmrestdError.require_condition(
         response.status_code == 200,
         snick.dedent(
@@ -26,10 +28,14 @@ def fetch_job_status(slurm_job_id: int) -> JobSubmissionStatus:
         snick.dedent(f"Couldn't find a slurm job matching id {slurm_job_id}"),
     )
     job = jobs.pop()
-    return status_map[job["job_state"]]
+    slurm_status = job["job_state"]
+    logger.debug(f"Slurm status for slurm job {slurm_job_id} is {slurm_status}")
+    jobbergate_status = status_map[job["job_state"]]
+    logger.debug(f"Jobbergate status for slurm job {slurm_job_id} is {jobbergate_status}")
+    return jobbergate_status
 
 
-def finish_active_jobs():
+async def finish_active_jobs():
     """
     Mark all active jobs that have completed or failed as finished.
     """
@@ -40,7 +46,7 @@ def finish_active_jobs():
         "Could not retrieve active job submissions",
         do_except=log_error,
     ):
-        active_job_submissions = fetch_active_submissions()
+        active_job_submissions = await fetch_active_submissions()
 
     for active_job_submission in active_job_submissions:
         logger.debug(
@@ -54,7 +60,7 @@ def finish_active_jobs():
             do_except=log_error,
             re_raise=False,
         ):
-            status = fetch_job_status(active_job_submission.slurm_job_id)
+            status = await fetch_job_status(active_job_submission.slurm_job_id)
 
         if status is None:
             logger.debug("Fetch status failed...skipping update")
@@ -72,5 +78,5 @@ def finish_active_jobs():
             do_except=log_error,
             re_raise=False,
         ):
-            update_status(active_job_submission.id, status)
+            await update_status(active_job_submission.id, status)
     logger.debug("...Finished marking completed jobs as finished")

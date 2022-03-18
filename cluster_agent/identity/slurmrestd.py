@@ -68,6 +68,10 @@ def acquire_token() -> str:
     """
     Retrieves a token from Slurmrestd based on the app settings.
     """
+    if SETTINGS.X_SLURM_USER_TOKEN is not None:
+        logger.debug("Using Slurm auth token from environment")
+        return SETTINGS.X_SLURM_USER_TOKEN
+
     logger.debug("Attempting to use cached token")
     token = _load_token_from_cache()
 
@@ -101,7 +105,14 @@ class AsyncBackendClient(httpx.AsyncClient):
 
     def __init__(self):
         self._token = None
-        super().__init__(base_url=SETTINGS.BASE_SLURMRESTD_URL, auth=self._inject_token)
+        super().__init__(
+            base_url=SETTINGS.BASE_SLURMRESTD_URL,
+            auth=self._inject_token,
+            event_hooks=dict(
+                request=[self._log_request],
+                response=[self._log_response],
+            ),
+        )
 
     def _inject_token(self, request: httpx.Request) -> httpx.Request:
         if self._token is None:
@@ -110,30 +121,13 @@ class AsyncBackendClient(httpx.AsyncClient):
         request.headers["x-slurm-user-token"] = self._token
         return request
 
+    @staticmethod
+    async def _log_request(request: httpx.Request):
+        logger.debug(f"Making request: {request.method} {request.url}")
 
-backend_client = AsyncBackendClient()
-
-
-class SyncBackendClient(httpx.Client):
-    """
-    Extends the httpx.Client class with automatic token acquisition for requests.
-    The token is acquired lazily on the first httpx request issued.
-    This client should be used for synchronous agent actions.
-    """
-
-    _token: typing.Optional[str]
-
-    def __init__(self):
-        self._token = None
-        super().__init__(base_url=SETTINGS.BASE_SLURMRESTD_URL, auth=self._inject_token)
-
-    def _inject_token(self, request: httpx.Request) -> httpx.Request:
-        if self._token is None:
-            self._token = acquire_token()
-        request.headers["x-slurm-user-name"] = SETTINGS.X_SLURM_USER_NAME
-        request.headers["x-slurm-user-token"] = self._token
-        return request
+    @staticmethod
+    async def _log_response(response: httpx.Response):
+        logger.debug(f"Received response: {response.request.method} {response.request.url} {response.status_code}")
 
 
 backend_client = AsyncBackendClient()
-sync_backend_client = SyncBackendClient()

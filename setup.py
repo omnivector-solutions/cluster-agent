@@ -19,7 +19,7 @@ setup(
     + _VERSION
     + "tar.gz",
     install_requires=list(map(lambda string: string.strip("\n"), open("requirements.txt", "r"))),
-    extra_requires=dict(dev=list(map(lambda string: string.strip("\n"), open("dev-requirements.txt", "r"))))
+    extra_requires=dict(dev=list(map(lambda string: string.strip("\n"), open("dev-requirements.txt", "r")))),
     packages=find_packages(),
     keywords=["armada", "hpc"],
     classifiers=[

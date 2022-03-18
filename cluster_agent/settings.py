@@ -1,6 +1,7 @@
 import sys
 from functools import lru_cache
 from pathlib import Path
+from typing import Optional
 
 from pydantic import BaseSettings, Field
 from pydantic.error_wrappers import ValidationError
@@ -15,15 +16,11 @@ class Settings(BaseSettings):
     # slurmrestd info
     BASE_SLURMRESTD_URL: str = Field("http://127.0.0.1:6820", regex=_URL_REGEX)
     X_SLURM_USER_NAME: str = Field("root")
+    X_SLURM_USER_TOKEN: Optional[str]
+    DEFAULT_SLURM_WORK_DIR: str = Field("/tmp")
 
     # cluster api info
     BASE_API_URL: str = Field("https://rats.omnivector.solutions", regex=_URL_REGEX)
-
-    # jobbergate api info
-    JOBBERGATE_API_URL: str = Field(
-        "https://localhost:8000/jobbergate", regex=_URL_REGEX
-    )
-    SBATCH_PATH: Path = Field("/usr/bin/sbatch")
 
     SENTRY_DSN: str = Field("https://rats.sentry.com", regex=_URL_REGEX)
 

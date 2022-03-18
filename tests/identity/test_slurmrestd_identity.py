@@ -112,7 +112,7 @@ def test__load_token_from_cache__returns_none_cached_token_will_expire_soon(
     assert retrieved_token is None
 
 
-def test_acquire_token__gets_a_token_from_the_cache(mock_slurmrestd_api_cache_dir):
+def test_acquire_token__gets_a_token_from_the_cache(mock_slurmrestd_api_cache_dir, tweak_settings):
     """
     Verifies that the token is retrieved from the cache if it is found there.
     """
@@ -125,13 +125,14 @@ def test_acquire_token__gets_a_token_from_the_cache(mock_slurmrestd_api_cache_di
         algorithm="HS256",
     )
     token_path.write_text(created_token)
-    retrieved_token = acquire_token()
+    with tweak_settings(X_SLURM_USER_TOKEN=None):
+        retrieved_token = acquire_token()
     assert retrieved_token == created_token
 
 
 @mock.patch("cluster_agent.identity.slurmrestd.subprocess.Popen")
 def test_acquire_token__gets_a_token_from_slurm_if_one_is_not_in_the_cache(
-    mock_subprocess_popen, mock_slurmrestd_api_cache_dir
+    mock_subprocess_popen, mock_slurmrestd_api_cache_dir, tweak_settings,
 ):  # noqa
     """
     Verifies that a token is pulled from Slurm if it is not found in the cache.
@@ -150,7 +151,8 @@ def test_acquire_token__gets_a_token_from_slurm_if_one_is_not_in_the_cache(
 
     mock_subprocess_popen.return_value = process_mock
 
-    retrieved_token = acquire_token()
+    with tweak_settings(X_SLURM_USER_TOKEN=None):
+        retrieved_token = acquire_token()
     assert retrieved_token == "dummy-token"
 
     token_path = mock_slurmrestd_api_cache_dir / "token"
@@ -159,7 +161,8 @@ def test_acquire_token__gets_a_token_from_slurm_if_one_is_not_in_the_cache(
 
 @mock.patch("cluster_agent.identity.slurmrestd.subprocess.Popen")
 def test_acquire_token__raise_error_if_subprocess_command_failed(
-    mock_subprocess_popen, mock_slurmrestd_api_cache_dir
+    mock_subprocess_popen, mock_slurmrestd_api_cache_dir, tweak_settings,
+
 ):  # noqa
     """
     Verifies whether an error is raised or not in case "scontrol token" subprocess call fails.
@@ -177,7 +180,8 @@ def test_acquire_token__raise_error_if_subprocess_command_failed(
 
     mock_subprocess_popen.return_value = process_mock
 
-    with pytest.raises(ProcessExecutionError) as error:
-        acquire_token()
+    with tweak_settings(X_SLURM_USER_TOKEN=None):
+        with pytest.raises(ProcessExecutionError) as error:
+            acquire_token()
 
     assert "This is a dummy error message" in str(error.value)

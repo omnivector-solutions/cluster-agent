@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  cluster-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./cluster_agent:/agent/cluster_agent
+      - cluster-agent-cache:/cache/
+    entrypoint: /agent/entrypoint.sh
+    environment:
+      CLUSTER_AGENT_BASE_SLURMRESTD_URL: http://slurmrestd:6820
+      CLUSTER_AGENT_X_SLURM_USER_NAME: "${X_SLURM_USER_NAME}"
+      CLUSTER_AGENT_X_SLURM_USER_TOKEN: "${X_SLURM_USER_TOKEN}"
+      CLUSTER_AGENT_DEFAULT_SLURM_WORK_DIR: /slurm-work-dir
+      CLUSTER_AGENT_BASE_API_URL: http://jobbergate-api:8000
+      CLUSTER_AGENT_SENTRY_DSN:
+      CLUSTER_AGENT_AUTH0_DOMAIN: "${AUTH0_DOMAIN}"
+      CLUSTER_AGENT_AUTH0_AUDIENCE: "${AUTH0_AUDIENCE}"
+      CLUSTER_AGENT_AUTH0_CLIENT_ID: "${AUTH0_CLIENT_ID}"
+      CLUSTER_AGENT_AUTH0_CLIENT_SECRET: "${AUTH0_CLIENT_SECRET}"
+      CLUSTER_AGENT_CACHE_DIR: /cache
+    depends_on:
+      jobbergate-api:
+        condition: service_healthy
+  jobbergate-api:
+    build:
+      context: ../jobbergate/jobbergate-api
+      dockerfile: Dockerfile-dev
+      args:
+        - PYPI_PASSWORD=${PYPI_PASSWORD}
+    volumes:
+      - ../jobbergate/jobbergate-api/jobbergate_api:/app/jobbergate_api
+      - ../jobbergate/jobbergate-api/dev_tools:/app/dev_tools
+      - ../jobbergate/jobbergate-api/alembic:/app/alembic
+    entrypoint: /app/entrypoint.sh
+    environment:
+      - DATABASE_HOST=jobbergate-db
+      - DATABASE_USER=omnivector
+      - DATABASE_PSWD=local-pswd
+      - DATABASE_NAME=jobbergate
+      - DATABASE_PORT=5432
+      - S3_ENDPOINT_URL=http://jobbergate-minio:9000
+      - S3_BUCKET_NAME=jobbergate-resources
+      - AWS_ACCESS_KEY_ID=compose-s3-key
+      - AWS_SECRET_ACCESS_KEY=compose-s3-secret
+      - ARMASEC_DOMAIN=${AUTH0_DOMAIN}
+      - ARMASEC_AUDIENCE=${AUTH0_AUDIENCE}
+      - ARMASEC_DEBUG=${ARMASEC_DEBUG}
+    ports:
+      - 8000:8000
+    healthcheck:
+      test: curl --fail http://localhost:8000/jobbergate/health || exit 1
+      interval: 5s
+      retries: 10
+      timeout: 5s
+
+  jobbergate-db:
+    image: postgres
+    restart: always
+    volumes:
+      - jobbergate_db_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_PASSWORD=local-pswd
+      - POSTGRES_USER=omnivector
+      - POSTGRES_DB=jobbergate
+    ports:
+      - 5432:5432
+
+  jobbergate-minio:
+    image: minio/minio
+    volumes:
+      - minio_data:/data
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      - MINIO_ROOT_USER=compose-s3-key
+      - MINIO_ROOT_PASSWORD=compose-s3-secret
+    command: ["server", "--compat", "--console-address", ':9001', "/data"]
+
+networks:
+  default:
+    external:
+      name: armada-net
+
+volumes:
+  jobbergate_db_data:
+  slurm_db_data:
+  minio_data:
+  cluster-agent-cache:
