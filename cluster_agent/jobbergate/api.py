@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 import httpx
+from loguru import logger
 
 from cluster_agent.settings import SETTINGS
 from cluster_agent.utils.exception import JobbergateApiError
@@ -36,7 +37,8 @@ async def fetch_pending_submissions() -> List[PendingJobSubmission]:
     """
     Retrieve a list of pending job_submissions.
     """
-
+    logger.debug(f"CLIENT: {jobbergate_client.base_url}")
+    logger.debug("PATH: /job-submissions/agent/pending")
     response = await jobbergate_client.get("/job-submissions/agent/pending")
 
     JobbergateApiError.require_condition(
