@@ -20,11 +20,6 @@ class Settings(BaseSettings):
     BASE_API_URL: str = Field("https://rats.omnivector.solutions", regex=_URL_REGEX)
     DISABLE_SLURM_AUTH: bool = False
 
-    # jobbergate api info
-    JOBBERGATE_API_URL: str = Field(
-        "http://localhost:8000/jobbergate", regex=_URL_REGEX
-    )
-
     SENTRY_DSN: str = Field("https://rats.sentry.com", regex=_URL_REGEX)
 
     # Auth0 config for machine-to-machine security

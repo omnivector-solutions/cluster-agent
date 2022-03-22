@@ -10,6 +10,8 @@ from cluster_agent.identity.slurmrestd import backend_client as slurmrestd_clien
 
 async def fetch_job_status(slurm_job_id: int) -> JobSubmissionStatus:
 
+    logger.debug(f"Fetching slurm job status for slurm job {slurm_job_id}")
+
     response = await slurmrestd_client.get(f"/slurm/v0.0.36/job/{slurm_job_id}")
     SlurmrestdError.require_condition(
         response.status_code == 200,
@@ -26,7 +28,11 @@ async def fetch_job_status(slurm_job_id: int) -> JobSubmissionStatus:
         snick.dedent(f"Couldn't find a slurm job matching id {slurm_job_id}"),
     )
     job = jobs.pop()
-    return status_map[job["job_state"]]
+    slurm_status = job["job_state"]
+    logger.debug(f"Slurm status for slurm job {slurm_job_id} is {slurm_status}")
+    jobbergate_status = status_map[job["job_state"]]
+    logger.debug(f"Jobbergate status for slurm job {slurm_job_id} is {jobbergate_status}")
+    return jobbergate_status
 
 
 async def finish_active_jobs():

@@ -1,9 +1,13 @@
 #!/bin/bash
 
-export SLURM_CPUS_ON_NODE=$(cat /proc/cpuinfo | grep processor | wc -l)
-sed -i "s/REPLACE_IT/CPUs=${SLURM_CPUS_ON_NODE}/g" /etc/slurm-llnl/slurm.conf
+host=$(hostname)
+sed -i "s/REPLACE_HOST/$host/g" /etc/slurm/slurm.conf
+sed -i "s/REPLACE_HOST/$host/g" /etc/slurm/slurmdbd.conf
 
 service munge start
 service slurmctld start
+service slurmdbd start
+
+slurmrestd -vvvv -s openapi/v0.0.36 -a rest_auth/local 0.0.0.0:6820
 
 tail -f /dev/null

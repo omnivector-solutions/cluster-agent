@@ -1,6 +1,5 @@
 import json
-from pathlib import Path
-from typing import Optional, cast
+from typing import cast
 
 import snick
 from loguru import logger
@@ -44,6 +43,7 @@ async def submit_job_script(pending_job_submission: PendingJobSubmission) -> int
             name=pending_job_submission.application_name,
         ),
     )
+    logger.debug(f"Submitting pending job submission {pending_job_submission.id} to slurm with payload {payload}")
     response = await slurmrestd_client.post(f"/slurm/v0.0.36/job/submit", json=payload.dict())
 
     try:
@@ -66,6 +66,7 @@ async def submit_job_script(pending_job_submission: PendingJobSubmission) -> int
 
     # Make static type checkers happy.
     slurm_job_id = cast(int, sub_data.job_id)
+    logger.debug(f"Received slurm job id {slurm_job_id} for job submission {pending_job_submission.id}")
 
     return slurm_job_id
 
