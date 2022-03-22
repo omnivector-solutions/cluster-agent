@@ -24,42 +24,85 @@ services:
       jobbergate-api:
         condition: service_healthy
 
-  slurm-master:
-    build:
-      context: ./etc/docker-slurm
-      dockerfile: Dockerfile.master
-    entrypoint: /etc/slurm/entrypoint.sh
+  mysql:
+    image: mysql:5.7
     environment:
-      - SLURM_CPUS_ON_NODE=2
-      - DISABLE_UNSHARE_SYSV=true
-      - DISABLE_USER_CHECK=true
-      - SLURMRESTD_SECURITY=disable_unshare_sysv
-    ports:
-      - 6817:6817
-      - 6818:6818
-      - 6819:6819
-      - 6820:6820
-    depends_on:
-      slurm-db:
-        condition: service_healthy
-
-  slurm-db:
-    image: mariadb:latest
-    restart: always
-    volumes:
-      - slurm_db_data:/var/lib/mysql/data/
-    environment:
-      - MYSQL_ROOT_PASSWORD=slurm-pswd
-      - MYSQL_DATABASE=slurm
-      - MYSQL_USER=slurm-user
-      - MYSQL_PASSWORD=slurm-pswd
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_DATABASE: slurm_acct_db
+      MYSQL_USER: slurm
+      MYSQL_PASSWORD: password
     ports:
       - 3306:3306
+    volumes:
+      - var_lib_mysql:/var/lib/mysql
     healthcheck:
-      test: "/usr/bin/mysql --user=slurm-user --password=slurm-pswd --execute \"SHOW DATABASES;\""
+      test: "/usr/bin/mysql --user=slurm --password=password --execute \"SHOW DATABASES;\""
       interval: 3s
       timeout: 1s
       retries: 5
+
+  slurmdbd:
+    image: slurm-docker-cluster
+    build:
+      context: ./etc/centos-slurm
+    hostname: slurmdbd
+    command: ["slurmdbd"]
+    volumes:
+      - var_log_slurm:/var/log/slurm
+    ports:
+      - 6819:6819
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  slurmctld:
+    image: slurm-docker-cluster
+    build:
+      context: ./etc/centos-slurm
+    hostname: slurmctld
+    command: ["slurmctld"]
+    volumes:
+      - slurm_jobdir:/data
+      - var_log_slurm:/var/log/slurm
+    ports:
+      - 6817:6817
+    depends_on:
+      - "slurmdbd"
+
+  slurmrestd:
+    image: slurm-docker-cluster
+    build:
+      context: ./etc/centos-slurm
+    hostname: slurmrestd
+    command: ["slurmrestd"]
+    ports:
+      - 6818:6818
+    depends_on:
+      - slurmctld
+
+  c1:
+    image: slurm-docker-cluster
+    build:
+      context: ./etc/centos-slurm
+    hostname: c1
+    command: ["slurmd"]
+    volumes:
+      - slurm_jobdir:/data
+      - var_log_slurm:/var/log/slurm
+    depends_on:
+      - "slurmctld"
+
+  c2:
+    image: slurm-docker-cluster
+    build:
+      context: ./etc/centos-slurm
+    hostname: c2
+    command: ["slurmd"]
+    volumes:
+      - slurm_jobdir:/data
+      - var_log_slurm:/var/log/slurm
+    depends_on:
+      - "slurmctld"
 
   jobbergate-api:
     build:
@@ -118,7 +161,9 @@ services:
     command: ["server", "--compat", "--console-address", ':9001', "/data"]
 
 volumes:
+  slurm_jobdir:
+  var_lib_mysql:
+  var_log_slurm:
   jobbergate_db_data:
-  slurm_db_data:
   minio_data:
   cluster-agent-cache:
