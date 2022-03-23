@@ -59,7 +59,7 @@ async def test_fetch_pending_submissions__success():
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
             return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
         )
-        respx.get(f"{SETTINGS.JOBBERGATE_API_URL}/job-submissions/agent/pending").mock(
+        respx.get(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/pending").mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=pending_job_submissions_data,
@@ -82,7 +82,7 @@ async def test_fetch_pending_submissions__raises_JobbergateApiError_if_response_
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
             return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
         )
-        respx.get(f"{SETTINGS.JOBBERGATE_API_URL}/job-submissions/agent/pending").mock(
+        respx.get(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/pending").mock(
             return_value=httpx.Response(status_code=400)
         )
 
@@ -103,7 +103,7 @@ async def test_fetch_pending_submissions__raises_JobbergateApiError_if_response_
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
             return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
         )
-        respx.get(f"{SETTINGS.JOBBERGATE_API_URL}/job-submissions/agent/pending").mock(
+        respx.get(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/pending").mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=pending_job_submissions_data,
@@ -141,7 +141,7 @@ async def test_fetch_active_submissions__success():
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
             return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
         )
-        respx.get(f"{SETTINGS.JOBBERGATE_API_URL}/job-submissions/agent/active").mock(
+        respx.get(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/active").mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=pending_job_submissions_data,
@@ -165,7 +165,7 @@ async def test_fetch_active_submissions__raises_JobbergateApiError_if_response_i
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
             return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
         )
-        respx.get(f"{SETTINGS.JOBBERGATE_API_URL}/job-submissions/agent/active").mock(
+        respx.get(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/active").mock(
             return_value=httpx.Response(status_code=400)
         )
 
@@ -186,7 +186,7 @@ async def test_fetch_active_submissions__raises_JobbergateApiError_if_response_c
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
             return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
         )
-        respx.get(f"{SETTINGS.JOBBERGATE_API_URL}/job-submissions/agent/active").mock(
+        respx.get(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/active").mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=active_job_submissions_data,
@@ -207,7 +207,7 @@ async def test_mark_as_submitted__success():
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
             return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
         )
-        update_route = respx.put(f"{SETTINGS.JOBBERGATE_API_URL}/job-submissions/agent/1")
+        update_route = respx.put(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/1")
         update_route.mock(return_value=httpx.Response(status_code=200))
 
         await mark_as_submitted(1, 111)
@@ -224,7 +224,7 @@ async def test_mark_as_submitted__raises_JobbergateApiError_if_the_response_is_n
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
             return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
         )
-        update_route = respx.put(f"{SETTINGS.JOBBERGATE_API_URL}/job-submissions/agent/1")
+        update_route = respx.put(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/1")
         update_route.mock(return_value=httpx.Response(status_code=400))
 
         with pytest.raises(JobbergateApiError, match="Could not mark job submission 1 as updated"):
@@ -242,7 +242,7 @@ async def test_update_status__success():
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
             return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
         )
-        update_route = respx.put(url__regex=rf"{SETTINGS.JOBBERGATE_API_URL}/job-submissions/agent/\d+")
+        update_route = respx.put(url__regex=rf"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/\d+")
         update_route.mock(return_value=httpx.Response(status_code=200))
 
         await update_status(1, JobSubmissionStatus.COMPLETED)
@@ -268,7 +268,7 @@ async def test_update_status__raises_JobbergateApiError_if_the_response_is_not_2
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
             return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
         )
-        update_route = respx.put(url__regex=rf"{SETTINGS.JOBBERGATE_API_URL}/job-submissions/agent/\d+")
+        update_route = respx.put(url__regex=rf"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/\d+")
         update_route.mock(return_value=httpx.Response(status_code=400))
 
         with pytest.raises(JobbergateApiError, match="Could not update status for job submission 1"):

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
 import pydantic
 
@@ -30,6 +30,7 @@ class SlurmJobParams(pydantic.BaseModel):
     Specialized model for describing job submission parameters for Slurm REST API.
     """
     name: str
+    get_user_environment: int = 1
 
 
 class SlurmJobSubmission(pydantic.BaseModel):
@@ -56,5 +57,5 @@ class SlurmSubmitResponse(pydantic.BaseModel, extra=pydantic.Extra.ignore):
     data from its job_script and application sources.
     """
 
-    errors: SlurmSubmitError = SlurmSubmitError()
+    errors: List[SlurmSubmitError] = []
     job_id: Optional[int]

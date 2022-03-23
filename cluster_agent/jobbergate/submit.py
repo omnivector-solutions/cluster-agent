@@ -12,6 +12,15 @@ from cluster_agent.utils.exception import JobSubmissionError, JobbergateApiError
 from cluster_agent.utils.logging import log_error
 
 
+async def ping_slurm():
+    response = await slurmrestd_client.get(f"/slurm/v0.0.36/ping")
+
+    JobSubmissionError.require_condition(
+        response.status_code == 200,
+        "Couldn't connect to Slurm REST API",
+    )
+
+
 async def submit_job_script(pending_job_submission: PendingJobSubmission) -> int:
     """
     Submit a Job Script to slurm via the Slurm REST API.
@@ -19,6 +28,9 @@ async def submit_job_script(pending_job_submission: PendingJobSubmission) -> int
     :param: pending_job_submission: A job_submission with fields needed to submit.
     :returns: The ``slurm_job_id`` for the submitted job
     """
+    logger.debug("Attemting to connect with Slurm REST API")
+    await ping_slurm()
+
     job_script_name = pending_job_submission.job_script_name
     unpacked_data = json.loads(pending_job_submission.job_script_data_as_string)
 
@@ -56,10 +68,9 @@ async def submit_job_script(pending_job_submission: PendingJobSubmission) -> int
         snick.dedent(
             f"""
             Slurmrestd rejected job submission with status {response.status_code}
-              URL:      {response.url}
-              Payload:  {payload}
-              Error:    {sub_data.errors.error}
-              Err. No.: {sub_data.errors.errno}
+              URL:       {response.url}
+              Payload:   {payload}
+              Response:  {json.dumps(sub_data.dict(), indent=2)}
             """,
         )
     )

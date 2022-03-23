@@ -22,7 +22,6 @@ async def fetch_pending_submissions() -> List[PendingJobSubmission]:
     with JobbergateApiError.handle_errors(
         "Failed to deserialize pending job submission data"
     ):
-        logger.debug("RESPONSE JSON: {response.json()}")
         pending_job_submissions = [
             PendingJobSubmission(**pjs) for pjs in response.json()
         ]
@@ -58,9 +57,9 @@ async def mark_as_submitted(job_submission_id: int, slurm_job_id: int):
     """
     logger.debug(f"Marking job submission {job_submission_id} as submitted")
     response = await backend_client.put(
-        f"jobberate/job-submissions/agent/{job_submission_id}",
+        f"jobbergate/job-submissions/agent/{job_submission_id}",
         json=dict(
-            status=JobSubmissionStatus.SUBMITTED,
+            new_status=JobSubmissionStatus.SUBMITTED,
             slurm_job_id=slurm_job_id,
         ),
     )
@@ -77,8 +76,8 @@ async def update_status(job_submission_id: int, status: JobSubmissionStatus):
     """
     logger.debug(f"Updating job submission {job_submission_id} with status {status}")
     response = await backend_client.put(
-        f"jobberate/job-submissions/agent/{job_submission_id}",
-        json=dict(status=status),
+        f"jobbergate/job-submissions/agent/{job_submission_id}",
+        json=dict(new_status=status),
     )
 
     JobbergateApiError.require_condition(

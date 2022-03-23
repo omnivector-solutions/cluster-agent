@@ -95,7 +95,7 @@ async def test_finish_active_jobs(tweak_settings, tmp_path, mocker, dummy_templa
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
             return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
         )
-        fetch_route = respx.get(f"{SETTINGS.JOBBERGATE_API_URL}/job-submissions/agent/active")
+        fetch_route = respx.get(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/active")
         fetch_route.mock(
             return_value=httpx.Response(
                 status_code=200,
@@ -127,7 +127,7 @@ async def test_finish_active_jobs(tweak_settings, tmp_path, mocker, dummy_templa
             job_submission_id = int(request.url.path.split("/")[-1])
             return httpx.Response(status_code=400 if job_submission_id == 2 else 200)
 
-        update_route = respx.put(url__regex=rf"{SETTINGS.JOBBERGATE_API_URL}/job-submissions/agent/\d+")
+        update_route = respx.put(url__regex=rf"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/\d+")
         update_route.mock(side_effect=_map_update_request)
 
         await finish_active_jobs()

@@ -168,20 +168,20 @@ async def test_submit_pending_jobs(dummy_template_source):
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
             return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
         )
-        fetch_route = respx.get(f"{SETTINGS.JOBBERGATE_API_URL}/job-submissions/agent/pending")
+        fetch_route = respx.get(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/pending")
         fetch_route.mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=pending_job_submissions_data,
             )
         )
-        update_1_route = respx.put(f"{SETTINGS.JOBBERGATE_API_URL}/job-submissions/agent/1")
+        update_1_route = respx.put(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/1")
         update_1_route.mock(return_value=httpx.Response(status_code=200))
 
-        update_2_route = respx.put(f"{SETTINGS.JOBBERGATE_API_URL}/job-submissions/agent/2")
+        update_2_route = respx.put(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/2")
         update_2_route.mock(return_value=httpx.Response(status_code=400))
 
-        update_3_route = respx.put(f"{SETTINGS.JOBBERGATE_API_URL}/job-submissions/agent/3")
+        update_3_route = respx.put(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/3")
         update_3_route.mock(return_value=httpx.Response(status_code=200))
 
         def _submit_side_effect(request):

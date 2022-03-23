@@ -10,6 +10,8 @@ from loguru import logger
 
 from cluster_agent.settings import SETTINGS
 
+SETTINGS.X_SLURM_USER_TOKEN = "dummy-token"
+
 
 @pytest.fixture
 def random_word():

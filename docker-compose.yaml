@@ -10,9 +10,9 @@ services:
       - cluster-agent-cache:/cache/
     entrypoint: /agent/entrypoint.sh
     environment:
-      CLUSTER_AGENT_BASE_SLURMRESTD_URL: http://slurm-master:6820
-      CLUSTER_AGENT_DISABLE_SLURM_AUTH: 1
-      CLUSTER_AGENT_X_SLURM_USER_NAME: root
+      CLUSTER_AGENT_BASE_SLURMRESTD_URL: http://slurmrestd:6820
+      CLUSTER_AGENT_X_SLURM_USER_NAME: "${X_SLURM_USER_NAME}"
+      CLUSTER_AGENT_X_SLURM_USER_TOKEN: "${X_SLURM_USER_TOKEN}"
       CLUSTER_AGENT_BASE_API_URL: http://jobbergate-api:8000
       CLUSTER_AGENT_SENTRY_DSN:
       CLUSTER_AGENT_AUTH0_DOMAIN: "${AUTH0_DOMAIN}"
@@ -23,43 +23,6 @@ services:
     depends_on:
       jobbergate-api:
         condition: service_healthy
-
-  slurm-master:
-    build:
-      context: ./etc/docker-slurm
-      dockerfile: Dockerfile.master
-    entrypoint: /etc/slurm/entrypoint.sh
-    environment:
-      - SLURM_CPUS_ON_NODE=2
-      - DISABLE_UNSHARE_SYSV=true
-      - DISABLE_USER_CHECK=true
-    ports:
-      - 6817:6817
-      - 6818:6818
-      - 6819:6819
-      - 6820:6820
-    depends_on:
-      slurm-db:
-        condition: service_healthy
-
-  slurm-db:
-    image: mariadb:latest
-    restart: always
-    volumes:
-      - slurm_db_data:/var/lib/mysql/data/
-    environment:
-      - MYSQL_ROOT_PASSWORD=slurm-pswd
-      - MYSQL_DATABASE=slurm
-      - MYSQL_USER=slurm-user
-      - MYSQL_PASSWORD=slurm-pswd
-    ports:
-      - 3306:3306
-    healthcheck:
-      test: "/usr/bin/mysql --user=slurm-user --password=slurm-pswd --execute \"SHOW DATABASES;\""
-      interval: 3s
-      timeout: 1s
-      retries: 5
-
   jobbergate-api:
     build:
       context: ../jobbergate/jobbergate-api
@@ -115,6 +78,11 @@ services:
       - MINIO_ROOT_USER=FAKE_ACCESS_KEY_ID
       - MINIO_ROOT_PASSWORD=FAKE_SECRET_ACCESS_KEY
     command: ["server", "--compat", "--console-address", ':9001', "/data"]
+
+networks:
+  default:
+    external:
+      name: armada-net
 
 volumes:
   jobbergate_db_data:
