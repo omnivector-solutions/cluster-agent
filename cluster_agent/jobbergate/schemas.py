@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 
 import pydantic
 
@@ -31,6 +31,7 @@ class SlurmJobParams(pydantic.BaseModel):
     """
     name: str
     get_user_environment: int = 1
+    current_working_directory: Optional[str]
 
 
 class SlurmJobSubmission(pydantic.BaseModel):

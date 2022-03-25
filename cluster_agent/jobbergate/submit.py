@@ -10,6 +10,7 @@ from cluster_agent.jobbergate.constants import JobSubmissionStatus
 from cluster_agent.identity.slurmrestd import backend_client as slurmrestd_client
 from cluster_agent.utils.exception import JobSubmissionError, JobbergateApiError
 from cluster_agent.utils.logging import log_error
+from cluster_agent.settings import SETTINGS
 
 
 async def ping_slurm():
@@ -53,10 +54,11 @@ async def submit_job_script(pending_job_submission: PendingJobSubmission) -> int
         script=job_script,
         job=SlurmJobParams(
             name=pending_job_submission.application_name,
+            current_working_directory=SETTINGS.DEFAULT_SLURM_WORK_DIR,
         ),
     )
     logger.debug(f"Submitting pending job submission {pending_job_submission.id} to slurm with payload {payload}")
-    response = await slurmrestd_client.post(f"/slurm/v0.0.36/job/submit", json=payload.dict())
+    response = await slurmrestd_client.post("/slurm/v0.0.36/job/submit", json=payload.dict())
 
     try:
         sub_data = SlurmSubmitResponse(**response.json())
