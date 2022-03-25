@@ -42,8 +42,8 @@ services:
       - DATABASE_PORT=5432
       - S3_ENDPOINT_URL=http://jobbergate-minio:9000
       - S3_BUCKET_NAME=jobbergate-resources
-      - AWS_ACCESS_KEY_ID=FAKE_ACCESS_KEY_ID
-      - AWS_SECRET_ACCESS_KEY=FAKE_SECRET_ACCESS_KEY
+      - AWS_ACCESS_KEY_ID=compose-s3-key
+      - AWS_SECRET_ACCESS_KEY=compose-s3-secret
       - ARMASEC_DOMAIN=${AUTH0_DOMAIN}
       - ARMASEC_AUDIENCE=${AUTH0_AUDIENCE}
       - ARMASEC_DEBUG=${ARMASEC_DEBUG}
@@ -75,8 +75,8 @@ services:
       - 9000:9000
       - 9001:9001
     environment:
-      - MINIO_ROOT_USER=FAKE_ACCESS_KEY_ID
-      - MINIO_ROOT_PASSWORD=FAKE_SECRET_ACCESS_KEY
+      - MINIO_ROOT_USER=compose-s3-key
+      - MINIO_ROOT_PASSWORD=compose-s3-secret
     command: ["server", "--compat", "--console-address", ':9001', "/data"]
 
 networks:
