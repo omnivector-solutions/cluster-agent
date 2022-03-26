@@ -27,7 +27,8 @@ setup(
         "pytest-asyncio==0.18.2",
         "black~=21.6b0",
         "flake8==4.0.1",
-    ])
+    ]),
+    packages=find_packages(),
     keywords=["armada", "hpc"],
     classifiers=[
         "Development Status :: 4 - Beta",

@@ -9,7 +9,7 @@ import pytest
 import respx
 
 from cluster_agent.settings import SETTINGS
-from cluster_agent.utils.exception import JobSubmissionError, JobbergateApiError
+from cluster_agent.utils.exception import JobbergateApiError
 from cluster_agent.jobbergate.schemas import PendingJobSubmission, ActiveJobSubmission
 from cluster_agent.jobbergate.constants import JobSubmissionStatus
 from cluster_agent.jobbergate.api import (
@@ -57,9 +57,14 @@ async def test_fetch_pending_submissions__success():
     ]
     async with respx.mock:
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
-            return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
+            return_value=httpx.Response(
+                status_code=200,
+                json=dict(access_token="dummy-token"),
+            )
         )
-        respx.get(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/pending").mock(
+        respx.get(
+            f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/pending"
+        ).mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=pending_job_submissions_data,
@@ -73,16 +78,21 @@ async def test_fetch_pending_submissions__success():
 
 
 @pytest.mark.asyncio
-async def test_fetch_pending_submissions__raises_JobbergateApiError_if_response_is_not_200():
+async def test_fetch_pending_submissions__raises_JobbergateApiError_if_response_is_not_200():  # noqa
     """
     Test that the ``fetch_pending_submissions()`` function will raise a
     JobbergateApiError if the response from the API is not OK (200).
     """
     with respx.mock:
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
-            return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
+            return_value=httpx.Response(
+                status_code=200,
+                json=dict(access_token="dummy-token"),
+            )
         )
-        respx.get(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/pending").mock(
+        respx.get(
+            f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/pending"
+        ).mock(
             return_value=httpx.Response(status_code=400)
         )
 
@@ -91,7 +101,7 @@ async def test_fetch_pending_submissions__raises_JobbergateApiError_if_response_
 
 
 @pytest.mark.asyncio
-async def test_fetch_pending_submissions__raises_JobbergateApiError_if_response_cannot_be_deserialized():
+async def test_fetch_pending_submissions__raises_JobbergateApiError_if_response_cannot_be_deserialized():  # noqa
     """
     Test that the ``fetch_pending_submissions()`` function will raise a
     JobbergateApiError if it fails to convert the response to a PendingJobSubmission.
@@ -99,11 +109,16 @@ async def test_fetch_pending_submissions__raises_JobbergateApiError_if_response_
     pending_job_submissions_data = [
         dict(bad="data"),
     ]
-    with respx.mock as route_mock:
+    with respx.mock:
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
-            return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
+            return_value=httpx.Response(
+                status_code=200,
+                json=dict(access_token="dummy-token"),
+            )
         )
-        respx.get(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/pending").mock(
+        respx.get(
+            f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/pending"
+        ).mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=pending_job_submissions_data,
@@ -139,9 +154,14 @@ async def test_fetch_active_submissions__success():
     ]
     with respx.mock:
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
-            return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
+            return_value=httpx.Response(
+                status_code=200,
+                json=dict(access_token="dummy-token"),
+            )
         )
-        respx.get(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/active").mock(
+        respx.get(
+            f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/active"
+        ).mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=pending_job_submissions_data,
@@ -156,16 +176,21 @@ async def test_fetch_active_submissions__success():
 
 
 @pytest.mark.asycio
-async def test_fetch_active_submissions__raises_JobbergateApiError_if_response_is_not_200():
+async def test_fetch_active_submissions__raises_JobbergateApiError_if_response_is_not_200():  # noqa
     """
     Test that the ``fetch_active_submissions()`` function will raise a
     JobbergateApiError if the response from the API is not OK (200).
     """
     with respx.mock:
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
-            return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
+            return_value=httpx.Response(
+                status_code=200,
+                json=dict(access_token="dummy-token"),
+            )
         )
-        respx.get(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/active").mock(
+        respx.get(
+            f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/active"
+        ).mock(
             return_value=httpx.Response(status_code=400)
         )
 
@@ -174,7 +199,7 @@ async def test_fetch_active_submissions__raises_JobbergateApiError_if_response_i
 
 
 @pytest.mark.asycio
-async def test_fetch_active_submissions__raises_JobbergateApiError_if_response_cannot_be_deserialized():
+async def test_fetch_active_submissions__raises_JobbergateApiError_if_response_cannot_be_deserialized():  # noqa
     """
     Test that the ``fetch_active_submissions()`` function will raise a
     JobbergateApiError if it fails to convert the response to an ActiveJobSubmission.
@@ -182,11 +207,16 @@ async def test_fetch_active_submissions__raises_JobbergateApiError_if_response_c
     active_job_submissions_data = [
         dict(bad="data"),
     ]
-    with respx.mock as route_mock:
+    with respx.mock:
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
-            return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
+            return_value=httpx.Response(
+                status_code=200,
+                json=dict(access_token="dummy-token"),
+            )
         )
-        respx.get(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/active").mock(
+        respx.get(
+            f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/active"
+        ).mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=active_job_submissions_data,
@@ -203,11 +233,16 @@ async def test_mark_as_submitted__success():
     Test that the ``mark_as_submitted()`` can successfully update a job submission
     with its ``slurm_job_id`` and a status of ``SUBMITTED``.
     """
-    with respx.mock as route_mock:
+    with respx.mock:
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
-            return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
+            return_value=httpx.Response(
+                status_code=200,
+                json=dict(access_token="dummy-token"),
+            )
         )
-        update_route = respx.put(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/1")
+        update_route = respx.put(
+            f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/1"
+        )
         update_route.mock(return_value=httpx.Response(status_code=200))
 
         await mark_as_submitted(1, 111)
@@ -215,19 +250,27 @@ async def test_mark_as_submitted__success():
 
 
 @pytest.mark.asycio
-async def test_mark_as_submitted__raises_JobbergateApiError_if_the_response_is_not_200():
+async def test_mark_as_submitted__raises_JobbergateApiError_if_the_response_is_not_200():  # noqa
     """
     Test that the ``mark_as_submitted()`` function will raise a JobbergateApiError if
     the response from the API is not OK (200).
     """
-    with respx.mock as route_mock:
+    with respx.mock:
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
-            return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
+            return_value=httpx.Response(
+                status_code=200,
+                json=dict(access_token="dummy-token"),
+            )
         )
-        update_route = respx.put(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/1")
+        update_route = respx.put(
+            f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/1"
+        )
         update_route.mock(return_value=httpx.Response(status_code=400))
 
-        with pytest.raises(JobbergateApiError, match="Could not mark job submission 1 as updated"):
+        with pytest.raises(
+            JobbergateApiError,
+            match="Could not mark job submission 1 as updated",
+        ):
             await mark_as_submitted(1, 111)
         assert update_route.called
 
@@ -238,11 +281,16 @@ async def test_update_status__success():
     Test that the ``update_status()`` can successfully update a job submission
     with a ``JobSubmissionStatus``.
     """
-    with respx.mock as route_mock:
+    with respx.mock:
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
-            return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
+            return_value=httpx.Response(
+                status_code=200,
+                json=dict(access_token="dummy-token"),
+            )
         )
-        update_route = respx.put(url__regex=rf"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/\d+")
+        update_route = respx.put(
+            url__regex=rf"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/\d+"
+        )
         update_route.mock(return_value=httpx.Response(status_code=200))
 
         await update_status(1, JobSubmissionStatus.COMPLETED)
@@ -264,13 +312,21 @@ async def test_update_status__raises_JobbergateApiError_if_the_response_is_not_2
     Test that the ``update_status()`` function will raise a JobbergateApiError if
     the response from the API is not OK (200).
     """
-    with respx.mock as route_mock:
+    with respx.mock:
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
-            return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
+            return_value=httpx.Response(
+                status_code=200,
+                json=dict(access_token="dummy-token"),
+            )
         )
-        update_route = respx.put(url__regex=rf"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/\d+")
+        update_route = respx.put(
+            url__regex=rf"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/\d+"
+        )
         update_route.mock(return_value=httpx.Response(status_code=400))
 
-        with pytest.raises(JobbergateApiError, match="Could not update status for job submission 1"):
+        with pytest.raises(
+            JobbergateApiError,
+            match="Could not update status for job submission 1",
+        ):
             await update_status(1, JobSubmissionStatus.CREATED)
         assert update_route.called

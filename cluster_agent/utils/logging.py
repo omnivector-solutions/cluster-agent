@@ -4,7 +4,6 @@ from traceback import format_tb
 
 from loguru import logger
 from buzz import DoExceptParams
-from snick import dedent_all
 
 
 def log_error(params: DoExceptParams):
@@ -16,10 +15,10 @@ def log_error(params: DoExceptParams):
                     message describing it, and the stack trace of the error.
     """
     logger.error(
-        dedent_all(
+        "\n".join([
             params.final_message,
             "--------",
             "Traceback:",
             "".join(format_tb(params.trace)),
-        )
+        ])
     )

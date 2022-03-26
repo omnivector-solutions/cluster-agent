@@ -3,21 +3,26 @@ Define tests for the submission functions of the jobbergate section.
 """
 
 import json
-import re
 
 import httpx
 import pytest
 import respx
 
-from cluster_agent.utils.exception import JobSubmissionError
+from cluster_agent.utils.exception import JobSubmissionError, SlurmrestdError
 from cluster_agent.settings import SETTINGS
-from cluster_agent.jobbergate.schemas import PendingJobSubmission, SlurmJobSubmission, SlurmJobParams
+from cluster_agent.jobbergate.schemas import (
+    PendingJobSubmission,
+    SlurmJobSubmission,
+    SlurmJobParams,
+)
 from cluster_agent.jobbergate.submit import submit_job_script, submit_pending_jobs
 from cluster_agent.jobbergate.constants import JobSubmissionStatus
 
 
 @pytest.mark.asyncio
-async def test_submit_job_script__success(dummy_pending_job_submission_data, dummy_template_source, mocker):
+async def test_submit_job_script__success(
+    dummy_pending_job_submission_data, dummy_template_source, mocker
+):
     """
     Test that the ``submit_job_script()`` successfully submits a job.
 
@@ -61,7 +66,9 @@ async def test_submit_job_script__raises_exception_if_no_executable_script_was_f
     """
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
     pending_job_submission.job_script_data_as_string = json.dumps(
-        {k: v for (k, v) in json.loads(pending_job_submission.job_script_data_as_string).items() if k != "application.sh"}
+        {k: v for (k, v) in json.loads(
+            pending_job_submission.job_script_data_as_string
+        ).items() if k != "application.sh"}
     )
 
     with pytest.raises(JobSubmissionError, match="Could not find an executable"):
@@ -97,13 +104,9 @@ async def test_submit_job_script__raises_exception_if_submit_call_response_is_no
             )
         )
 
-        match_regex = re.compile(
-            r"rejected job submission with status 400.*BOOM!",
-            re.DOTALL,
-        )
         with pytest.raises(
-            JobSubmissionError,
-            match=match_regex,
+            SlurmrestdError,
+            match="Failed to submit job to slurm",
         ):
             await submit_job_script(pending_job_submission)
 
@@ -128,7 +131,7 @@ async def test_submit_job_script__raises_exception_if_response_cannot_be_unpacke
             content="BAD DATA",
         ))
 
-        with pytest.raises(JobSubmissionError, match="Couldn't unpack response"):
+        with pytest.raises(SlurmrestdError, match="Failed to submit job to slurm"):
             await submit_job_script(pending_job_submission)
 
 

@@ -9,5 +9,4 @@ python-hostlist==1.21
 loguru~=0.5.3
 PyJWT==2.1.0
 httpx==0.18.2
-snick==1.2.0
 py-buzz==3.0.0

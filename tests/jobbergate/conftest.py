@@ -3,9 +3,9 @@ Define fixtures for the ``jobbergate`` section.
 """
 
 import json
+from textwrap import dedent
 
 import pytest
-import snick
 
 
 @pytest.fixture(scope="module")
@@ -13,7 +13,7 @@ def dummy_template_source():
     """
     Provide a fixture that returns a valid job_script_template.
     """
-    return snick.dedent(
+    return dedent(
         """
         #!/bin/python3
 
@@ -24,7 +24,7 @@ def dummy_template_source():
         print(f"bar='{{bar}}'")
         print(f"baz='{{baz}}'")
         """
-    )
+    ).strip()
 
 
 @pytest.fixture

@@ -125,7 +125,11 @@ class AsyncBackendClient(httpx.AsyncClient):
 
     @staticmethod
     async def _log_response(response: httpx.Response):
-        logger.debug(f"Received response: {response.request.method} {response.request.url} {response.status_code}")
+        logger.debug(
+            f"Received response: {response.request.method} "
+            f"{response.request.url} "
+            f"{response.status_code}"
+        )
 
 
 backend_client = AsyncBackendClient()
