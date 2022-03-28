@@ -19,8 +19,15 @@ setup(
     + _VERSION
     + "tar.gz",
     install_requires=list(map(lambda string: string.strip("\n"), open("requirements.txt", "r"))),
-    extra_requires=dict(dev=list(map(lambda string: string.strip("\n"), open("dev-requirements.txt", "r")))),
-    packages=find_packages(),
+    extra_requires=dict(dev=[
+        "pytest==7.1.0",
+        "pytest-mock==3.7.0",
+        "respx==0.19.2",
+        "asynctest==0.13.0",
+        "pytest-asyncio==0.18.2",
+        "black~=21.6b0",
+        "flake8==4.0.1",
+    ])
     keywords=["armada", "hpc"],
     classifiers=[
         "Development Status :: 4 - Beta",
