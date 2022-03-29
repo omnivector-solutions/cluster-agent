@@ -29,6 +29,7 @@ class SlurmJobParams(pydantic.BaseModel):
     """
     Specialized model for describing job submission parameters for Slurm REST API.
     """
+
     name: str
     get_user_environment: int = 1
     current_working_directory: Optional[str]

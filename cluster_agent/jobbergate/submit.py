@@ -59,7 +59,9 @@ async def submit_job_script(pending_job_submission: PendingJobSubmission) -> int
         "Failed to submit job to slurm",
         do_except=log_error,
     ):
-        response = await slurmrestd_client.post("/slurm/v0.0.36/job/submit", json=payload.dict())
+        response = await slurmrestd_client.post(
+            "/slurm/v0.0.36/job/submit", json=payload.dict()
+        )
         response.raise_for_status()
         sub_data = SlurmSubmitResponse(**response.json())
 

@@ -25,7 +25,7 @@ setup(
         "respx==0.19.2",
         "asynctest==0.13.0",
         "pytest-asyncio==0.18.2",
-        "black~=21.6b0",
+        "black==22.3.0",
         "flake8==4.0.1",
     ]),
     packages=find_packages(),

@@ -15,10 +15,12 @@ def log_error(params: DoExceptParams):
                     message describing it, and the stack trace of the error.
     """
     logger.error(
-        "\n".join([
-            params.final_message,
-            "--------",
-            "Traceback:",
-            "".join(format_tb(params.trace)),
-        ])
+        "\n".join(
+            [
+                params.final_message,
+                "--------",
+                "Traceback:",
+                "".join(format_tb(params.trace)),
+            ]
+        )
     )

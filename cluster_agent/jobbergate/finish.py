@@ -28,7 +28,9 @@ async def fetch_job_status(slurm_job_id: int) -> JobSubmissionStatus:
     slurm_status = job["job_state"]
     logger.debug(f"Slurm status for slurm job {slurm_job_id} is {slurm_status}")
     jobbergate_status = status_map[job["job_state"]]
-    logger.debug(f"Jobbergate status for slurm job {slurm_job_id} is {jobbergate_status}")
+    logger.debug(
+        f"Jobbergate status for slurm job {slurm_job_id} is {jobbergate_status}"
+    )
     return jobbergate_status
 
 
