@@ -19,7 +19,7 @@ setup(
     + _VERSION
     + "tar.gz",
     install_requires=list(map(lambda string: string.strip("\n"), open("requirements.txt", "r"))),
-    extra_requires=dict(dev=[
+    extras_require=dict(dev=[
         "pytest==7.1.0",
         "pytest-mock==3.7.0",
         "respx==0.19.2",
