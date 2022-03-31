@@ -35,6 +35,7 @@ def dummy_pending_job_submission_data(dummy_template_source):
     return dict(
         id=1,
         job_submission_name="sub1",
+        job_submission_owner_email="email1@dummy.com",
         job_script_id=11,
         job_script_name="script1",
         job_script_data_as_string=json.dumps({"application.sh": dummy_template_source}),

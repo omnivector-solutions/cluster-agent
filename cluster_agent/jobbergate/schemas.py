@@ -11,6 +11,7 @@ class PendingJobSubmission(pydantic.BaseModel, extra=pydantic.Extra.ignore):
 
     id: int
     job_submission_name: str
+    job_submission_owner_email: str
     job_script_name: str
     job_script_data_as_string: str
     application_name: str
@@ -32,6 +33,8 @@ class SlurmJobParams(pydantic.BaseModel):
 
     name: str
     get_user_environment: int = 1
+    user_id: int
+    group_id: int
     current_working_directory: Optional[str]
 
 

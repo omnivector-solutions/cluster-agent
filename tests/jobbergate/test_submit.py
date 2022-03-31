@@ -30,6 +30,8 @@ async def test_submit_job_script__success(
     and that a ``slurm_job_id`` is returned.
     """
     mocker.patch("cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token")
+    mock_ldap = mocker.patch("cluster_agent.jobbergate.submit.ldap")
+    mock_ldap.find_uid_gid.return_value = (1111, 9999)
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
 
     async with respx.mock:
@@ -52,18 +54,24 @@ async def test_submit_job_script__success(
             job=SlurmJobParams(
                 name=pending_job_submission.application_name,
                 current_working_directory=SETTINGS.DEFAULT_SLURM_WORK_DIR,
+                user_id=1111,
+                group_id=9999,
             ),
         ).dict()
+        mock_ldap.find_uid_gid.assert_called_once_with("email1@dummy.com")
 
 
 @pytest.mark.asyncio
 async def test_submit_job_script__raises_exception_if_no_executable_script_was_found(
-    dummy_pending_job_submission_data
+    dummy_pending_job_submission_data, mocker,
 ):
     """
     Test that the ``submit_job_script()`` will raise a JobSubmissionError if it cannot
     find an executable job script in the retrieved pending job submission data.
     """
+    mock_ldap = mocker.patch("cluster_agent.jobbergate.submit.ldap")
+    mock_ldap.find_uid_gid.return_value = (1111, 9999)
+
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
     pending_job_submission.job_script_data_as_string = json.dumps(
         {k: v for (k, v) in json.loads(
@@ -85,6 +93,9 @@ async def test_submit_job_script__raises_exception_if_submit_call_response_is_no
     REST API is nota 200. Verifies that the error message is included in the raised
     exception.
     """
+    mock_ldap = mocker.patch("cluster_agent.jobbergate.submit.ldap")
+    mock_ldap.find_uid_gid.return_value = (1111, 9999)
+
     mocker.patch("cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token")
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
 
@@ -121,6 +132,9 @@ async def test_submit_job_script__raises_exception_if_response_cannot_be_unpacke
     REST API is nota 200. Verifies that the error message is included in the raised
     exception.
     """
+    mock_ldap = mocker.patch("cluster_agent.jobbergate.submit.ldap")
+    mock_ldap.find_uid_gid.return_value = (1111, 9999)
+
     mocker.patch("cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token")
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
 
@@ -136,17 +150,20 @@ async def test_submit_job_script__raises_exception_if_response_cannot_be_unpacke
 
 
 @pytest.mark.asyncio
-async def test_submit_pending_jobs(dummy_template_source):
+async def test_submit_pending_jobs(dummy_template_source, mocker):
     """
     Test that the ``submit_pending_jobs()`` function can fetch pending job submissions,
     submit each to slurm via the Slurm REST API, and update the job submission via the
     Jobbergate API.
     """
+    mock_ldap = mocker.patch("cluster_agent.jobbergate.submit.ldap")
+    mock_ldap.find_uid_gid.return_value = (1111, 9999)
 
     pending_job_submissions_data = [
         dict(
             id=1,
             job_submission_name="sub1",
+            job_submission_owner_email="email1@dummy.com",
             job_script_id=11,
             job_script_name="script1",
             job_script_data_as_string=json.dumps({"application.sh": dummy_template_source}),
@@ -155,6 +172,7 @@ async def test_submit_pending_jobs(dummy_template_source):
         dict(
             id=2,
             job_submission_name="sub2",
+            job_submission_owner_email="email2@dummy.com",
             job_script_id=22,
             job_script_name="script2",
             job_script_data_as_string=json.dumps({"application.sh": dummy_template_source}),
@@ -163,6 +181,7 @@ async def test_submit_pending_jobs(dummy_template_source):
         dict(
             id=3,
             job_submission_name="sub3",
+            job_submission_owner_email="email3@dummy.com",
             job_script_id=33,
             job_script_name="script3",
             job_script_data_as_string=json.dumps({"application.sh": dummy_template_source}),

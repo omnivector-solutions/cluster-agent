@@ -15,6 +15,7 @@ from cluster_agent.identity.slurmrestd import backend_client as slurmrestd_clien
 from cluster_agent.utils.exception import JobSubmissionError
 from cluster_agent.utils.exception import SlurmrestdError
 from cluster_agent.utils.logging import log_error
+from cluster_agent.utils.user import ldap
 from cluster_agent.settings import SETTINGS
 
 
@@ -39,6 +40,14 @@ async def submit_job_script(pending_job_submission: PendingJobSubmission) -> int
             filename = f"{job_script_name}.job"
 
     JobSubmissionError.require_condition(
+        ldap is not None,
+        "LDAP is not available to retrieve username.",
+    )
+    (user_id, group_id) = ldap.find_uid_gid(
+        pending_job_submission.job_submission_owner_email,
+    )
+
+    JobSubmissionError.require_condition(
         job_script is not None,
         "Could not find an executable script in retrieved job script data.",
     )
@@ -48,6 +57,8 @@ async def submit_job_script(pending_job_submission: PendingJobSubmission) -> int
         job=SlurmJobParams(
             name=pending_job_submission.application_name,
             current_working_directory=SETTINGS.DEFAULT_SLURM_WORK_DIR,
+            user_id=user_id,
+            group_id=group_id,
         ),
     )
     logger.debug(

@@ -30,6 +30,7 @@ async def test_fetch_pending_submissions__success():
         dict(
             id=1,
             job_submission_name="sub1",
+            job_submission_owner_email="email1@dummy.com",
             job_script_id=11,
             job_script_name="script1",
             job_script_data_as_string="{}",
@@ -39,6 +40,7 @@ async def test_fetch_pending_submissions__success():
         dict(
             id=2,
             job_submission_name="sub2",
+            job_submission_owner_email="email2@dummy.com",
             job_script_id=22,
             job_script_name="script2",
             job_script_data_as_string="{}",
@@ -48,6 +50,7 @@ async def test_fetch_pending_submissions__success():
         dict(
             id=3,
             job_submission_name="sub3",
+            job_submission_owner_email="email3@dummy.com",
             job_script_id=33,
             job_script_name="script3",
             job_script_data_as_string="{}",
