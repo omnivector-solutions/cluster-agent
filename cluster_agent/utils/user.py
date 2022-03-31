@@ -15,9 +15,15 @@ class LDAP:
     """
 
     def __init__(self):
+        """
+        Initialize the LDAP class.
+        """
         self.connection = None
 
     def connect(self):
+        """
+        Connec to the the LDAP server.
+        """
         LDAPError.require_condition(
             all(
                 [
@@ -50,6 +56,8 @@ class LDAP:
     def find_username(self, email: str) -> str:
         """
         Find an active diretory username given a user email.
+
+        Lazily connect to the LDAP server if not already connected.
         """
         if self.connection is None:
             self.connect()
@@ -85,6 +93,9 @@ class LDAP:
         return user_id
 
     def find_uid_gid(self, email: str) -> Tuple[int, int]:
+        """
+        Find the uid/gid for a user given their email address.
+        """
         username = self.find_username(email)
         with UIDError.handle_errors(
             f"Couldn't find uid/gid info for username {username}",
