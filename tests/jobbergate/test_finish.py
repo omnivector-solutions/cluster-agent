@@ -16,10 +16,14 @@ async def test_fetch_pending_submissions__success(mocker):
     Test that the ``fetch_job_status()`` function can successfully retrieve
     job_state from Slurm and convert it into a JobSubmissionStatus.
     """
-    mocker.patch("cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token")
+    mocker.patch(
+        "cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token"
+    )
     async with respx.mock:
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
-            return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
+            return_value=httpx.Response(
+                status_code=200, json=dict(access_token="dummy-token")
+            )
         )
         respx.get(f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/11").mock(
             return_value=httpx.Response(
@@ -58,31 +62,43 @@ async def test_fetch_pending_submissions__success(mocker):
 
 
 @pytest.mark.asyncio
-async def test_fetch_pending_submissions__raises_SlurmrestdError_if_response_is_not_200(mocker):
+async def test_fetch_pending_submissions__raises_SlurmrestdError_if_response_is_not_200(
+    mocker,
+):
     """
     Test that the ``fetch_job_status()`` will raise a ``SlurmrestdError`` if the
     response is not a 200.
     """
-    mocker.patch("cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token")
+    mocker.patch(
+        "cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token"
+    )
     async with respx.mock:
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
-            return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
+            return_value=httpx.Response(
+                status_code=200, json=dict(access_token="dummy-token")
+            )
         )
         respx.get(f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/11").mock(
             return_value=httpx.Response(status_code=400)
         )
-        with pytest.raises(SlurmrestdError, match="Failed to fetch job status from slurm"):
+        with pytest.raises(
+            SlurmrestdError, match="Failed to fetch job status from slurm"
+        ):
             await fetch_job_status(11)
 
 
 @pytest.mark.asyncio
-async def test_finish_active_jobs(tweak_settings, tmp_path, mocker, dummy_template_source):
+async def test_finish_active_jobs(
+    tweak_settings, tmp_path, mocker, dummy_template_source
+):
     """
     Test that the ``finish_active_jobs()`` function can fetch active job submissions,
     retrieve the job state from slurm, map it to a ``JobSubmissionStatus``, and update
     the job submission status via the API.
     """
-    mocker.patch("cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token")
+    mocker.patch(
+        "cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token"
+    )
     active_job_submissions_data = [
         dict(id=1, slurm_job_id=11),  # Will complete
         dict(id=2, slurm_job_id=22),  # Jobbergate API gives a 400
@@ -93,9 +109,13 @@ async def test_finish_active_jobs(tweak_settings, tmp_path, mocker, dummy_templa
 
     async with respx.mock:
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
-            return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
+            return_value=httpx.Response(
+                status_code=200, json=dict(access_token="dummy-token")
+            )
         )
-        fetch_route = respx.get(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/active")
+        fetch_route = respx.get(
+            f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/active"
+        )
         fetch_route.mock(
             return_value=httpx.Response(
                 status_code=200,
@@ -115,12 +135,17 @@ async def test_finish_active_jobs(tweak_settings, tmp_path, mocker, dummy_templa
             return httpx.Response(
                 status_code=400 if slurm_job_id == 33 else 200,
                 json=dict(
-                    jobs=[] if slurm_job_id == 44 else [
+                    jobs=[]
+                    if slurm_job_id == 44
+                    else [
                         dict(job_state=mapper[slurm_job_id]),
                     ],
                 ),
             )
-        slurm_route = respx.get(url__regex=rf"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/\d+")
+
+        slurm_route = respx.get(
+            url__regex=rf"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/\d+"
+        )
         slurm_route.mock(side_effect=_map_slurm_request)
 
         def _map_update_request(request: httpx.Request):
@@ -138,7 +163,13 @@ async def test_finish_active_jobs(tweak_settings, tmp_path, mocker, dummy_templa
             return int(request.url.path.split("/")[-1])
 
         assert slurm_route.call_count == 5
-        assert [_map_slurm_call(c.request) for c in slurm_route.calls] == [11, 22, 33, 44, 55]
+        assert [_map_slurm_call(c.request) for c in slurm_route.calls] == [
+            11,
+            22,
+            33,
+            44,
+            55,
+        ]
 
         assert fetch_route.call_count == 1
 

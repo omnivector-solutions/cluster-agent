@@ -95,9 +95,7 @@ async def test_fetch_pending_submissions__raises_JobbergateApiError_if_response_
         )
         respx.get(
             f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/pending"
-        ).mock(
-            return_value=httpx.Response(status_code=400)
-        )
+        ).mock(return_value=httpx.Response(status_code=400))
 
         with pytest.raises(JobbergateApiError, match="Failed to fetch pending"):
             await fetch_pending_submissions()
@@ -193,9 +191,7 @@ async def test_fetch_active_submissions__raises_JobbergateApiError_if_response_i
         )
         respx.get(
             f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/active"
-        ).mock(
-            return_value=httpx.Response(status_code=400)
-        )
+        ).mock(return_value=httpx.Response(status_code=400))
 
         with pytest.raises(JobbergateApiError, match="Failed to fetch"):
             await fetch_active_submissions()
@@ -297,14 +293,18 @@ async def test_update_status__success():
         update_route.mock(return_value=httpx.Response(status_code=200))
 
         await update_status(1, JobSubmissionStatus.COMPLETED)
-        assert update_route.calls.last.request.content == json.dumps(dict(
-            new_status=JobSubmissionStatus.COMPLETED,
-        )).encode("utf-8")
+        assert update_route.calls.last.request.content == json.dumps(
+            dict(
+                new_status=JobSubmissionStatus.COMPLETED,
+            )
+        ).encode("utf-8")
 
         await update_status(2, JobSubmissionStatus.FAILED)
-        assert update_route.calls.last.request.content == json.dumps(dict(
-            new_status=JobSubmissionStatus.FAILED,
-        )).encode("utf-8")
+        assert update_route.calls.last.request.content == json.dumps(
+            dict(
+                new_status=JobSubmissionStatus.FAILED,
+            )
+        ).encode("utf-8")
 
         assert update_route.call_count == 2
 

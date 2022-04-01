@@ -7,7 +7,7 @@ import json
 import pytest
 
 from cluster_agent.utils import user
-from cluster_agent.utils.exception import LDAPError, UIDError
+from cluster_agent.utils.exception import LDAPError
 from cluster_agent.settings import SETTINGS
 
 
@@ -22,6 +22,7 @@ def test_connect__success(mocker, tweak_settings):
 
     with tweak_settings(
         LDAP_DOMAIN="dummy.domain.com",
+        LDAP_HOST="dummy.domain.com",
         LDAP_USERNAME="dummyUser",
         LDAP_PASSWORD="dummy-password",
     ):
@@ -29,9 +30,9 @@ def test_connect__success(mocker, tweak_settings):
         mock_server.assert_called_once_with(SETTINGS.LDAP_DOMAIN, get_info=user.ALL)
         mock_connection.assert_called_once_with(
             mock_server_obj,
-            user=f"{SETTINGS.LDAP_DOMAIN}\\{SETTINGS.LDAP_USERNAME}",
+            user=SETTINGS.LDAP_USERNAME,
             password=SETTINGS.LDAP_PASSWORD,
-            authentication=user.NTLM,
+            authentication=user.SIMPLE,
             auto_bind=True,
         )
     assert ldap.search_base == "DC=dummy,DC=domain,DC=com"
@@ -48,6 +49,7 @@ def test_connect__raises_LDAPError_if_settings_are_missing(tweak_settings):
 
     with tweak_settings(
         LDAP_DOMAIN=None,
+        LDAP_HOST="dummy.domain.com",
         LDAP_USERNAME="dummyUser",
         LDAP_PASSWORD="dummy-password",
     ):
@@ -56,6 +58,16 @@ def test_connect__raises_LDAPError_if_settings_are_missing(tweak_settings):
 
     with tweak_settings(
         LDAP_DOMAIN="dummy.domain.com",
+        LDAP_HOST=None,
+        LDAP_USERNAME="dummyUser",
+        LDAP_PASSWORD="dummy-password",
+    ):
+        with pytest.raises(LDAPError, match="Agent is not configured for LDAP"):
+            ldap.connect()
+
+    with tweak_settings(
+        LDAP_DOMAIN="dummy.domain.com",
+        LDAP_HOST="dummy.domain.com",
         LDAP_USERNAME=None,
         LDAP_PASSWORD="dummy-password",
     ):
@@ -64,6 +76,7 @@ def test_connect__raises_LDAPError_if_settings_are_missing(tweak_settings):
 
     with tweak_settings(
         LDAP_DOMAIN="dummy.domain.com",
+        LDAP_HOST="dummy.domain.com",
         LDAP_USERNAME="dummyUser",
         LDAP_PASSWORD=None,
     ):
@@ -94,6 +107,7 @@ def test_find_username__success(mocker, tweak_settings):
     ldap = user.LDAP()
 
     with tweak_settings(
+        LDAP_HOST="dummy.domain.com",
         LDAP_DOMAIN="dummy.domain.com",
         LDAP_USERNAME="dummyUser",
         LDAP_PASSWORD="dummy-password",
@@ -120,6 +134,7 @@ def test_find_username__fails_if_server_does_not_return_1_entry(mocker, tweak_se
     ldap = user.LDAP()
 
     with tweak_settings(
+        LDAP_HOST="dummy.domain.com",
         LDAP_DOMAIN="dummy.domain.com",
         LDAP_USERNAME="dummyUser",
         LDAP_PASSWORD="dummy-password",
@@ -157,6 +172,7 @@ def test_find_username__fails_if_entries_cannot_be_extracted(mocker, tweak_setti
 
     with tweak_settings(
         LDAP_DOMAIN="dummy.domain.com",
+        LDAP_HOST="dummy.domain.com",
         LDAP_USERNAME="dummyUser",
         LDAP_PASSWORD="dummy-password",
     ):
@@ -187,6 +203,7 @@ def test_find_username__fails_if_user_has_more_than_one_CN(mocker, tweak_setting
 
     with tweak_settings(
         LDAP_DOMAIN="dummy.domain.com",
+        LDAP_HOST="dummy.domain.com",
         LDAP_USERNAME="dummyUser",
         LDAP_PASSWORD="dummy-password",
     ):
@@ -197,54 +214,3 @@ def test_find_username__fails_if_user_has_more_than_one_CN(mocker, tweak_setting
         mock_entry.entry_to_json = lambda: json.dumps(dict(attributes=dict(cn=[1, 2])))
         with pytest.raises(LDAPError, match="User did not have exactly one CN"):
             ldap.find_username("dummy_user@dummy.domain.com")
-
-
-def test_find_uid_gid__success(mocker, tweak_settings):
-    """
-    Test that the ``find_uid_gid()`` gets uid and gid for the given user email.
-
-    Mock ``pwd.getpwnam`` to return a valid passwd entry with a uid and guid for the
-    user. Assert that the returned value is a 2-tuple of integers.
-    """
-
-    mock_pwd_entry = mocker.MagicMock()
-    mock_pwd_entry.pw_uid = 1111
-    mock_pwd_entry.pw_gid = 9999
-    mock_pwd = mocker.patch.object(user, "pwd")
-    mock_pwd.getpwnam.return_value = mock_pwd_entry
-
-    ldap = user.LDAP()
-    mocker.patch.object(ldap, "find_username")
-
-    with tweak_settings(
-        LDAP_DOMAIN="dummy.domain.com",
-        LDAP_USERNAME="dummyUser",
-        LDAP_PASSWORD="dummy-password",
-    ):
-        (uid, gid) = ldap.find_uid_gid("dummy_user@dummy.domain.com")
-
-    assert uid == 1111
-    assert gid == 9999
-
-
-def test_find_uid_gid__fails_if_getpwnam_finds_no_matches(mocker, tweak_settings):
-    """
-    Test that the ``find_uid_gid()`` fails if the getpwnam finds no matches.
-
-    Mock ``pwd.getpwnam`` to raise a ``KeyError`` if the supplied email has no uid.
-    Assert that a UIDError is raised.
-    """
-
-    mock_pwd = mocker.patch.object(user, "pwd")
-    mock_pwd.getpwnam.side_effect = KeyError("name not found")
-
-    ldap = user.LDAP()
-    mocker.patch.object(ldap, "find_username")
-
-    with tweak_settings(
-        LDAP_DOMAIN="dummy.domain.com",
-        LDAP_USERNAME="dummyUser",
-        LDAP_PASSWORD="dummy-password",
-    ):
-        with pytest.raises(UIDError, match="Couldn't find uid/gid info"):
-            ldap.find_uid_gid("dummy_user@dummy.domain.com")

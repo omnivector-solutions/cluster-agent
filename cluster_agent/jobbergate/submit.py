@@ -11,7 +11,10 @@ from cluster_agent.jobbergate.schemas import (
 )
 from cluster_agent.jobbergate.api import fetch_pending_submissions, mark_as_submitted
 from cluster_agent.jobbergate.constants import JobSubmissionStatus
-from cluster_agent.identity.slurmrestd import backend_client as slurmrestd_client
+from cluster_agent.identity.slurmrestd import (
+    backend_client as slurmrestd_client,
+    inject_token,
+)
 from cluster_agent.utils.exception import JobSubmissionError
 from cluster_agent.utils.exception import SlurmrestdError
 from cluster_agent.utils.logging import log_error
@@ -43,9 +46,7 @@ async def submit_job_script(pending_job_submission: PendingJobSubmission) -> int
         ldap is not None,
         "LDAP is not available to retrieve username.",
     )
-    (user_id, group_id) = ldap.find_uid_gid(
-        pending_job_submission.job_submission_owner_email,
-    )
+    username = ldap.find_username(pending_job_submission.job_submission_owner_email)
 
     JobSubmissionError.require_condition(
         job_script is not None,
@@ -57,8 +58,6 @@ async def submit_job_script(pending_job_submission: PendingJobSubmission) -> int
         job=SlurmJobParams(
             name=pending_job_submission.application_name,
             current_working_directory=SETTINGS.DEFAULT_SLURM_WORK_DIR,
-            user_id=user_id,
-            group_id=group_id,
         ),
     )
     logger.debug(
@@ -71,7 +70,9 @@ async def submit_job_script(pending_job_submission: PendingJobSubmission) -> int
         do_except=log_error,
     ):
         response = await slurmrestd_client.post(
-            "/slurm/v0.0.36/job/submit", json=payload.dict()
+            "/slurm/v0.0.36/job/submit",
+            auth=lambda r: inject_token(r, username=username),
+            json=payload.dict(),
         )
         response.raise_for_status()
         sub_data = SlurmSubmitResponse(**response.json())
@@ -98,24 +99,26 @@ async def submit_pending_jobs():
     pending_job_submissions = await fetch_pending_submissions()
 
     for pending_job_submission in pending_job_submissions:
-        skip = "skipping to next pending job"
         logger.debug(f"Submitting pending job_submission {pending_job_submission.id}")
-        slurm_job_id = None
+        with JobSubmissionError.handle_errors(
+            (
+                f"Failed to sumbit pending job_submission {pending_job_submission.id}"
+                "...skipping to next pending job"
+            ),
+            do_except=log_error,
+            do_else=lambda: logger.debug(
+                "Finished submitting pending job_submission {pending_job_submission.id}"
+            ),
+            re_raise=False,
+        ):
 
-        try:
             slurm_job_id = await submit_job_script(pending_job_submission)
-        except Exception:
-            logger.debug(f"Failed to submit job script...{skip}")
-            continue
 
-        logger.debug(
-            "Updating job_submission with "
-            f"status='{JobSubmissionStatus.SUBMITTED}' {slurm_job_id=}"
-        )
+            logger.debug(
+                "Updating job_submission with "
+                f"status='{JobSubmissionStatus.SUBMITTED}' {slurm_job_id=}"
+            )
 
-        try:
             await mark_as_submitted(pending_job_submission.id, slurm_job_id)
-        except Exception:
-            logger.debug(f"Failed to mark as submitted...{skip}")
 
     logger.debug("...Finished submitting pending jobs")

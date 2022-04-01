@@ -3,7 +3,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
-from pydantic import BaseSettings, Field
+from pydantic import BaseSettings, Field, root_validator
 from pydantic.error_wrappers import ValidationError
 
 from cluster_agent.utils.logging import logger
@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     BASE_API_URL: str = Field("https://rats.omnivector.solutions", regex=_URL_REGEX)
 
     # LDAP server settings
+    LDAP_HOST: Optional[str]
     LDAP_DOMAIN: Optional[str]
     LDAP_USERNAME: Optional[str]
     LDAP_PASSWORD: Optional[str]
@@ -36,6 +37,20 @@ class Settings(BaseSettings):
     AUTH0_CLIENT_SECRET: str = Field("abcde12345")
 
     CACHE_DIR = Path.home() / ".cache/cluster-agent"
+
+    @root_validator
+    def compute_extra_settings(cls, values):
+        """
+        Compute settings values that are based on other settings values.
+        """
+        ldap_host = values["LDAP_HOST"]
+        ldap_domain = values["LDAP_DOMAIN"]
+
+        # Just use the LDAP domain as the host if host is not set but domain is
+        if ldap_domain is not None and ldap_host is None:
+            values["LDAP_HOST"] = ldap_domain
+
+        return values
 
     class Config:
 

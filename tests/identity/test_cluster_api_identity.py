@@ -31,7 +31,9 @@ def test__write_token_to_cache__creates_cache_directory_if_does_not_exist(
     assert mock_cluster_api_cache_dir.exists()
 
 
-def test__load_token_from_cache__loads_token_data_from_the_cache(mock_cluster_api_cache_dir):
+def test__load_token_from_cache__loads_token_data_from_the_cache(
+    mock_cluster_api_cache_dir,
+):
     """
     Verifies that a token can be retrieved from the cache.
     """
@@ -83,7 +85,9 @@ def test__load_token_from_cache__returns_none_if_cached_token_is_expired(
     mock_cluster_api_cache_dir.mkdir(parents=True)
     token_path = mock_cluster_api_cache_dir / "token"
     one_second_ago = int(datetime.now(tz=timezone.utc).timestamp()) - 1
-    expired_token = jwt.encode(dict(exp=one_second_ago), key="dummy-key", algorithm="HS256")
+    expired_token = jwt.encode(
+        dict(exp=one_second_ago), key="dummy-key", algorithm="HS256"
+    )
     token_path.write_text(expired_token)
 
     retrieved_token = _load_token_from_cache()
@@ -100,7 +104,9 @@ def test__load_token_from_cache__returns_none_if_cached_token_will_expire_soon(
     mock_cluster_api_cache_dir.mkdir(parents=True)
     token_path = mock_cluster_api_cache_dir / "token"
     nine_seconds_from_now = int(datetime.now(tz=timezone.utc).timestamp()) + 9
-    expired_token = jwt.encode(dict(exp=nine_seconds_from_now), key="dummy-key", algorithm="HS256")
+    expired_token = jwt.encode(
+        dict(exp=nine_seconds_from_now), key="dummy-key", algorithm="HS256"
+    )
     token_path.write_text(expired_token)
 
     retrieved_token = _load_token_from_cache()

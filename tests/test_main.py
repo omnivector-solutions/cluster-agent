@@ -74,24 +74,18 @@ async def test_main__checks_if_main_file_calls_jobs_collection(
 @mock.patch("cluster_agent.main.submit_jobs")
 @mock.patch("cluster_agent.main.finish_jobs")
 @pytest.mark.asyncio
-async def test_main__call_secondary_functions_to_collect_data(
-    mock_finish_jobs,
-    mock_submit_jobs,
-    mock_collect_partitions,
-    mock_collect_nodes,
-    mock_collect_jobs,
-    mock_collect_diagnostics,
-):
+async def test_main__call_secondary_functions_to_collect_data(*operations):
     """Ensures there is an async function to call all the functions that collect data"""
 
-    await run_agent()
+    # The name of the functions are used for logging. Mocks have no names, so fake it.
+    for op in operations:
+        op.__name__ = "whatever"
 
-    mock_collect_partitions.assert_awaited_once()
-    mock_collect_nodes.assert_awaited_once()
-    mock_collect_jobs.assert_awaited_once()
-    mock_collect_diagnostics.assert_awaited_once()
-    mock_submit_jobs.assert_awaited_once()
-    mock_finish_jobs.assert_awaited_once()
+    with mock.patch("cluster_agent.main.logger"):
+        await run_agent()
+
+    for op in operations:
+        op.assert_awaited_once()
 
 
 @mock.patch("cluster_agent.main.asyncio")

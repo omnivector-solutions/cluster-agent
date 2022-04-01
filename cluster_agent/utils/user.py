@@ -1,10 +1,9 @@
-import pwd
 import json
-from typing import Tuple
 
-from ldap3 import Server, Connection, ALL, NTLM
+from ldap3 import Server, Connection, ALL, SIMPLE
+from loguru import logger
 
-from cluster_agent.utils.exception import LDAPError, UIDError
+from cluster_agent.utils.exception import LDAPError
 from cluster_agent.utils.logging import log_error
 from cluster_agent.settings import SETTINGS
 
@@ -24,9 +23,11 @@ class LDAP:
         """
         Connec to the the LDAP server.
         """
+        logger.debug("Attempting to connect to LDAP server")
         LDAPError.require_condition(
             all(
                 [
+                    SETTINGS.LDAP_HOST is not None,
                     SETTINGS.LDAP_DOMAIN is not None,
                     SETTINGS.LDAP_USERNAME is not None,
                     SETTINGS.LDAP_PASSWORD is not None,
@@ -35,23 +36,30 @@ class LDAP:
             "Agent is not configured for LDAP",
         )
 
+        host = SETTINGS.LDAP_HOST
         domain = SETTINGS.LDAP_DOMAIN
-        username = f"{domain}\\{SETTINGS.LDAP_USERNAME}"
-        password = SETTINGS.LDAP_PASSWORD
 
         # Make static type checkers happy
         assert domain is not None
 
         self.search_base = ",".join([f"DC={dc}" for dc in domain.split(".")])
 
-        server = Server(domain, get_info=ALL)
-        self.connection = Connection(
-            server,
-            user=username,
-            password=password,
-            authentication=NTLM,
-            auto_bind=True,
-        )
+        username = SETTINGS.LDAP_USERNAME
+        password = SETTINGS.LDAP_PASSWORD
+
+        logger.debug(f"Connecting to LDAP at {host} ({domain}) with {username}")
+        with LDAPError.handle_errors(
+            "Couldn't connect to LDAP",
+            do_except=log_error,
+        ):
+            server = Server(host, get_info=ALL)
+            self.connection = Connection(
+                server,
+                user=username,
+                password=password,
+                authentication=SIMPLE,
+                auto_bind=True,
+            )
 
     def find_username(self, email: str) -> str:
         """
@@ -65,13 +73,21 @@ class LDAP:
         # Make static type checkers happy
         assert self.connection is not None
 
-        self.connection.search(
-            self.search_base,
-            f"(mail={email})",
-            attributes=["cn"],
-        )
+        logger.debug(f"Searching for email {email} in LDAP")
+
+        with LDAPError.handle_errors(
+            "LDAP search failed",
+            do_except=log_error,
+        ):
+            self.connection.search(
+                self.search_base,
+                f"(mail={email})",
+                attributes=["cn"],
+            )
 
         entries = self.connection.entries
+        logger.debug(f"Found {len(entries)} entries")
+
         LDAPError.require_condition(
             len(entries) == 1,
             f"Did not find exactly one match for email {email}. Found {len(entries)}",
@@ -89,21 +105,8 @@ class LDAP:
             f"User did not have exactly one CN. Got {cns}.",
         )
 
-        user_id = cns.pop().lower()
-        return user_id
-
-    def find_uid_gid(self, email: str) -> Tuple[int, int]:
-        """
-        Find the uid/gid for a user given their email address.
-        """
-        username = self.find_username(email)
-        with UIDError.handle_errors(
-            f"Couldn't find uid/gid info for username {username}",
-            do_except=log_error,
-        ):
-            entry = pwd.getpwnam(username)
-
-        return (entry.pw_uid, entry.pw_gid)
+        username = cns.pop().lower()
+        return username
 
 
 ldap = None

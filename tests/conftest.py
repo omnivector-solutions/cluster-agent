@@ -54,7 +54,9 @@ def respx_mock():
     """
     with respx.mock as mock:
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
-            return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
+            return_value=httpx.Response(
+                status_code=200, json=dict(access_token="dummy-token")
+            )
         )
         yield mock
 

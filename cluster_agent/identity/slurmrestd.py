@@ -1,4 +1,5 @@
 """Core module for Jobbergate API identity management"""
+
 import subprocess
 import typing
 
@@ -12,7 +13,7 @@ from cluster_agent.utils.logging import logger
 CACHE_DIR = SETTINGS.CACHE_DIR / "slurmrestd"
 
 
-def _load_token_from_cache() -> typing.Union[str, None]:
+def _load_token_from_cache(username: str) -> typing.Union[str, None]:
     """
     Looks for and returns a token from a cache file (if it exists).
     Returns None if::
@@ -20,12 +21,15 @@ def _load_token_from_cache() -> typing.Union[str, None]:
     * Can't read the token
     * The token is expired (or will expire within 10 seconds)
     """
-    token_path = CACHE_DIR / "token"
+    token_path = CACHE_DIR / f"{username}.token"
+    logger.debug(f"Attempting to retrieve token from: {token_path}")
     if not token_path.exists():
+        logger.debug("Cached token does not exist")
         return None
 
     try:
-        token = token_path.read_text()
+        token = token_path.read_text().strip()
+        logger.debug(f"Retrieved token from {token_path} as {token}")
     except Exception:
         logger.warning(
             f"Couldn't load token from cache file {token_path}. Will acquire a new one"
@@ -43,7 +47,7 @@ def _load_token_from_cache() -> typing.Union[str, None]:
     return token
 
 
-def _write_token_to_cache(token: str):
+def _write_token_to_cache(token: str, username: str):
     """
     Writes the token to the cache.
     """
@@ -57,28 +61,24 @@ def _write_token_to_cache(token: str):
             )  # noqa
             return
 
-    token_path = CACHE_DIR / "token"
+    token_path = CACHE_DIR / f"{username}.token"
     try:
         token_path.write_text(token)
     except Exception:
         logger.warning(f"Couldn't save token to {token_path}")
 
 
-def acquire_token() -> str:
+def acquire_token(username: str) -> str:
     """
     Retrieves a token from Slurmrestd based on the app settings.
     """
-    if SETTINGS.X_SLURM_USER_TOKEN is not None:
-        logger.debug("Using Slurm auth token from environment")
-        return SETTINGS.X_SLURM_USER_TOKEN
-
     logger.debug("Attempting to use cached token")
-    token = _load_token_from_cache()
+    token = _load_token_from_cache(username)
 
     if token is None:
         logger.debug("Attempting to acquire token from Slurmrestd")
         proc = subprocess.Popen(
-            "scontrol token".split(),
+            f"scontrol token username={username}".split(),
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -88,10 +88,33 @@ def acquire_token() -> str:
             proc.returncode == 0, stderr.decode().strip()
         )
         token = stdout.decode().strip().split("=")[1]
-        _write_token_to_cache(token)
+        _write_token_to_cache(token, username)
 
-    logger.debug("Successfully acquired auth token from Auth0")
+    logger.debug("Successfully acquired auth token")
     return token
+
+
+def inject_token(
+    request: httpx.Request,
+    username: typing.Optional[str] = None,
+) -> httpx.Request:
+    """
+    Inject a token based on the provided username into the request.
+
+    For requests that need to use something except the default username,
+    this injector should be used at the request level (instead of at client
+    initialization) like this:
+
+    .. code-block:: python
+
+       client.get(url, auth=lambda r: inject_token(r, username=username))
+    """
+    if username is None:
+        username = SETTINGS.X_SLURM_USER_NAME
+
+    request.headers["x-slurm-user-name"] = username
+    request.headers["x-slurm-user-token"] = acquire_token(username)
+    return request
 
 
 class AsyncBackendClient(httpx.AsyncClient):
@@ -104,22 +127,14 @@ class AsyncBackendClient(httpx.AsyncClient):
     _token: typing.Optional[str]
 
     def __init__(self):
-        self._token = None
         super().__init__(
             base_url=SETTINGS.BASE_SLURMRESTD_URL,
-            auth=self._inject_token,
+            auth=inject_token,
             event_hooks=dict(
                 request=[self._log_request],
                 response=[self._log_response],
             ),
         )
-
-    def _inject_token(self, request: httpx.Request) -> httpx.Request:
-        if self._token is None:
-            self._token = acquire_token()
-        request.headers["x-slurm-user-name"] = SETTINGS.X_SLURM_USER_NAME
-        request.headers["x-slurm-user-token"] = self._token
-        return request
 
     @staticmethod
     async def _log_request(request: httpx.Request):

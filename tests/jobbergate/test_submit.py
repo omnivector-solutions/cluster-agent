@@ -29,13 +29,17 @@ async def test_submit_job_script__success(
     Verifies that a PendingJobSubmission instance is submitted via the Slurm REST API
     and that a ``slurm_job_id`` is returned.
     """
-    mocker.patch("cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token")
+    mocker.patch(
+        "cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token"
+    )
     mock_ldap = mocker.patch("cluster_agent.jobbergate.submit.ldap")
-    mock_ldap.find_uid_gid.return_value = (1111, 9999)
+    mock_ldap.find_username.return_value = "dummy-user"
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
 
     async with respx.mock:
-        submit_route = respx.post(f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/submit")
+        submit_route = respx.post(
+            f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/submit"
+        )
         submit_route.mock(
             return_value=httpx.Response(
                 status_code=200,
@@ -49,21 +53,25 @@ async def test_submit_job_script__success(
         assert submit_route.call_count == 1
         last_request = submit_route.calls.last.request
         assert last_request.method == "POST"
-        assert json.loads(last_request.content.decode("utf-8")) == SlurmJobSubmission(
-            script=dummy_template_source,
-            job=SlurmJobParams(
-                name=pending_job_submission.application_name,
-                current_working_directory=SETTINGS.DEFAULT_SLURM_WORK_DIR,
-                user_id=1111,
-                group_id=9999,
-            ),
-        ).dict()
-        mock_ldap.find_uid_gid.assert_called_once_with("email1@dummy.com")
+        assert last_request.headers["x-slurm-user-name"] == "dummy-user"
+        assert last_request.headers["x-slurm-user-token"] == "dummy-token"
+        assert (
+            json.loads(last_request.content.decode("utf-8"))
+            == SlurmJobSubmission(
+                script=dummy_template_source,
+                job=SlurmJobParams(
+                    name=pending_job_submission.application_name,
+                    current_working_directory=SETTINGS.DEFAULT_SLURM_WORK_DIR,
+                ),
+            ).dict()
+        )
+        mock_ldap.find_username.assert_called_once_with("email1@dummy.com")
 
 
 @pytest.mark.asyncio
 async def test_submit_job_script__raises_exception_if_no_executable_script_was_found(
-    dummy_pending_job_submission_data, mocker,
+    dummy_pending_job_submission_data,
+    mocker,
 ):
     """
     Test that the ``submit_job_script()`` will raise a JobSubmissionError if it cannot
@@ -74,9 +82,13 @@ async def test_submit_job_script__raises_exception_if_no_executable_script_was_f
 
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
     pending_job_submission.job_script_data_as_string = json.dumps(
-        {k: v for (k, v) in json.loads(
-            pending_job_submission.job_script_data_as_string
-        ).items() if k != "application.sh"}
+        {
+            k: v
+            for (k, v) in json.loads(
+                pending_job_submission.job_script_data_as_string
+            ).items()
+            if k != "application.sh"
+        }
     )
 
     with pytest.raises(JobSubmissionError, match="Could not find an executable"):
@@ -96,11 +108,15 @@ async def test_submit_job_script__raises_exception_if_submit_call_response_is_no
     mock_ldap = mocker.patch("cluster_agent.jobbergate.submit.ldap")
     mock_ldap.find_uid_gid.return_value = (1111, 9999)
 
-    mocker.patch("cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token")
+    mocker.patch(
+        "cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token"
+    )
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
 
     async with respx.mock:
-        submit_route = respx.post(f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/submit")
+        submit_route = respx.post(
+            f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/submit"
+        )
         submit_route.mock(
             return_value=httpx.Response(
                 status_code=400,
@@ -135,15 +151,21 @@ async def test_submit_job_script__raises_exception_if_response_cannot_be_unpacke
     mock_ldap = mocker.patch("cluster_agent.jobbergate.submit.ldap")
     mock_ldap.find_uid_gid.return_value = (1111, 9999)
 
-    mocker.patch("cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token")
+    mocker.patch(
+        "cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token"
+    )
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
 
     async with respx.mock:
-        submit_route = respx.post(f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/submit")
-        submit_route.mock(return_value=httpx.Response(
-            status_code=200,
-            content="BAD DATA",
-        ))
+        submit_route = respx.post(
+            f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/submit"
+        )
+        submit_route.mock(
+            return_value=httpx.Response(
+                status_code=200,
+                content="BAD DATA",
+            )
+        )
 
         with pytest.raises(SlurmrestdError, match="Failed to submit job to slurm"):
             await submit_job_script(pending_job_submission)
@@ -157,7 +179,11 @@ async def test_submit_pending_jobs(dummy_template_source, mocker):
     Jobbergate API.
     """
     mock_ldap = mocker.patch("cluster_agent.jobbergate.submit.ldap")
-    mock_ldap.find_uid_gid.return_value = (1111, 9999)
+    mock_ldap.find_username.return_value = "dummy-user"
+
+    mocker.patch(
+        "cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token"
+    )
 
     pending_job_submissions_data = [
         dict(
@@ -166,7 +192,9 @@ async def test_submit_pending_jobs(dummy_template_source, mocker):
             job_submission_owner_email="email1@dummy.com",
             job_script_id=11,
             job_script_name="script1",
-            job_script_data_as_string=json.dumps({"application.sh": dummy_template_source}),
+            job_script_data_as_string=json.dumps(
+                {"application.sh": dummy_template_source}
+            ),
             application_name="app1",
         ),
         dict(
@@ -175,7 +203,9 @@ async def test_submit_pending_jobs(dummy_template_source, mocker):
             job_submission_owner_email="email2@dummy.com",
             job_script_id=22,
             job_script_name="script2",
-            job_script_data_as_string=json.dumps({"application.sh": dummy_template_source}),
+            job_script_data_as_string=json.dumps(
+                {"application.sh": dummy_template_source}
+            ),
             application_name="app2",
         ),
         dict(
@@ -184,29 +214,41 @@ async def test_submit_pending_jobs(dummy_template_source, mocker):
             job_submission_owner_email="email3@dummy.com",
             job_script_id=33,
             job_script_name="script3",
-            job_script_data_as_string=json.dumps({"application.sh": dummy_template_source}),
+            job_script_data_as_string=json.dumps(
+                {"application.sh": dummy_template_source}
+            ),
             application_name="app3",
         ),
     ]
 
     async with respx.mock:
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
-            return_value=httpx.Response(status_code=200, json=dict(access_token="dummy-token"))
+            return_value=httpx.Response(
+                status_code=200, json=dict(access_token="dummy-token")
+            )
         )
-        fetch_route = respx.get(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/pending")
+        fetch_route = respx.get(
+            f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/pending"
+        )
         fetch_route.mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=pending_job_submissions_data,
             )
         )
-        update_1_route = respx.put(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/1")
+        update_1_route = respx.put(
+            f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/1"
+        )
         update_1_route.mock(return_value=httpx.Response(status_code=200))
 
-        update_2_route = respx.put(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/2")
+        update_2_route = respx.put(
+            f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/2"
+        )
         update_2_route.mock(return_value=httpx.Response(status_code=400))
 
-        update_3_route = respx.put(f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/3")
+        update_3_route = respx.put(
+            f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/3"
+        )
         update_3_route.mock(return_value=httpx.Response(status_code=200))
 
         def _submit_side_effect(request):
@@ -224,21 +266,27 @@ async def test_submit_pending_jobs(dummy_template_source, mocker):
                     json=dict(job_id=fake_slurm_job_id),
                 )
 
-        submit_route = respx.post(f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/submit")
+        submit_route = respx.post(
+            f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/submit"
+        )
         submit_route.mock(side_effect=_submit_side_effect)
 
         await submit_pending_jobs()
 
         assert update_1_route.call_count == 1
-        assert update_1_route.calls.last.request.content == json.dumps(dict(
-            new_status=JobSubmissionStatus.SUBMITTED,
-            slurm_job_id=11,
-        )).encode("utf-8")
+        assert update_1_route.calls.last.request.content == json.dumps(
+            dict(
+                new_status=JobSubmissionStatus.SUBMITTED,
+                slurm_job_id=11,
+            )
+        ).encode("utf-8")
 
         assert update_2_route.call_count == 1
-        assert update_2_route.calls.last.request.content == json.dumps(dict(
-            new_status=JobSubmissionStatus.SUBMITTED,
-            slurm_job_id=22,
-        )).encode("utf-8")
+        assert update_2_route.calls.last.request.content == json.dumps(
+            dict(
+                new_status=JobSubmissionStatus.SUBMITTED,
+                slurm_job_id=22,
+            )
+        ).encode("utf-8")
 
         assert not update_3_route.called

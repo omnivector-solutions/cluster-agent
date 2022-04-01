@@ -8,11 +8,11 @@ services:
     volumes:
       - ./cluster_agent:/agent/cluster_agent
       - cluster-agent-cache:/cache/
+      - shared-users:/etc/users/
     entrypoint: /agent/entrypoint.sh
     environment:
       CLUSTER_AGENT_BASE_SLURMRESTD_URL: http://slurmrestd:6820
-      CLUSTER_AGENT_X_SLURM_USER_NAME: "${X_SLURM_USER_NAME}"
-      CLUSTER_AGENT_X_SLURM_USER_TOKEN: "${X_SLURM_USER_TOKEN}"
+      CLUSTER_AGENT_X_SLURM_USER_NAME: slurm
       CLUSTER_AGENT_DEFAULT_SLURM_WORK_DIR: /slurm-work-dir
       CLUSTER_AGENT_BASE_API_URL: http://jobbergate-api:8000
       CLUSTER_AGENT_SENTRY_DSN:
@@ -21,9 +21,16 @@ services:
       CLUSTER_AGENT_AUTH0_CLIENT_ID: "${AUTH0_CLIENT_ID}"
       CLUSTER_AGENT_AUTH0_CLIENT_SECRET: "${AUTH0_CLIENT_SECRET}"
       CLUSTER_AGENT_CACHE_DIR: /cache
+      CLUSTER_AGENT_LDAP_HOST: ldap://ldap:1389
+      CLUSTER_AGENT_LDAP_DOMAIN: test.ldap.com
+      CLUSTER_AGENT_LDAP_USERNAME: "cn=admin,dc=test,dc=ldap,dc=com"
+      CLUSTER_AGENT_LDAP_PASSWORD: admin
     depends_on:
+      ldap:
+        condition: service_healthy
       jobbergate-api:
         condition: service_healthy
+
   jobbergate-api:
     build:
       context: ../jobbergate/jobbergate-api
@@ -80,6 +87,21 @@ services:
       - MINIO_ROOT_PASSWORD=compose-s3-secret
     command: ["server", "--compat", "--console-address", ':9001', "/data"]
 
+  ldap:
+    image: bitnami/openldap:2.5.11
+    environment:
+      LDAP_ROOT: "dc=test,dc=ldap,dc=com"
+      LDAP_ADMIN_USERNAME: "admin"
+      LDAP_ADMIN_PASSWORD: "admin"
+    ports:
+      - 1389:1389
+      - 1636:1636
+    healthcheck:
+      test: ldapurl || exit 1
+      interval: 5s
+      retries: 10
+      timeout: 5s
+
 networks:
   default:
     external:
@@ -90,3 +112,6 @@ volumes:
   slurm_db_data:
   minio_data:
   cluster-agent-cache:
+  shared-users:
+    external: true
+    name: shared-users
