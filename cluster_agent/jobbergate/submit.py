@@ -40,7 +40,6 @@ async def submit_job_script(pending_job_submission: PendingJobSubmission) -> int
     for (filename, data) in unpacked_data.items():
         if filename == "application.sh":
             job_script = data
-            filename = f"{job_script_name}.job"
 
     if ldap is not None:
         logger.debug("Fetching username from LDAP")
