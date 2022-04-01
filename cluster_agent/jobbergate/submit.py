@@ -29,7 +29,6 @@ async def submit_job_script(pending_job_submission: PendingJobSubmission) -> int
     :param: pending_job_submission: A job_submission with fields needed to submit.
     :returns: The ``slurm_job_id`` for the submitted job
     """
-    job_script_name = pending_job_submission.job_script_name
     unpacked_data = json.loads(pending_job_submission.job_script_data_as_string)
 
     # TODO: Using Slurm REST API, we don't need to embed sbatch params.

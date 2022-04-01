@@ -83,7 +83,7 @@ async def test_submit_job_script__falls_back_to_slurm_user_if_ldap_unavailable(
     mocker.patch(
         "cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token"
     )
-    mock_ldap = mocker.patch("cluster_agent.jobbergate.submit.ldap", new=None)
+    mocker.patch("cluster_agent.jobbergate.submit.ldap", new=None)
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
 
     async with respx.mock:
