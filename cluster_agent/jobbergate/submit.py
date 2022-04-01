@@ -42,11 +42,12 @@ async def submit_job_script(pending_job_submission: PendingJobSubmission) -> int
             job_script = data
             filename = f"{job_script_name}.job"
 
-    JobSubmissionError.require_condition(
-        ldap is not None,
-        "LDAP is not available to retrieve username.",
-    )
-    username = ldap.find_username(pending_job_submission.job_submission_owner_email)
+    if ldap is not None:
+        logger.debug("Fetching username from LDAP")
+        username = ldap.find_username(pending_job_submission.job_submission_owner_email)
+    else:
+        logger.debug("LDAP not available. Using {SETTINGS.X_SLURM_USER_NAME} as user.")
+        username = SETTINGS.X_SLURM_USER_NAME
 
     JobSubmissionError.require_condition(
         job_script is not None,

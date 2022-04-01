@@ -27,7 +27,8 @@ async def test_submit_job_script__success(
     Test that the ``submit_job_script()`` successfully submits a job.
 
     Verifies that a PendingJobSubmission instance is submitted via the Slurm REST API
-    and that a ``slurm_job_id`` is returned.
+    and that a ``slurm_job_id`` is returned. Verifies that LDAP was used to retrieve
+    the username.
     """
     mocker.patch(
         "cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token"
@@ -66,6 +67,54 @@ async def test_submit_job_script__success(
             ).dict()
         )
         mock_ldap.find_username.assert_called_once_with("email1@dummy.com")
+
+
+@pytest.mark.asyncio
+async def test_submit_job_script__falls_back_to_slurm_user_if_ldap_unavailable(
+    dummy_pending_job_submission_data, dummy_template_source, mocker
+):
+    """
+    Test that the ``submit_job_script()`` submits a job with the slurm user if no ldap.
+
+    Verifies that a PendingJobSubmission instance is submitted via the Slurm REST API
+    and that a ``slurm_job_id`` is returned. Verifies that the default username,
+    ``X_SLURM_USER_NAME`` is used for the job submission because LDAP is not avaialble.
+    """
+    mocker.patch(
+        "cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token"
+    )
+    mock_ldap = mocker.patch("cluster_agent.jobbergate.submit.ldap", new=None)
+    pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
+
+    async with respx.mock:
+        submit_route = respx.post(
+            f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/submit"
+        )
+        submit_route.mock(
+            return_value=httpx.Response(
+                status_code=200,
+                json=dict(job_id=13),
+            )
+        )
+
+        slurm_job_id = await submit_job_script(pending_job_submission)
+
+        assert slurm_job_id == 13
+        assert submit_route.call_count == 1
+        last_request = submit_route.calls.last.request
+        assert last_request.method == "POST"
+        assert last_request.headers["x-slurm-user-name"] == SETTINGS.X_SLURM_USER_NAME
+        assert last_request.headers["x-slurm-user-token"] == "dummy-token"
+        assert (
+            json.loads(last_request.content.decode("utf-8"))
+            == SlurmJobSubmission(
+                script=dummy_template_source,
+                job=SlurmJobParams(
+                    name=pending_job_submission.application_name,
+                    current_working_directory=SETTINGS.DEFAULT_SLURM_WORK_DIR,
+                ),
+            ).dict()
+        )
 
 
 @pytest.mark.asyncio
