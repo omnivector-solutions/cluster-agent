@@ -176,7 +176,7 @@ async def test_fetch_active_submissions__success():
             assert (i + 1) * 11 == active_job_submission.slurm_job_id
 
 
-@pytest.mark.asycio
+@pytest.mark.asyncio
 async def test_fetch_active_submissions__raises_JobbergateApiError_if_response_is_not_200():  # noqa
     """
     Test that the ``fetch_active_submissions()`` function will raise a
@@ -197,7 +197,7 @@ async def test_fetch_active_submissions__raises_JobbergateApiError_if_response_i
             await fetch_active_submissions()
 
 
-@pytest.mark.asycio
+@pytest.mark.asyncio
 async def test_fetch_active_submissions__raises_JobbergateApiError_if_response_cannot_be_deserialized():  # noqa
     """
     Test that the ``fetch_active_submissions()`` function will raise a
@@ -226,7 +226,7 @@ async def test_fetch_active_submissions__raises_JobbergateApiError_if_response_c
             await fetch_active_submissions()
 
 
-@pytest.mark.asycio
+@pytest.mark.asyncio
 async def test_mark_as_submitted__success():
     """
     Test that the ``mark_as_submitted()`` can successfully update a job submission
@@ -248,7 +248,7 @@ async def test_mark_as_submitted__success():
         assert update_route.called
 
 
-@pytest.mark.asycio
+@pytest.mark.asyncio
 async def test_mark_as_submitted__raises_JobbergateApiError_if_the_response_is_not_200():  # noqa
     """
     Test that the ``mark_as_submitted()`` function will raise a JobbergateApiError if
@@ -274,7 +274,7 @@ async def test_mark_as_submitted__raises_JobbergateApiError_if_the_response_is_n
         assert update_route.called
 
 
-@pytest.mark.asycio
+@pytest.mark.asyncio
 async def test_update_status__success():
     """
     Test that the ``update_status()`` can successfully update a job submission
@@ -309,7 +309,7 @@ async def test_update_status__success():
         assert update_route.call_count == 2
 
 
-@pytest.mark.asycio
+@pytest.mark.asyncio
 async def test_update_status__raises_JobbergateApiError_if_the_response_is_not_200():
     """
     Test that the ``update_status()`` function will raise a JobbergateApiError if
