@@ -6,6 +6,10 @@ This file keeps track of all notable changes to the Cluster Agent.
 
 Unreleased
 ----------
+
+1.3.0 - 2022-04-05
+------------------
+
 - Added jobbergate section for retrieving, submitting, and updating jobs from Jobbergate
 - Adde support for looking up usernames from LDAP via email from auth token
 - Added unit tests for jobbergate section
