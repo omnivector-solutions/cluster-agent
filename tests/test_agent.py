@@ -7,7 +7,12 @@ import asynctest
 import pytest
 from hostlist import expand_hostlist
 
-from cluster_agent.agent import update_diagnostics, upsert_partitions, upsert_nodes, upsert_jobs
+from cluster_agent.agent import (
+    update_diagnostics,
+    upsert_partitions,
+    upsert_nodes,
+    upsert_jobs,
+)
 from cluster_agent.settings import SETTINGS
 from cluster_agent.utils.exception import SlurmrestdError
 
@@ -68,7 +73,9 @@ async def test_upsert_partitions(
             json=dict(
                 meta=dict(),
                 errors=list(),
-                partition=dict(nodes=expand_hostlist(nodes_names_string), name=partition_name),
+                partition=dict(
+                    nodes=expand_hostlist(nodes_names_string), name=partition_name
+                ),
             ),
         )
     ]
@@ -223,7 +230,9 @@ async def test_update_diagnostics(
     )
 
     mock_slurmrestd_client.get = asynctest.CoroutineMock()
-    mock_slurmrestd_client.get.return_value.json.return_value = mock_diagnostics_response_body
+    mock_slurmrestd_client.get.return_value.json.return_value = (
+        mock_diagnostics_response_body
+    )
     mock_slurmrestd_client.get.return_value.status_code = 200
     mock_slurmrestd_client.get.return_value.url = (
         SETTINGS.BASE_SLURMRESTD_URL + "/slurm/v0.0.36/diag/"
@@ -284,7 +293,9 @@ async def test_update_diagnostics__raise_error_in_case_slurmrestd_returns_4xx_or
 @mock.patch("cluster_agent.agent.cluster_api_client")
 @mock.patch("cluster_agent.agent.slurmrestd_client")
 @pytest.mark.asyncio
-async def test_upsert_jobs(mock_slurmrestd_client, mock_cluster_api_client, mock_asyncio):
+async def test_upsert_jobs(
+    mock_slurmrestd_client, mock_cluster_api_client, mock_asyncio
+):
     """
     Verify whether nodes are upserted correctly. Also, check is the
     function returns a list of integers

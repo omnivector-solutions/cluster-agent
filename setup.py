@@ -19,16 +19,15 @@ setup(
     + _VERSION
     + "tar.gz",
     install_requires=list(map(lambda string: string.strip("\n"), open("requirements.txt", "r"))),
-    extras_require={
-        "dev": [
-            "pytest~=6.2.4",
-            "pytest-asyncio~=0.17.2",
-            "asynctest~=0.13.0",
-            "respx~=0.17.1",
-            "black~=21.6b0",
-            "flake8~=3.9.2",
-        ]
-    },
+    extras_require=dict(dev=[
+        "pytest==7.1.0",
+        "pytest-mock==3.7.0",
+        "respx==0.19.2",
+        "asynctest==0.13.0",
+        "pytest-asyncio==0.18.2",
+        "black==22.3.0",
+        "flake8==4.0.1",
+    ]),
     packages=find_packages(),
     keywords=["armada", "hpc"],
     classifiers=[

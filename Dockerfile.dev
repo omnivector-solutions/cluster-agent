@@ -1,0 +1,17 @@
+FROM python:3.8.13-slim-bullseye
+
+RUN apt update -y
+RUN apt install -y ldap-utils
+
+RUN mkdir /cache
+RUN mkdir /agent
+
+COPY requirements.txt /agent/
+RUN pip3 install -r /agent/requirements.txt
+
+COPY entrypoint.sh /agent/
+RUN chmod +x /agent/entrypoint.sh
+
+WORKDIR /agent
+
+ENV PYTHONPATH "${PYTHONPATH}:/agent/cluster_agent"

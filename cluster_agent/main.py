@@ -5,53 +5,58 @@ from sentry_sdk.integrations.logging import LoggingIntegration
 from sentry_sdk.utils import BadDsn
 import sentry_sdk
 
-from cluster_agent.utils.logging import logger
+from cluster_agent.utils.logging import logger, log_error
+from cluster_agent.utils.exception import ProcessExecutionError
 from cluster_agent.settings import SETTINGS
 from cluster_agent import agent
+from cluster_agent.jobbergate.submit import submit_pending_jobs
+from cluster_agent.jobbergate.finish import finish_active_jobs
 
 
 async def collect_diagnostics():
-    logger.info("##### Calling insertion of cluster diagnostics #####")
-
+    """
+    Insert cluster diagnostics.
+    """
     res = await agent.update_diagnostics()
-
-    logger.debug(
-        "##### Response information ({}): {} #####".format(collect_diagnostics.__name__, res)
-    )
-
-    logger.info(f"##### {collect_diagnostics.__name__} run successfully #####")
+    logger.debug(f"Collect diagnostic repsponse: {res}")
 
 
 async def collect_partitions():
-    logger.info("##### Calling upsertion of cluster partitions #####")
-
+    """
+    Upsert cluster partitions.
+    """
     res = await agent.upsert_partitions()
-
-    logger.debug(
-        "##### Response information ({}): {} #####".format(collect_partitions.__name__, res)
-    )
-
-    logger.info(f"##### {collect_partitions.__name__} run successfully #####")
+    logger.debug(f"Upsert partitions repsponse: {res}")
 
 
 async def collect_nodes():
-    logger.info("##### Calling upsertion of cluster nodes #####")
-
+    """
+    Upsert cluster nodes.
+    """
     res = await agent.upsert_nodes()
-
-    logger.debug("##### Response information ({}): {} #####".format(collect_nodes.__name__, res))
-
-    logger.info(f"##### {collect_nodes.__name__} run successfully #####")
+    logger.debug(f"Upsert nodes repsponse: {res}")
 
 
 async def collect_jobs():
-    logger.info("##### Calling upsertion of cluster jobs #####")
-
+    """
+    Upsert cluster jobs.
+    """
     res = await agent.upsert_jobs()
+    logger.debug(f"Upsert jobs repsponse: {res}")
 
-    logger.debug("##### Response information ({}): {} #####".format(collect_jobs.__name__, res))
 
-    logger.info(f"##### {collect_jobs.__name__} run successfully #####")
+async def submit_jobs():
+    """
+    Submit pending jobs.
+    """
+    await submit_pending_jobs()
+
+
+async def finish_jobs():
+    """
+    Mark finished jobs.
+    """
+    await finish_active_jobs()
 
 
 try:
@@ -69,14 +74,37 @@ except BadDsn as e:
 
 
 async def run_agent():
-    """Await each coroutine to collect data from slurmrestd and send to the Cluster API"""
+    """Run task functions for the agent"""
     logger.info("Starting Cluster Agent")
-    await collect_diagnostics()
-    await collect_partitions()
-    await collect_nodes()
-    await collect_jobs()
+
+    operations = [
+        collect_diagnostics,
+        collect_partitions,
+        collect_nodes,
+        collect_jobs,
+        submit_jobs,
+        finish_jobs,
+    ]
+
+    for operation in operations:
+        docstring = (operation.__doc__ or operation.__name__).strip()
+        logger.info(f">>>> Start: {docstring}")
+        finish_status = "!!!! Failed"
+        with ProcessExecutionError.handle_errors(
+            f"Operation {operation.__name__} failed",
+            do_except=log_error,
+            do_finally=lambda: logger.info(f"{finish_status}: {docstring}"),
+            re_raise=False,
+        ):
+            await operation()
+            finish_status = "<<<< Completed"
+
     logger.info("Cluster Agent run successfully, exiting...")
 
 
 def main():
     asyncio.run(run_agent())
+
+
+if __name__ == "__main__":
+    main()

@@ -26,11 +26,15 @@ def _load_token_from_cache() -> typing.Union[str, None]:
     try:
         token = token_path.read_text()
     except Exception:
-        logger.warning(f"Couldn't load token from cache file {token_path}. Will acquire a new one")
+        logger.warning(
+            f"Couldn't load token from cache file {token_path}. Will acquire a new one"
+        )
         return None
 
     try:
-        jwt.decode(token, options=dict(verify_signature=False, verify_exp=True), leeway=-10)
+        jwt.decode(
+            token, options=dict(verify_signature=False, verify_exp=True), leeway=-10
+        )
     except jwt.ExpiredSignatureError:
         logger.warning("Cached token is expired. Will acquire a new one.")
         return None
@@ -78,7 +82,8 @@ def acquire_token() -> str:
         logger.debug(f"Posting Auth0 request to {auth0_url}")
         response = httpx.post(auth0_url, data=auth0_body)
         AuthTokenError.require_condition(
-            response.status_code == 200, f"Failed to get auth token from Auth0: {response.text}"
+            response.status_code == 200,
+            f"Failed to get auth token from Auth0: {response.text}",
         )
         with AuthTokenError.handle_errors("Malformed response payload from Auth0"):
             token = response.json()["access_token"]
@@ -99,13 +104,32 @@ class AsyncBackendClient(httpx.AsyncClient):
 
     def __init__(self):
         self._token = None
-        super().__init__(base_url=SETTINGS.BASE_API_URL, auth=self._inject_token)
+        super().__init__(
+            base_url=SETTINGS.BASE_API_URL,
+            auth=self._inject_token,
+            event_hooks=dict(
+                request=[self._log_request],
+                response=[self._log_response],
+            ),
+        )
 
     def _inject_token(self, request: httpx.Request) -> httpx.Request:
         if self._token is None:
             self._token = acquire_token()
         request.headers["authorization"] = f"Bearer {self._token}"
         return request
+
+    @staticmethod
+    async def _log_request(request: httpx.Request):
+        logger.debug(f"Making request: {request.method} {request.url}")
+
+    @staticmethod
+    async def _log_response(response: httpx.Response):
+        logger.debug(
+            f"Received response: {response.request.method} "
+            f"{response.request.url} "
+            f"{response.status_code}"
+        )
 
 
 backend_client = AsyncBackendClient()
