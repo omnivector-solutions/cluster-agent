@@ -15,14 +15,18 @@ from cluster_agent.identity.slurmrestd import (
     backend_client as slurmrestd_client,
     inject_token,
 )
+from cluster_agent.identity.local_user.factory import manufacture
+from cluster_agent.identity.local_user.mappers import MapperBase
 from cluster_agent.utils.exception import JobSubmissionError
 from cluster_agent.utils.exception import SlurmrestdError
 from cluster_agent.utils.logging import log_error
-from cluster_agent.utils.user import ldap
 from cluster_agent.settings import SETTINGS
 
 
-async def submit_job_script(pending_job_submission: PendingJobSubmission) -> int:
+async def submit_job_script(
+    pending_job_submission: PendingJobSubmission,
+    user_mapper: MapperBase,
+) -> int:
     """
     Submit a Job Script to slurm via the Slurm REST API.
 
@@ -40,12 +44,9 @@ async def submit_job_script(pending_job_submission: PendingJobSubmission) -> int
         if filename == "application.sh":
             job_script = data
 
-    if ldap is not None:
-        logger.debug("Fetching username from LDAP")
-        username = ldap.find_username(pending_job_submission.job_submission_owner_email)
-    else:
-        logger.debug("LDAP not available. Using {SETTINGS.X_SLURM_USER_NAME} as user.")
-        username = SETTINGS.X_SLURM_USER_NAME
+    email = pending_job_submission.job_submission_owner_email
+    logger.debug("Fetching username for email {email}")
+    username = user_mapper.find_username(email)
 
     JobSubmissionError.require_condition(
         job_script is not None,
@@ -94,6 +95,9 @@ async def submit_pending_jobs():
     """
     logger.debug("Started submitting pending jobs...")
 
+    logger.debug("Building user-mapper")
+    user_mapper = manufacture()
+
     logger.debug("Fetching pending jobs...")
     pending_job_submissions = await fetch_pending_submissions()
 
@@ -111,7 +115,7 @@ async def submit_pending_jobs():
             re_raise=False,
         ):
 
-            slurm_job_id = await submit_job_script(pending_job_submission)
+            slurm_job_id = await submit_job_script(pending_job_submission, user_mapper)
 
             logger.debug(
                 "Updating job_submission with "

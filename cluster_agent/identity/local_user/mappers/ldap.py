@@ -1,51 +1,55 @@
 import json
 
-from ldap3 import Server, Connection, ALL, SIMPLE
+from ldap3 import Server, Connection, ALL, SIMPLE, NTLM
 from loguru import logger
 
-from cluster_agent.utils.exception import LDAPError
 from cluster_agent.utils.logging import log_error
-from cluster_agent.settings import SETTINGS
+
+from cluster_agent.identity.local_user.exceptions import LDAPError
+from cluster_agent.identity.local_user.mappers.mapper_base import MapperBase
+from cluster_agent.identity.local_user.settings import LocalUserSettings
+from cluster_agent.identity.local_user.constants import LDAPAuthType
 
 
-class LDAP:
+class LDAPMapper(MapperBase):
     """
     Provide a class to interface with the LDAP server
     """
+    connection = None
 
-    def __init__(self):
+    def configure(self, settings: LocalUserSettings):
         """
-        Initialize the LDAP class.
-        """
-        self.connection = None
-
-    def connect(self):
-        """
-        Connec to the the LDAP server.
+        Connect to the the LDAP server.
         """
         logger.debug("Attempting to connect to LDAP server")
         LDAPError.require_condition(
             all(
                 [
-                    SETTINGS.LDAP_HOST is not None,
-                    SETTINGS.LDAP_DOMAIN is not None,
-                    SETTINGS.LDAP_USERNAME is not None,
-                    SETTINGS.LDAP_PASSWORD is not None,
+                    settings.LDAP_HOST is not None,
+                    settings.LDAP_DOMAIN is not None,
+                    settings.LDAP_USERNAME is not None,
+                    settings.LDAP_PASSWORD is not None,
                 ]
             ),
-            "Agent is not configured for LDAP",
+            "LDAP is not configured in the settings. Cannot use LDAP user-mapper.",
         )
 
-        host = SETTINGS.LDAP_HOST
-        domain = SETTINGS.LDAP_DOMAIN
+        host = settings.LDAP_HOST
+        domain = settings.LDAP_DOMAIN
 
         # Make static type checkers happy
         assert domain is not None
 
         self.search_base = ",".join([f"DC={dc}" for dc in domain.split(".")])
 
-        username = SETTINGS.LDAP_USERNAME
-        password = SETTINGS.LDAP_PASSWORD
+        if settings.LDAP_AUTH_TYPE == LDAPAuthType.NTLM:
+            username = f"{settings.LDAP_DOMAIN}\\{settings.LDAP_USERNAME}"
+            auth_type = NTLM
+        else:
+            username = settings.LDAP_USERNAME
+            auth_type = SIMPLE
+
+        password = settings.LDAP_PASSWORD
 
         logger.debug(f"Connecting to LDAP at {host} ({domain}) with {username}")
         with LDAPError.handle_errors(
@@ -57,7 +61,7 @@ class LDAP:
                 server,
                 user=username,
                 password=password,
-                authentication=SIMPLE,
+                authentication=auth_type,
                 auto_bind=True,
             )
 
@@ -67,9 +71,10 @@ class LDAP:
 
         Lazily connect to the LDAP server if not already connected.
         """
-        if self.connection is None:
-            self.connect()
-
+        LDAPError.require_condition(
+            self.connection is not None,
+            "Not connected to an LDAP server yet!",
+        )
         # Make static type checkers happy
         assert self.connection is not None
 
@@ -107,8 +112,3 @@ class LDAP:
 
         username = cns.pop().lower()
         return username
-
-
-ldap = None
-with LDAPError.handle_errors("Could not create LDAP connection", do_except=log_error):
-    ldap = LDAP()
