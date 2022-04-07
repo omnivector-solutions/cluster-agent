@@ -22,10 +22,10 @@ class Settings(BaseSettings):
     BASE_API_URL: str = Field("https://rats.omnivector.solutions", regex=_URL_REGEX)
 
     # LDAP server settings
-    LDAP_HOST: Optional[str]
-    LDAP_DOMAIN: Optional[str]
-    LDAP_USERNAME: Optional[str]
-    LDAP_PASSWORD: Optional[str]
+    LDAP_HOST: Optional[str] = Field(None)
+    LDAP_DOMAIN: Optional[str] = Field(None)
+    LDAP_USERNAME: Optional[str] = Field(None)
+    LDAP_PASSWORD: Optional[str] = Field(None)
 
     SENTRY_DSN: str = Field("https://rats.sentry.com", regex=_URL_REGEX)
 
