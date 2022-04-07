@@ -1,16 +1,16 @@
 from cluster_agent.identity.slurm_user.exceptions import SingleUserError
 
-from cluster_agent.identity.slurm_user.mappers.mapper_base import MapperBase
-from cluster_agent.identity.slurm_user.settings import LocalUserSettings
+from cluster_agent.identity.slurm_user.mappers.mapper_base import SlurmUserMapper
+from cluster_agent.identity.slurm_user.settings import SlurmUserSettings
 
 
-class SingleUserMapper(MapperBase):
+class SingleUserMapper(SlurmUserMapper):
     """
     Provide a class to interface with the LDAP server
     """
     submitter = None
 
-    def configure(self, settings: LocalUserSettings):
+    def configure(self, settings: SlurmUserSettings):
         """
         Connect to the the LDAP server.
         """

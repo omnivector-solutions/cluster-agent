@@ -16,7 +16,7 @@ from cluster_agent.identity.slurmrestd import (
     inject_token,
 )
 from cluster_agent.identity.slurm_user.factory import manufacture
-from cluster_agent.identity.slurm_user.mappers import MapperBase
+from cluster_agent.identity.slurm_user.mappers import SlurmUserMapper
 from cluster_agent.utils.exception import JobSubmissionError
 from cluster_agent.utils.exception import SlurmrestdError
 from cluster_agent.utils.logging import log_error
@@ -25,7 +25,7 @@ from cluster_agent.settings import SETTINGS
 
 async def submit_job_script(
     pending_job_submission: PendingJobSubmission,
-    user_mapper: MapperBase,
+    user_mapper: SlurmUserMapper,
 ) -> int:
     """
     Submit a Job Script to slurm via the Slurm REST API.

@@ -2,7 +2,7 @@ import contextlib
 
 import pytest
 
-from cluster_agent.identity.slurm_user.settings import LOCAL_USER_SETTINGS
+from cluster_agent.identity.slurm_user.settings import SLURM_USER_SETTINGS
 
 
 @pytest.fixture
@@ -19,12 +19,12 @@ def tweak_slurm_user_settings():
         """
         previous_values = {}
         for (key, value) in kwargs.items():
-            previous_values[key] = getattr(LOCAL_USER_SETTINGS, key)
-            setattr(LOCAL_USER_SETTINGS, key, value)
+            previous_values[key] = getattr(SLURM_USER_SETTINGS, key)
+            setattr(SLURM_USER_SETTINGS, key, value)
         try:
             yield
         finally:
             for (key, value) in previous_values.items():
-                setattr(LOCAL_USER_SETTINGS, key, value)
+                setattr(SLURM_USER_SETTINGS, key, value)
 
     return _helper

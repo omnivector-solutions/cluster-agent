@@ -1,3 +1,7 @@
+"""
+Describe the settings that are needed/used in setting up Slurm user mapping.
+"""
+
 import sys
 from functools import lru_cache
 from typing import Optional
@@ -10,10 +14,15 @@ from cluster_agent.utils.logging import logger
 from cluster_agent.settings import SETTINGS
 
 
-class LocalUserSettings(BaseSettings):
+class SlurmUserSettings(BaseSettings):
+    """
+    Settings class for Slurm user mapping.
 
-    # Type of local user mapper to use
-    LOCAL_USER_MAPPER: MapperType = MapperType.SINGLE_USER
+    Contain only settings that are needed/used by the Slurm user mappers.
+    """
+
+    # Type of slurm user mapper to use
+    SLURM_USER_MAPPER: MapperType = MapperType.SINGLE_USER
 
     # LDAP server settings
     LDAP_HOST: Optional[str]
@@ -37,6 +46,7 @@ class LocalUserSettings(BaseSettings):
         if ldap_domain is not None and ldap_host is None:
             values["LDAP_HOST"] = ldap_domain
 
+        # If using single user, but don't have the setting, use default slurm user
         if values["SINGLE_USER_SUBMITTER"] is None:
             values["SINGLE_USER_SUBMITTER"] = SETTINGS.X_SLURM_USER_NAME
 
@@ -49,12 +59,12 @@ class LocalUserSettings(BaseSettings):
 
 
 @lru_cache()
-def init_settings() -> LocalUserSettings:
+def init_settings() -> SlurmUserSettings:
     try:
-        return LocalUserSettings()
+        return SlurmUserSettings()
     except ValidationError as e:
         logger.error(e)
         sys.exit(1)
 
 
-LOCAL_USER_SETTINGS = init_settings()
+SLURM_USER_SETTINGS = init_settings()

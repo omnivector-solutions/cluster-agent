@@ -1,5 +1,5 @@
 """
-Provide custom exceptions for local user mappers.
+Provide custom exceptions that are only used in the slurm_user sub-package.
 """
 
 from cluster_agent.utils.exception import ClusterAgentError

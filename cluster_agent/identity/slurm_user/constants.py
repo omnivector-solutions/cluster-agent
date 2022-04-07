@@ -1,3 +1,7 @@
+"""
+Define constants for the slurm_user subpackage.
+"""
+
 from enum import Enum
 
 

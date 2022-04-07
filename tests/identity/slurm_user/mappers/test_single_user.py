@@ -6,7 +6,7 @@ import pytest
 
 from cluster_agent.identity.slurm_user.exceptions import SingleUserError
 from cluster_agent.identity.slurm_user.mappers import single_user
-from cluster_agent.identity.slurm_user.settings import LOCAL_USER_SETTINGS
+from cluster_agent.identity.slurm_user.settings import SLURM_USER_SETTINGS
 
 
 def test_configure__success(mocker, tweak_slurm_user_settings):
@@ -16,7 +16,7 @@ def test_configure__success(mocker, tweak_slurm_user_settings):
     mapper = single_user.SingleUserMapper()
 
     with tweak_slurm_user_settings(SINGLE_USER_SUBMITTER="dummy-user"):
-        mapper.configure(LOCAL_USER_SETTINGS)
+        mapper.configure(SLURM_USER_SETTINGS)
     assert mapper.submitter == "dummy-user"
 
 
@@ -27,7 +27,7 @@ def test_find_username__success(mocker, tweak_slurm_user_settings):
     mapper = single_user.SingleUserMapper()
 
     with tweak_slurm_user_settings(SINGLE_USER_SUBMITTER="dummy-user"):
-        mapper.configure(LOCAL_USER_SETTINGS)
+        mapper.configure(SLURM_USER_SETTINGS)
         username = mapper.find_username("does.not@matter.com")
     assert username == "dummy-user"
 
