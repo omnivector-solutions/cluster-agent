@@ -1,7 +1,7 @@
-from cluster_agent.identity.local_user.settings import LOCAL_USER_SETTINGS
-from cluster_agent.identity.local_user.exceptions import MapperFactoryError
-from cluster_agent.identity.local_user.constants import MapperType
-from cluster_agent.identity.local_user.mappers import (
+from cluster_agent.identity.slurm_user.settings import LOCAL_USER_SETTINGS
+from cluster_agent.identity.slurm_user.exceptions import MapperFactoryError
+from cluster_agent.identity.slurm_user.constants import MapperType
+from cluster_agent.identity.slurm_user.mappers import (
     MapperBase,
     LDAPMapper,
     SingleUserMapper,

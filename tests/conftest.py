@@ -9,7 +9,7 @@ import pytest
 from loguru import logger
 
 from cluster_agent.settings import SETTINGS
-from cluster_agent.identity.local_user.settings import LOCAL_USER_SETTINGS
+from cluster_agent.identity.slurm_user.settings import LOCAL_USER_SETTINGS
 
 
 @pytest.fixture
@@ -96,7 +96,7 @@ def tweak_settings():
 
 
 @pytest.fixture
-def tweak_local_user_settings():
+def tweak_slurm_user_settings():
     """
     Provides a fixture to use as a context manager where the local user settings may be
     temporarily changed.

@@ -5,10 +5,10 @@ from loguru import logger
 
 from cluster_agent.utils.logging import log_error
 
-from cluster_agent.identity.local_user.exceptions import LDAPError
-from cluster_agent.identity.local_user.mappers.mapper_base import MapperBase
-from cluster_agent.identity.local_user.settings import LocalUserSettings
-from cluster_agent.identity.local_user.constants import LDAPAuthType
+from cluster_agent.identity.slurm_user.exceptions import LDAPError
+from cluster_agent.identity.slurm_user.mappers.mapper_base import MapperBase
+from cluster_agent.identity.slurm_user.settings import LocalUserSettings
+from cluster_agent.identity.slurm_user.constants import LDAPAuthType
 
 
 class LDAPMapper(MapperBase):

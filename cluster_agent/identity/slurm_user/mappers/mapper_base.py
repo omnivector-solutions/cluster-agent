@@ -1,6 +1,6 @@
 import abc
 
-from cluster_agent.identity.local_user.settings import LocalUserSettings
+from cluster_agent.identity.slurm_user.settings import LocalUserSettings
 
 
 class MapperBase:

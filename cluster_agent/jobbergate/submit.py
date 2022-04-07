@@ -15,8 +15,8 @@ from cluster_agent.identity.slurmrestd import (
     backend_client as slurmrestd_client,
     inject_token,
 )
-from cluster_agent.identity.local_user.factory import manufacture
-from cluster_agent.identity.local_user.mappers import MapperBase
+from cluster_agent.identity.slurm_user.factory import manufacture
+from cluster_agent.identity.slurm_user.mappers import MapperBase
 from cluster_agent.utils.exception import JobSubmissionError
 from cluster_agent.utils.exception import SlurmrestdError
 from cluster_agent.utils.logging import log_error

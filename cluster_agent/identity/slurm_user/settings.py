@@ -5,7 +5,7 @@ from typing import Optional
 from pydantic import BaseSettings, root_validator
 from pydantic.error_wrappers import ValidationError
 
-from cluster_agent.identity.local_user.constants import MapperType, LDAPAuthType
+from cluster_agent.identity.slurm_user.constants import MapperType, LDAPAuthType
 from cluster_agent.utils.logging import logger
 from cluster_agent.settings import SETTINGS
 

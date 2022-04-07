@@ -167,7 +167,7 @@ async def test_submit_job_script__raises_exception_if_response_cannot_be_unpacke
 
 
 @pytest.mark.asyncio
-async def test_submit_pending_jobs(dummy_template_source, mocker, tweak_local_user_settings):
+async def test_submit_pending_jobs(dummy_template_source, mocker, tweak_slurm_user_settings):
     """
     Test that the ``submit_pending_jobs()`` function can fetch pending job submissions,
     submit each to slurm via the Slurm REST API, and update the job submission via the
@@ -264,7 +264,7 @@ async def test_submit_pending_jobs(dummy_template_source, mocker, tweak_local_us
         )
         submit_route.mock(side_effect=_submit_side_effect)
 
-        with tweak_local_user_settings(SINGLE_USER_SUBMITTER="dummy-user"):
+        with tweak_slurm_user_settings(SINGLE_USER_SUBMITTER="dummy-user"):
             await submit_pending_jobs()
 
         assert update_1_route.call_count == 1

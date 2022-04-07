@@ -1,7 +1,7 @@
-from cluster_agent.identity.local_user.exceptions import SingleUserError
+from cluster_agent.identity.slurm_user.exceptions import SingleUserError
 
-from cluster_agent.identity.local_user.mappers.mapper_base import MapperBase
-from cluster_agent.identity.local_user.settings import LocalUserSettings
+from cluster_agent.identity.slurm_user.mappers.mapper_base import MapperBase
+from cluster_agent.identity.slurm_user.settings import LocalUserSettings
 
 
 class SingleUserMapper(MapperBase):
