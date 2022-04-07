@@ -3,7 +3,7 @@ from enum import Enum
 
 class MapperType(str, Enum):
     """
-    Enumeration of possible job_submission statuses.
+    Enumeration of available mapper types.
     """
 
     LDAP = "LDAP"
@@ -12,7 +12,7 @@ class MapperType(str, Enum):
 
 class LDAPAuthType(str, Enum):
     """
-    Enumeration of possible job_submission statuses.
+    Enumeration of possible auth types available with the LDAP mapper.
     """
 
     NTLM = "NTLM"
