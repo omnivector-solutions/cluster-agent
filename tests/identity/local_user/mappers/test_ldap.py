@@ -38,6 +38,34 @@ def test_configure__success(mocker, tweak_local_user_settings):
     assert mapper.search_base == "DC=dummy,DC=domain,DC=com"
 
 
+def test_configure__sets_up_ntlm_auth_type_correctly(mocker, tweak_local_user_settings):
+    """
+    Test that an LDAP instance will ``configure()`` NTLM auth correctly.
+    """
+    mock_server_obj = mocker.MagicMock()
+    mock_server = mocker.patch.object(ldap, "Server", return_value=mock_server_obj)
+    mock_connection = mocker.patch.object(ldap, "Connection")
+    mapper = ldap.LDAPMapper()
+
+    with tweak_local_user_settings(
+        LDAP_DOMAIN="dummy.domain.com",
+        LDAP_HOST="dummy.domain.com",
+        LDAP_USERNAME="dummyUser",
+        LDAP_PASSWORD="dummy-password",
+        LDAP_AUTH_TYPE="NTLM",
+    ):
+        mapper.configure(LOCAL_USER_SETTINGS)
+        mock_server.assert_called_once_with(LOCAL_USER_SETTINGS.LDAP_DOMAIN, get_info=ldap.ALL)
+        mock_connection.assert_called_once_with(
+            mock_server_obj,
+            user=f"{LOCAL_USER_SETTINGS.LDAP_DOMAIN}\\{LOCAL_USER_SETTINGS.LDAP_USERNAME}",
+            password=LOCAL_USER_SETTINGS.LDAP_PASSWORD,
+            authentication=ldap.NTLM,
+            auto_bind=True,
+        )
+    assert mapper.search_base == "DC=dummy,DC=domain,DC=com"
+
+
 def test_configure__raises_LDAPError_if_settings_are_missing(tweak_local_user_settings):
     """
     Test that the ``configure()`` method will fail if settings are not correct.
