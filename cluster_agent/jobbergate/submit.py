@@ -45,8 +45,10 @@ async def submit_job_script(
             job_script = data
 
     email = pending_job_submission.job_submission_owner_email
-    logger.debug("Fetching username for email {email}")
+    mapper_class_name = mapper.__class__.__name__
+    logger.debug(f"Fetching username for email {email} with mapper {mapper_class_name}")
     username = user_mapper.find_username(email)
+    logger.debug(f"Using local slurm user {username} for job submission")
 
     JobSubmissionError.require_condition(
         job_script is not None,
@@ -62,7 +64,7 @@ async def submit_job_script(
     )
     logger.debug(
         f"Submitting pending job submission {pending_job_submission.id} "
-        "to slurm with payload {payload}"
+        f"to slurm with payload {payload}"
     )
 
     with SlurmrestdError.handle_errors(
@@ -110,7 +112,7 @@ async def submit_pending_jobs():
             ),
             do_except=log_error,
             do_else=lambda: logger.debug(
-                "Finished submitting pending job_submission {pending_job_submission.id}"
+                f"Finished submitting pending job_submission {pending_job_submission.id}"
             ),
             re_raise=False,
         ):
