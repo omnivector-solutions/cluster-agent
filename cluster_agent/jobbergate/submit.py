@@ -45,7 +45,7 @@ async def submit_job_script(
             job_script = data
 
     email = pending_job_submission.job_submission_owner_email
-    mapper_class_name = mapper.__class__.__name__
+    mapper_class_name = user_mapper.__class__.__name__
     logger.debug(f"Fetching username for email {email} with mapper {mapper_class_name}")
     username = user_mapper.find_username(email)
     logger.debug(f"Using local slurm user {username} for job submission")
