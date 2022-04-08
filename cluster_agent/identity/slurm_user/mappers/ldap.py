@@ -62,8 +62,9 @@ class LDAPMapper(SlurmUserMapper):
                 user=username,
                 password=password,
                 authentication=auth_type,
-                auto_bind=True,
             )
+            self.connection.start_tls()
+            self.connection.bind()
 
     def find_username(self, email: str) -> str:
         """

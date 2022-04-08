@@ -33,7 +33,6 @@ def test_configure__success(mocker, tweak_slurm_user_settings):
             user=SLURM_USER_SETTINGS.LDAP_USERNAME,
             password=SLURM_USER_SETTINGS.LDAP_PASSWORD,
             authentication=ldap.SIMPLE,
-            auto_bind=True,
         )
     assert mapper.search_base == "DC=dummy,DC=domain,DC=com"
 
@@ -61,7 +60,6 @@ def test_configure__sets_up_ntlm_auth_type_correctly(mocker, tweak_slurm_user_se
             user=f"{SLURM_USER_SETTINGS.LDAP_DOMAIN}\\{SLURM_USER_SETTINGS.LDAP_USERNAME}",
             password=SLURM_USER_SETTINGS.LDAP_PASSWORD,
             authentication=ldap.NTLM,
-            auto_bind=True,
         )
     assert mapper.search_base == "DC=dummy,DC=domain,DC=com"
 
