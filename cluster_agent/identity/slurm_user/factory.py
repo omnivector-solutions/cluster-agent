@@ -28,7 +28,7 @@ def manufacture() -> SlurmUserMapper:
     mapper_class = mapper_map.get(SLURM_USER_SETTINGS.SLURM_USER_MAPPER)
     MapperFactoryError.require_condition(
         mapper_class is not None,
-        "Couldn't find a mapper class for {SLURM_USER_SETTINGS.SLURM_USER_MAPPER}",
+        f"Couldn't find a mapper class for {SLURM_USER_SETTINGS.SLURM_USER_MAPPER}",
     )
     assert mapper_class is not None
     mapper_instance = mapper_class()

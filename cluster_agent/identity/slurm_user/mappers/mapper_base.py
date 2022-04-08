@@ -1,5 +1,5 @@
 """
-Provide definition of the base slurm user mapper class.
+Provide definition of the base SlurmUserMapper class.
 """
 import abc
 
@@ -8,12 +8,12 @@ from cluster_agent.identity.slurm_user.settings import SlurmUserSettings
 
 class SlurmUserMapper:
     """
-    Provide a base class for classes that map Armada users to local Slurm/Unix users.
+    Provide a base class for classes that map Armada users to local Slurm users.
 
     Define two methods that must be overridden in base classes:
 
     - configure(): Configure the mapper given the app settings
-    - find_username(): Map a provided email address to a local slurm/unix user.
+    - find_username(): Map a provided email address to a local slurm user.
     """
 
     @abc.abstractmethod

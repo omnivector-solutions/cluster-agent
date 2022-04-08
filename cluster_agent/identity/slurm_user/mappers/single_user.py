@@ -1,5 +1,8 @@
-from cluster_agent.identity.slurm_user.exceptions import SingleUserError
+"""
+Define the a single-user mapper.
+"""
 
+from cluster_agent.identity.slurm_user.exceptions import SingleUserError
 from cluster_agent.identity.slurm_user.mappers.mapper_base import SlurmUserMapper
 from cluster_agent.identity.slurm_user.settings import SlurmUserSettings
 
