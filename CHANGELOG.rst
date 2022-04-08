@@ -7,6 +7,13 @@ This file keeps track of all notable changes to the Cluster Agent.
 Unreleased
 ----------
 
+1.4.0 - 2022-04-07
+------------------
+
+- Moved LDAP support into ``slurm_user`` module.
+- Made slurm user mapping more extensible.
+- Fixed username mapping for NTLM auth type.
+
 1.3.0 - 2022-04-05
 ------------------
 

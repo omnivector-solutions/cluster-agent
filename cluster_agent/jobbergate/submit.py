@@ -15,14 +15,18 @@ from cluster_agent.identity.slurmrestd import (
     backend_client as slurmrestd_client,
     inject_token,
 )
+from cluster_agent.identity.slurm_user.factory import manufacture
+from cluster_agent.identity.slurm_user.mappers import SlurmUserMapper
 from cluster_agent.utils.exception import JobSubmissionError
 from cluster_agent.utils.exception import SlurmrestdError
 from cluster_agent.utils.logging import log_error
-from cluster_agent.utils.user import ldap
 from cluster_agent.settings import SETTINGS
 
 
-async def submit_job_script(pending_job_submission: PendingJobSubmission) -> int:
+async def submit_job_script(
+    pending_job_submission: PendingJobSubmission,
+    user_mapper: SlurmUserMapper,
+) -> int:
     """
     Submit a Job Script to slurm via the Slurm REST API.
 
@@ -40,12 +44,11 @@ async def submit_job_script(pending_job_submission: PendingJobSubmission) -> int
         if filename == "application.sh":
             job_script = data
 
-    if ldap is not None:
-        logger.debug("Fetching username from LDAP")
-        username = ldap.find_username(pending_job_submission.job_submission_owner_email)
-    else:
-        logger.debug("LDAP not available. Using {SETTINGS.X_SLURM_USER_NAME} as user.")
-        username = SETTINGS.X_SLURM_USER_NAME
+    email = pending_job_submission.job_submission_owner_email
+    mapper_class_name = user_mapper.__class__.__name__
+    logger.debug(f"Fetching username for email {email} with mapper {mapper_class_name}")
+    username = user_mapper.find_username(email)
+    logger.debug(f"Using local slurm user {username} for job submission")
 
     JobSubmissionError.require_condition(
         job_script is not None,
@@ -61,7 +64,7 @@ async def submit_job_script(pending_job_submission: PendingJobSubmission) -> int
     )
     logger.debug(
         f"Submitting pending job submission {pending_job_submission.id} "
-        "to slurm with payload {payload}"
+        f"to slurm with payload {payload}"
     )
 
     with SlurmrestdError.handle_errors(
@@ -94,6 +97,9 @@ async def submit_pending_jobs():
     """
     logger.debug("Started submitting pending jobs...")
 
+    logger.debug("Building user-mapper")
+    user_mapper = manufacture()
+
     logger.debug("Fetching pending jobs...")
     pending_job_submissions = await fetch_pending_submissions()
 
@@ -106,12 +112,12 @@ async def submit_pending_jobs():
             ),
             do_except=log_error,
             do_else=lambda: logger.debug(
-                "Finished submitting pending job_submission {pending_job_submission.id}"
+                f"Finished submitting pending job_submission {pending_job_submission.id}"
             ),
             re_raise=False,
         ):
 
-            slurm_job_id = await submit_job_script(pending_job_submission)
+            slurm_job_id = await submit_job_script(pending_job_submission, user_mapper)
 
             logger.debug(
                 "Updating job_submission with "
