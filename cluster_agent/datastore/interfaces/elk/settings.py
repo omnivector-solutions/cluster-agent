@@ -36,7 +36,7 @@ class ElasticsearchSettings(BaseSettingsClass):
     def assemble_attrs_from_env(cls, values):
 
         # assemble Elasticsearch connection properties
-        if values.get("ELASTICSEARCH_CONNECTION_URL"):
+        if not values.get("ELASTICSEARCH_CONNECTION_URL"):
             values.update(
                 ELASTICSEARCH_CONNECTION_PROPERTIES=ElasticsearchConnection(
                     hosts=[values.get("ELASTICSEARCH_CONNECTION_URL")],
