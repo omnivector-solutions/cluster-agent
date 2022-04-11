@@ -24,3 +24,7 @@ class JobbergateApiError(ClusterAgentError):
 
 class JobSubmissionError(ClusterAgentError):
     """Raise exception when a job cannot be submitted raises any error"""
+
+
+class ClusterAPIError(ClusterAgentError):
+    """Raise exception when the Cluster API returns 4xx or 5xx"""

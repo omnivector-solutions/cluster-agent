@@ -9,6 +9,7 @@ from cluster_agent.utils.logging import logger, log_error
 from cluster_agent.utils.exception import ProcessExecutionError
 from cluster_agent.settings import SETTINGS
 from cluster_agent import agent
+from cluster_agent.datastore.mapper import push_to_datastores
 from cluster_agent.jobbergate.submit import submit_pending_jobs
 from cluster_agent.jobbergate.finish import finish_active_jobs
 
@@ -84,6 +85,7 @@ async def run_agent():
         collect_jobs,
         submit_jobs,
         finish_jobs,
+        push_to_datastores,
     ]
 
     for operation in operations:
