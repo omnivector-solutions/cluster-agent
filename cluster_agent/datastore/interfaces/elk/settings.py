@@ -1,9 +1,13 @@
+import sys
+from functools import lru_cache
 from typing import Any, Dict, List, Optional
 from typing_extensions import TypedDict
 
 from pydantic import Field, root_validator
+from pydantic.error_wrappers import ValidationError
 
 from cluster_agent.datastore.interfaces.constants import BaseSettingsClass
+from cluster_agent.utils.logging import logger
 
 
 class ElasticsearchConnection(TypedDict):
@@ -43,5 +47,19 @@ class ElasticsearchSettings(BaseSettingsClass):
 
         return values
 
+    class Config:
 
-ELASTICSEARCH_SETTINGS = ElasticsearchSettings()
+        env_file = ".env"
+        env_prefix = "CLUSTER_AGENT_"
+
+
+@lru_cache()
+def init_settings() -> ElasticsearchSettings:
+    try:
+        return ElasticsearchSettings()
+    except ValidationError as e:
+        logger.error(e)
+        sys.exit(1)
+
+
+ELASTICSEARCH_SETTINGS = init_settings()
