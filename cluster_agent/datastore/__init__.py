@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+from cluster_agent.datastore.interfaces.constants import BaseSettingsClass
+
 
 class BaseDataStoreOps:
     """
@@ -26,7 +28,7 @@ class BaseDataStoreOps:
         ).save(refresh=True)
     """
 
-    def __init__(self, settings: BaseModel, database_type: str) -> None:
+    def __init__(self, settings: BaseSettingsClass, database_type: str) -> None:
 
         self.settings = settings
         self.database_type = database_type

@@ -1,7 +1,9 @@
 from typing import Any, Dict, List, Optional
 from typing_extensions import TypedDict
 
-from pydantic import BaseModel, Field, root_validator
+from pydantic import Field, root_validator
+
+from cluster_agent.datastore.interfaces.constants import BaseSettingsClass
 
 
 class ElasticsearchConnection(TypedDict):
@@ -15,9 +17,7 @@ class ElasticsearchQuerySettings(TypedDict):
     blocks: Dict[str, Any]
 
 
-class ElasticsearchSettings(BaseModel):
-
-    is_configured = False
+class ElasticsearchSettings(BaseSettingsClass):
 
     ELASTICSEARCH_CONNECTION_URL: Optional[str] = Field(
         None, description="Elasticsearch connection string"
