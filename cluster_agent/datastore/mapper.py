@@ -21,13 +21,12 @@ class DataStoreMapper:
                 logger.debug(f"Added {class_name} to ops_classes list")
 
     def call_ops(self) -> None:
-        logger.debug(self._ops_classes)
         for ops_class in self._ops_classes:
             if ops_class.settings.is_configured:
-                logger.debug(f"{ops_class.__name__} is configured. Calling `run` method.")
+                logger.debug(f"{ops_class.__class__.__name__} is configured. Calling `run` method.")
                 ops_class.run()
                 continue
-            logger.debug(f"{ops_class.__name__} is not configured. Skipping.")
+            logger.debug(f"{ops_class.__class__.__name__} is not configured. Skipping.")
 
 
 async def push_to_datastores():
