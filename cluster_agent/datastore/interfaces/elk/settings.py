@@ -22,7 +22,7 @@ class ElasticsearchSettings(BaseSettingsClass):
     ELASTICSEARCH_CONNECTION_URL: Optional[str] = Field(
         None, description="Elasticsearch connection string"
     )
-    ELASTICSEARCH_VERIFY_CERTS: bool = True
+    ELASTICSEARCH_VERIFY_CERTS: bool = False
     ELASTICSEARCH_CONNECTION_PROPERTIES: Dict[str, Any] = None
     ELASTICSEARCH_QUERY_SETTINGS = ElasticsearchQuerySettings(
         number_of_shards=1, number_of_replicas=1, blocks=dict(read_only_allow_delete=None)
