@@ -22,6 +22,7 @@ class DataStoreMapper:
 
     def call_ops(self) -> None:
         for ops_class in self._ops_classes:
+            logger.debug(ops_class.settings.dict())
             if ops_class.settings.is_configured:
                 logger.debug(f"{ops_class.__class__.__name__} is configured. Calling `run` method.")
                 ops_class.run()
