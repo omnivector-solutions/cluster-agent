@@ -1,3 +1,4 @@
+import os
 import sys
 from functools import lru_cache
 from typing import Any, Dict, List, Optional
@@ -36,7 +37,7 @@ class ElasticsearchSettings(BaseSettingsClass):
     def assemble_attrs_from_env(cls, values):
 
         # assemble Elasticsearch connection properties
-        if not values.get("ELASTICSEARCH_CONNECTION_URL"):
+        if values.get("ELASTICSEARCH_CONNECTION_URL"):
             values.update(
                 ELASTICSEARCH_CONNECTION_PROPERTIES=ElasticsearchConnection(
                     hosts=[values.get("ELASTICSEARCH_CONNECTION_URL")],
@@ -46,11 +47,6 @@ class ElasticsearchSettings(BaseSettingsClass):
             )
 
         return values
-
-    class Config:
-
-        env_file = ".env"
-        env_prefix = "CLUSTER_AGENT_"
 
 
 @lru_cache()

@@ -1,6 +1,11 @@
-from pydantic import BaseModel
+from pydantic import BaseSettings
 
 
-class BaseSettingsClass(BaseModel):
+class BaseSettingsClass(BaseSettings):
 
     is_configured = False
+
+    class Config:
+
+        env_file = ".env"
+        env_prefix = "CLUSTER_AGENT_"
