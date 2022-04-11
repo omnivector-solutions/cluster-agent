@@ -6,7 +6,7 @@ from cluster_agent.utils.exception import JobbergateApiError
 from cluster_agent.utils.logging import log_error
 from cluster_agent.jobbergate.schemas import PendingJobSubmission, ActiveJobSubmission
 from cluster_agent.jobbergate.constants import JobSubmissionStatus
-from cluster_agent.identity.cluster_api import backend_client
+from cluster_agent.identity.cluster_api import async_backend_client
 
 
 async def fetch_pending_submissions() -> List[PendingJobSubmission]:
@@ -17,11 +17,9 @@ async def fetch_pending_submissions() -> List[PendingJobSubmission]:
         "Failed to fetch pending job submissions",
         do_except=log_error,
     ):
-        response = await backend_client.get("/jobbergate/job-submissions/agent/pending")
+        response = await async_backend_client.get("/jobbergate/job-submissions/agent/pending")
         response.raise_for_status()
-        pending_job_submissions = [
-            PendingJobSubmission(**pjs) for pjs in response.json()
-        ]
+        pending_job_submissions = [PendingJobSubmission(**pjs) for pjs in response.json()]
 
     logger.debug(f"Retrieved {len(pending_job_submissions)} pending job submissions")
     return pending_job_submissions
@@ -35,7 +33,7 @@ async def fetch_active_submissions() -> List[ActiveJobSubmission]:
         "Failed to fetch active job submissions",
         do_except=log_error,
     ):
-        response = await backend_client.get("jobbergate/job-submissions/agent/active")
+        response = await async_backend_client.get("jobbergate/job-submissions/agent/active")
         response.raise_for_status()
         active_job_submissions = [ActiveJobSubmission(**ajs) for ajs in response.json()]
 
@@ -53,7 +51,7 @@ async def mark_as_submitted(job_submission_id: int, slurm_job_id: int):
         f"Could not mark job submission {job_submission_id} as updated via the API",
         do_except=log_error,
     ):
-        response = await backend_client.put(
+        response = await async_backend_client.put(
             f"jobbergate/job-submissions/agent/{job_submission_id}",
             json=dict(
                 new_status=JobSubmissionStatus.SUBMITTED,
@@ -73,7 +71,7 @@ async def update_status(job_submission_id: int, status: JobSubmissionStatus):
         f"Could not update status for job submission {job_submission_id} via the API",
         do_except=log_error,
     ):
-        response = await backend_client.put(
+        response = await async_backend_client.put(
             f"jobbergate/job-submissions/agent/{job_submission_id}",
             json=dict(new_status=status),
         )

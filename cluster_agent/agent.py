@@ -1,8 +1,8 @@
 import asyncio
 
 from cluster_agent.utils.exception import SlurmrestdError
-from cluster_agent.identity.cluster_api import backend_client as cluster_api_client
-from cluster_agent.identity.slurmrestd import backend_client as slurmrestd_client
+from cluster_agent.identity.cluster_api import async_backend_client as cluster_api_client
+from cluster_agent.identity.slurmrestd import async_backend_client as slurmrestd_client
 
 import hostlist
 
@@ -84,9 +84,7 @@ async def update_diagnostics():
     )
     diagnostics = r.json()
 
-    response = await cluster_api_client.post(
-        "/cluster/agent/diagnostics", json=diagnostics
-    )
+    response = await cluster_api_client.post("/cluster/agent/diagnostics", json=diagnostics)
 
     return response.status_code
 

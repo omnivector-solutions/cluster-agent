@@ -12,7 +12,7 @@ from cluster_agent.jobbergate.schemas import (
 from cluster_agent.jobbergate.api import fetch_pending_submissions, mark_as_submitted
 from cluster_agent.jobbergate.constants import JobSubmissionStatus
 from cluster_agent.identity.slurmrestd import (
-    backend_client as slurmrestd_client,
+    async_backend_client as slurmrestd_client,
     inject_token,
 )
 from cluster_agent.identity.slurm_user.factory import manufacture
