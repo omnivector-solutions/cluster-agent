@@ -163,11 +163,11 @@ class SyncBackendClient(httpx.Client):
         )
 
     @staticmethod
-    async def _log_request(request: httpx.Request):
+    def _log_request(request: httpx.Request):
         logger.debug(f"Making request: {request.method} {request.url}")
 
     @staticmethod
-    async def _log_response(response: httpx.Response):
+    def _log_response(response: httpx.Response):
         logger.debug(
             f"Received response: {response.request.method} "
             f"{response.request.url} "
