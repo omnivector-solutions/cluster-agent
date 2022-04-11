@@ -11,6 +11,7 @@ class SingleUserMapper(SlurmUserMapper):
     """
     Provide a class to interface with the LDAP server
     """
+
     submitter = None
 
     def configure(self, settings: SlurmUserSettings):

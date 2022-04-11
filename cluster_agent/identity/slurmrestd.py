@@ -31,15 +31,11 @@ def _load_token_from_cache(username: str) -> typing.Union[str, None]:
         token = token_path.read_text().strip()
         logger.debug(f"Retrieved token from {token_path} as {token}")
     except Exception:
-        logger.warning(
-            f"Couldn't load token from cache file {token_path}. Will acquire a new one"
-        )
+        logger.warning(f"Couldn't load token from cache file {token_path}. Will acquire a new one")
         return None
 
     try:
-        jwt.decode(
-            token, options=dict(verify_signature=False, verify_exp=True), leeway=-10
-        )
+        jwt.decode(token, options=dict(verify_signature=False, verify_exp=True), leeway=-10)
     except jwt.ExpiredSignatureError:
         logger.warning("Cached token is expired. Will acquire a new one.")
         return None
@@ -84,9 +80,7 @@ def acquire_token(username: str) -> str:
             stderr=subprocess.PIPE,
         )
         stdout, stderr = proc.communicate()
-        ProcessExecutionError.require_condition(
-            proc.returncode == 0, stderr.decode().strip()
-        )
+        ProcessExecutionError.require_condition(proc.returncode == 0, stderr.decode().strip())
         token = stdout.decode().strip().split("=")[1]
         _write_token_to_cache(token, username)
 
@@ -149,4 +143,37 @@ class AsyncBackendClient(httpx.AsyncClient):
         )
 
 
-backend_client = AsyncBackendClient()
+class SyncBackendClient(httpx.Client):
+    """
+    Extends the httpx.Client class with automatic token acquisition for requests.
+    The token is acquired lazily on the first httpx request issued.
+    This client should be used for most datastore actions.
+    """
+
+    _token: typing.Optional[str]
+
+    def __init__(self):
+        super().__init__(
+            base_url=SETTINGS.BASE_SLURMRESTD_URL,
+            auth=inject_token,
+            event_hooks=dict(
+                request=[self._log_request],
+                response=[self._log_response],
+            ),
+        )
+
+    @staticmethod
+    async def _log_request(request: httpx.Request):
+        logger.debug(f"Making request: {request.method} {request.url}")
+
+    @staticmethod
+    async def _log_response(response: httpx.Response):
+        logger.debug(
+            f"Received response: {response.request.method} "
+            f"{response.request.url} "
+            f"{response.status_code}"
+        )
+
+
+async_backend_client = AsyncBackendClient()
+sync_backend_client = SyncBackendClient()
