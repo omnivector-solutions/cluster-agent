@@ -79,7 +79,6 @@ class ElkOps(BaseDataStoreOps):
         for job in jobs["jobs"]:
 
             documents.Jobs(
-                _id="{cluster_id}-{job_id}".format(cluster_id=cluster_id, job_id=job.get("job_id")),
                 timestamp=time.time(),
                 cluster_id=cluster_id,
                 **job,
