@@ -21,8 +21,9 @@ class ElkOps(BaseDataStoreOps):
     Base Elasticsearch operations class.
     """
 
-    settings = ELASTICSEARCH_SETTINGS
-    database_name = "Elasticsearch"
+    def __init__(self) -> None:
+        super().__init__(settings=ELASTICSEARCH_SETTINGS, database_type="Elasticsearch")
+
 
     def _create_all_elasticsearch_indexes(self):
         """
@@ -36,9 +37,11 @@ class ElkOps(BaseDataStoreOps):
                 except RequestError as e:
                     logger.info("Exception: {}".format(str(e)))
 
+
     def _connect(self):
         connections.create_connection(**ELASTICSEARCH_SETTINGS.ELASTICSEARCH_CONNECTION_PROPERTIES)
         self._create_all_elasticsearch_indexes()
+
 
     def _push_jobs(self):
         """
@@ -86,6 +89,7 @@ class ElkOps(BaseDataStoreOps):
             logger.debug("**** No job from slurmrestd to push to Elasticsearch")
         else:
             logger.debug("**** Pushed all available jobs to Elasticsearch")
+
 
     def _push(self):
         logger.debug("**** Pushing jobs to Elasticsearch")

@@ -26,8 +26,10 @@ class BaseDataStoreOps:
         ).save(refresh=True)
     """
 
-    settings: BaseModel = None
-    database_name: str = None
+    def __init__(self, settings: BaseModel, database_type: str) -> None:
+
+        self.settings = settings
+        self.database_type = database_type
 
     def _connect(self):
         """
@@ -53,8 +55,7 @@ class BaseDataStoreOps:
         """
         raise NotImplementedError
 
-    @classmethod
-    def run(cls):
+    def run(self):
         """Run all needed operations"""
-        cls._connect()
-        cls._push()
+        self._connect()
+        self._push()
