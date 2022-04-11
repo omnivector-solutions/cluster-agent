@@ -16,8 +16,10 @@ class DataStoreMapper:
             if issubclass(obj, BaseDataStoreOps) and obj.settings is not None:
                 logger.debug(f"Found {class_name} operation class. Database: {obj.database_name}")
                 self._ops_classes = self._ops_classes.append(obj)
+                logger.debug(f"Added {class_name} to ops_classes list")
 
     def call_ops(self) -> None:
+        logger.debug(self._ops_classes)
         for ops_class in self._ops_classes:
             logger.debug(f"Calling `run` method from {ops_class.__name__}")
             ops_class.run()
