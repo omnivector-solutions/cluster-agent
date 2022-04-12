@@ -7,6 +7,11 @@ This file keeps track of all notable changes to the Cluster Agent.
 Unreleased
 ----------
 
+1.5.0 - 2022-04-12
+------------------
+
+- Disabled cluster data collectors.
+
 1.4.0 - 2022-04-07
 ------------------
 

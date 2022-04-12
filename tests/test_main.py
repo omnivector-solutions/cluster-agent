@@ -67,10 +67,10 @@ async def test_main__checks_if_main_file_calls_jobs_collection(
     mock_agent_upsert_jobs.assert_awaited_once()
 
 
-@mock.patch("cluster_agent.main.collect_diagnostics")
-@mock.patch("cluster_agent.main.collect_jobs")
-@mock.patch("cluster_agent.main.collect_nodes")
-@mock.patch("cluster_agent.main.collect_partitions")
+# @mock.patch("cluster_agent.main.collect_diagnostics")
+# @mock.patch("cluster_agent.main.collect_jobs")
+# @mock.patch("cluster_agent.main.collect_nodes")
+# @mock.patch("cluster_agent.main.collect_partitions")
 @mock.patch("cluster_agent.main.submit_jobs")
 @mock.patch("cluster_agent.main.finish_jobs")
 @pytest.mark.asyncio

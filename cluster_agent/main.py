@@ -78,10 +78,10 @@ async def run_agent():
     logger.info("Starting Cluster Agent")
 
     operations = [
-        collect_diagnostics,
-        collect_partitions,
-        collect_nodes,
-        collect_jobs,
+        # collect_diagnostics,
+        # collect_partitions,
+        # collect_nodes,
+        # collect_jobs,
         submit_jobs,
         finish_jobs,
     ]
