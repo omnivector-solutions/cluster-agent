@@ -48,26 +48,6 @@ class ElkOps(BaseDataStoreOps):
         Pull jobs data from slurmrestd and push to elasticsearch directly
         """
 
-        # fetch cluster ID
-        # query = Template('query {cluster(clientId: "$client_id"){clusterId}}').substitute(
-        #     client_id=SETTINGS.AUTH0_CLIENT_ID
-        # )
-        # r = cluster_api_client.post(
-        #     "/cluster/graphql/query", json=dict(query=dedent(query), variables=dict())
-        # )
-        # ClusterAPIError.require_condition(
-        #     r.status_code == 200,
-        #     f"Cluster API returned {r.status_code} when calling {r.url}: {r.text}",
-        # )
-
-        # with ClusterAPIError.handle_errors(
-        #     f"No cluster matches client_id={SETTINGS.AUTH0_CLIENT_ID}",
-        #     raise_exc_class=ClusterAPIError,
-        # ):
-        #     cluster_id = r.json().get("data").get("cluster")[0].get("clusterId")
-
-        # assert cluster_id is not None
-
         # fetch jobs data
         r = slurmrestd_client.get("/slurm/v0.0.36/jobs")
         SlurmrestdError.require_condition(
@@ -79,9 +59,8 @@ class ElkOps(BaseDataStoreOps):
         for job in jobs["jobs"]:
 
             documents.Jobs(
-                # _id="{cluster_id}-{job_id}".format(cluster_id=cluster_id, job_id=job.get("job_id")),
+                _id=job.get("job_id"),
                 timestamp=time.time(),
-                # cluster_id=cluster_id,
                 **job,
             ).save(refresh=True)
 
