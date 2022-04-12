@@ -1,5 +1,3 @@
-from pydantic import BaseModel
-
 from cluster_agent.datastore.interfaces.constants import BaseSettingsClass
 
 

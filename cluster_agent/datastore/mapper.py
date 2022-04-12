@@ -16,7 +16,9 @@ class DataStoreMapper:
         for class_name, obj in inspect.getmembers(operations, inspect.isclass):
             if issubclass(obj, BaseDataStoreOps) and obj is not BaseDataStoreOps:
                 ops_class = obj()
-                logger.debug(f"Found {class_name} operation class. Database: {ops_class.database_type}")
+                logger.debug(
+                    f"Found {class_name} operation class. Database: {ops_class.database_type}"
+                )
                 self._ops_classes.append(obj())
                 logger.debug(f"Added {class_name} to ops_classes list")
 

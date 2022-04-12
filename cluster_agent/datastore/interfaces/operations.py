@@ -1,7 +1,5 @@
 import inspect
 import time
-from string import Template
-from textwrap import dedent
 
 from elasticsearch_dsl import connections, Document
 from elasticsearch.exceptions import RequestError
@@ -9,10 +7,8 @@ from elasticsearch.exceptions import RequestError
 from cluster_agent.datastore import BaseDataStoreOps
 from cluster_agent.datastore.interfaces.elk import documents
 from cluster_agent.datastore.interfaces.elk.settings import ELASTICSEARCH_SETTINGS
-from cluster_agent.identity.cluster_api import sync_backend_client as cluster_api_client
 from cluster_agent.identity.slurmrestd import sync_backend_client as slurmrestd_client
-from cluster_agent.settings import SETTINGS
-from cluster_agent.utils.exception import SlurmrestdError, ClusterAPIError
+from cluster_agent.utils.exception import SlurmrestdError
 from cluster_agent.utils.logging import logger
 
 
@@ -23,7 +19,6 @@ class ElkOps(BaseDataStoreOps):
 
     def __init__(self) -> None:
         super().__init__(settings=ELASTICSEARCH_SETTINGS, database_type="Elasticsearch")
-
 
     def _create_all_elasticsearch_indexes(self):
         """
@@ -37,11 +32,9 @@ class ElkOps(BaseDataStoreOps):
                 except RequestError as e:
                     logger.info("Exception: {}".format(str(e)))
 
-
     def _connect(self):
         connections.create_connection(**ELASTICSEARCH_SETTINGS.ELASTICSEARCH_CONNECTION_PROPERTIES)
         self._create_all_elasticsearch_indexes()
-
 
     def _push_jobs(self):
         """
@@ -68,7 +61,6 @@ class ElkOps(BaseDataStoreOps):
             logger.debug("**** No job from slurmrestd to push to Elasticsearch")
         else:
             logger.debug("**** Pushed all available jobs to Elasticsearch")
-
 
     def _push(self):
         logger.debug("**** Pushing jobs to Elasticsearch")
