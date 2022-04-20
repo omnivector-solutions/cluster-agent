@@ -3,6 +3,7 @@ Define tests for the submission functions of the jobbergate section.
 """
 
 import json
+import pathlib
 
 import httpx
 import pytest
@@ -37,6 +38,7 @@ async def test_submit_job_script__success(
         "cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token"
     )
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
+    name = pending_job_submission.application_name
 
     async with respx.mock:
         submit_route = respx.post(
@@ -57,13 +59,70 @@ async def test_submit_job_script__success(
         assert last_request.method == "POST"
         assert last_request.headers["x-slurm-user-name"] == "dummy-user"
         assert last_request.headers["x-slurm-user-token"] == "dummy-token"
-        assert json.loads(last_request.content.decode("utf-8")) == SlurmJobSubmission(
+        assert last_request.content.decode("utf-8") == SlurmJobSubmission(
             script=dummy_template_source,
             job=SlurmJobParams(
-                name=pending_job_submission.application_name,
+                name=name,
                 current_working_directory=SETTINGS.DEFAULT_SLURM_WORK_DIR,
+                standard_output=SETTINGS.DEFAULT_SLURM_WORK_DIR / f"{name}.out",
+                standard_error=SETTINGS.DEFAULT_SLURM_WORK_DIR / f"{name}.err",
             ),
-        ).dict()
+        ).json()
+
+
+@pytest.mark.asyncio
+async def test_submit_job_script__with_non_default_execution_directory(
+    dummy_pending_job_submission_data, dummy_template_source, mocker
+):
+    """
+    Test that the ``submit_job_script()`` successfully submits a job with an exec dir.
+
+    Verifies that a PendingJobSubmission instance is submitted via the Slurm REST API
+    and that a ``slurm_job_id`` is returned. Verifies that the execution_directory is
+    taken from the request and submitted to slurm rest api.
+    """
+    user_mapper = mocker.MagicMock()
+    user_mapper.find_username.return_value = "dummy-user"
+
+    mocker.patch(
+        "cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token"
+    )
+    fake_path = pathlib.Path("/some/fake/path")
+    pending_job_submission = PendingJobSubmission(
+        **dummy_pending_job_submission_data,
+        execution_directory=fake_path,
+    )
+    name = pending_job_submission.application_name
+
+    async with respx.mock:
+        submit_route = respx.post(
+            f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/submit"
+        )
+        submit_route.mock(
+            return_value=httpx.Response(
+                status_code=200,
+                json=dict(job_id=13),
+            )
+        )
+
+        slurm_job_id = await submit_job_script(pending_job_submission, user_mapper)
+
+        assert slurm_job_id == 13
+        assert submit_route.call_count == 1
+        last_request = submit_route.calls.last.request
+        assert last_request.method == "POST"
+        assert last_request.headers["x-slurm-user-name"] == "dummy-user"
+        assert last_request.headers["x-slurm-user-token"] == "dummy-token"
+        assert last_request.content.decode("utf-8") == SlurmJobSubmission(
+            script=dummy_template_source,
+            job=SlurmJobParams(
+                name=name,
+                current_working_directory=fake_path,
+                standard_output=fake_path / f"{name}.out",
+                standard_error=fake_path / f"{name}.err",
+            ),
+        ).json()
+
 
 
 @pytest.mark.asyncio

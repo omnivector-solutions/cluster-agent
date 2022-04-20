@@ -45,6 +45,7 @@ async def submit_job_script(
             job_script = data
 
     email = pending_job_submission.job_submission_owner_email
+    name = pending_job_submission.application_name
     mapper_class_name = user_mapper.__class__.__name__
     logger.debug(f"Fetching username for email {email} with mapper {mapper_class_name}")
     username = user_mapper.find_username(email)
@@ -55,11 +56,14 @@ async def submit_job_script(
         "Could not find an executable script in retrieved job script data.",
     )
 
+    submit_dir = pending_job_submission.execution_directory or SETTINGS.DEFAULT_SLURM_WORK_DIR
     payload = SlurmJobSubmission(
         script=job_script,
         job=SlurmJobParams(
             name=pending_job_submission.application_name,
-            current_working_directory=SETTINGS.DEFAULT_SLURM_WORK_DIR,
+            current_working_directory=submit_dir,
+            standard_output=submit_dir / f"{name}.out",
+            standard_error=submit_dir / f"{name}.err",
         ),
     )
     logger.debug(
@@ -74,10 +78,10 @@ async def submit_job_script(
         response = await slurmrestd_client.post(
             "/slurm/v0.0.36/job/submit",
             auth=lambda r: inject_token(r, username=username),
-            json=payload.dict(),
+            data=payload.json(),
         )
         response.raise_for_status()
-        sub_data = SlurmSubmitResponse(**response.json())
+        sub_data = SlurmSubmitResponse.parse_raw(response.content)
 
     # Make static type checkers happy.
     slurm_job_id = cast(int, sub_data.job_id)
