@@ -143,7 +143,10 @@ async def test_find_username__success(mocker, tweak_slurm_user_settings):
     assert username == "xxx00x"
 
 
-async def test_find_username__fails_if_server_does_not_return_1_entry(mocker, tweak_slurm_user_settings):
+async def test_find_username__fails_if_server_does_not_return_1_entry(
+    mocker,
+    tweak_slurm_user_settings,
+):
     """
     Test that the ``find_username()`` fails if server does not return exactly 1 entry.
 
@@ -177,7 +180,10 @@ async def test_find_username__fails_if_server_does_not_return_1_entry(mocker, tw
             await mapper.find_username("dummy_user@dummy.domain.com")
 
 
-async def test_find_username__fails_if_entries_cannot_be_extracted(mocker, tweak_slurm_user_settings):
+async def test_find_username__fails_if_entries_cannot_be_extracted(
+    mocker,
+    tweak_slurm_user_settings,
+):
     """
     Test that the ``find_username()`` fails if entries are invalid.
 

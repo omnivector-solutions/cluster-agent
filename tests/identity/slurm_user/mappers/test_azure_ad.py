@@ -9,7 +9,6 @@ import respx
 from cluster_agent.settings import SETTINGS
 from cluster_agent.identity.slurm_user.exceptions import AzureADError
 from cluster_agent.identity.slurm_user.mappers import azure_ad
-from cluster_agent.identity.slurm_user.settings import SLURM_USER_SETTINGS
 
 
 async def test_find_username__success():

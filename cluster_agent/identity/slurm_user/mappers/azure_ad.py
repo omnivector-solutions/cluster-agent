@@ -65,7 +65,7 @@ class AzureADMapper(SlurmUserMapper):
             )
             member = member_list.members.pop()
 
-            logger.debug(f"Getting azure access token for user")
+            logger.debug("Getting azure access token for user")
             response = await backend_client.get(
                 f"/admin/management/organizations/members/{member.user_id}",
             )
@@ -78,7 +78,7 @@ class AzureADMapper(SlurmUserMapper):
             )
             identity = member_detail.identities.pop()
 
-            logger.debug(f"Requesting username from Azure AD")
+            logger.debug("Requesting username from Azure AD")
             response = httpx.get(
                 "https://graph.microsoft.com/v1.0/me?$select=mailNickName",
                 headers=dict(Authorization=f"Bearer {identity.access_token}"),
