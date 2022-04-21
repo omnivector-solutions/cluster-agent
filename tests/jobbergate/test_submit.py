@@ -8,8 +8,9 @@ import httpx
 import pytest
 import respx
 
-from cluster_agent.utils.exception import JobSubmissionError, SlurmrestdError
+from cluster_agent.identity.slurm_user.mappers.mapper_base import SlurmUserMapper
 from cluster_agent.settings import SETTINGS
+from cluster_agent.utils.exception import JobSubmissionError, SlurmrestdError
 from cluster_agent.jobbergate.schemas import (
     PendingJobSubmission,
     SlurmJobSubmission,
@@ -30,7 +31,7 @@ async def test_submit_job_script__success(
     and that a ``slurm_job_id`` is returned. Verifies that LDAP was used to retrieve
     the username.
     """
-    user_mapper = mocker.MagicMock()
+    user_mapper = mocker.AsyncMock(SlurmUserMapper)
     user_mapper.find_username.return_value = "dummy-user"
 
     mocker.patch(
@@ -87,7 +88,7 @@ async def test_submit_job_script__raises_exception_if_no_executable_script_was_f
     )
 
     with pytest.raises(JobSubmissionError, match="Could not find an executable"):
-        await submit_job_script(pending_job_submission, mocker.MagicMock())
+        await submit_job_script(pending_job_submission, mocker.AsyncMock(SlurmUserMapper))
 
 
 @pytest.mark.asyncio
@@ -100,7 +101,7 @@ async def test_submit_job_script__raises_exception_if_submit_call_response_is_no
     REST API is nota 200. Verifies that the error message is included in the raised
     exception.
     """
-    user_mapper = mocker.MagicMock()
+    user_mapper = mocker.AsyncMock(SlurmUserMapper)
     user_mapper.find_username.return_value = "dummy-user"
 
     mocker.patch(
@@ -143,7 +144,7 @@ async def test_submit_job_script__raises_exception_if_response_cannot_be_unpacke
     REST API is nota 200. Verifies that the error message is included in the raised
     exception.
     """
-    user_mapper = mocker.MagicMock()
+    user_mapper = mocker.AsyncMock(SlurmUserMapper)
     user_mapper.find_username.return_value = "dummy-user"
 
     mocker.patch(

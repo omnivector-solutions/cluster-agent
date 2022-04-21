@@ -8,17 +8,19 @@ from cluster_agent.identity.slurm_user.constants import MapperType
 from cluster_agent.identity.slurm_user.mappers import (
     SlurmUserMapper,
     LDAPMapper,
+    AzureADMapper,
     SingleUserMapper,
 )
 
 
 mapper_map = {
     MapperType.LDAP: LDAPMapper,
+    MapperType.AZURE_AD: AzureADMapper,
     MapperType.SINGLE_USER: SingleUserMapper,
 }
 
 
-def manufacture() -> SlurmUserMapper:
+async def manufacture() -> SlurmUserMapper:
     """
     Create an instance of a Slurm user mapper given the app configuration.
 
@@ -32,5 +34,5 @@ def manufacture() -> SlurmUserMapper:
     )
     assert mapper_class is not None
     mapper_instance = mapper_class()
-    mapper_instance.configure(SLURM_USER_SETTINGS)
+    await mapper_instance.configure(SLURM_USER_SETTINGS)
     return mapper_instance

@@ -47,7 +47,7 @@ async def submit_job_script(
     email = pending_job_submission.job_submission_owner_email
     mapper_class_name = user_mapper.__class__.__name__
     logger.debug(f"Fetching username for email {email} with mapper {mapper_class_name}")
-    username = user_mapper.find_username(email)
+    username = await user_mapper.find_username(email)
     logger.debug(f"Using local slurm user {username} for job submission")
 
     JobSubmissionError.require_condition(
@@ -98,7 +98,7 @@ async def submit_pending_jobs():
     logger.debug("Started submitting pending jobs...")
 
     logger.debug("Building user-mapper")
-    user_mapper = manufacture()
+    user_mapper = await manufacture()
 
     logger.debug("Fetching pending jobs...")
     pending_job_submissions = await fetch_pending_submissions()
