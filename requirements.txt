@@ -11,3 +11,4 @@ PyJWT==2.4.0
 httpx==0.22.0
 py-buzz==3.1.0
 ldap3==2.9.1
+email-validator==1.1.3

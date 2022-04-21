@@ -8,8 +8,9 @@ import httpx
 import pytest
 import respx
 
-from cluster_agent.utils.exception import JobSubmissionError, SlurmrestdError
+from cluster_agent.identity.slurm_user.mappers.mapper_base import SlurmUserMapper
 from cluster_agent.settings import SETTINGS
+from cluster_agent.utils.exception import JobSubmissionError, SlurmrestdError
 from cluster_agent.jobbergate.schemas import (
     PendingJobSubmission,
     SlurmJobSubmission,
@@ -30,12 +31,9 @@ async def test_submit_job_script__success(
     and that a ``slurm_job_id`` is returned. Verifies that LDAP was used to retrieve
     the username.
     """
-    user_mapper = mocker.MagicMock()
+    user_mapper = mocker.AsyncMock(SlurmUserMapper)
     user_mapper.find_username.return_value = "dummy-user"
 
-    mocker.patch(
-        "cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token"
-    )
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
     name = pending_job_submission.application_name
 
@@ -57,7 +55,7 @@ async def test_submit_job_script__success(
         last_request = submit_route.calls.last.request
         assert last_request.method == "POST"
         assert last_request.headers["x-slurm-user-name"] == "dummy-user"
-        assert last_request.headers["x-slurm-user-token"] == "dummy-token"
+        assert last_request.headers["x-slurm-user-token"] == "default-dummy-token"
         assert last_request.content.decode("utf-8") == SlurmJobSubmission(
             script=dummy_template_source,
             job=SlurmJobParams(
@@ -80,7 +78,7 @@ async def test_submit_job_script__with_non_default_execution_directory(
     and that a ``slurm_job_id`` is returned. Verifies that the execution_directory is
     taken from the request and submitted to slurm rest api.
     """
-    user_mapper = mocker.MagicMock()
+    user_mapper = mocker.AsyncMock(SlurmUserMapper)
     user_mapper.find_username.return_value = "dummy-user"
 
     mocker.patch(
@@ -145,7 +143,7 @@ async def test_submit_job_script__raises_exception_if_no_executable_script_was_f
     )
 
     with pytest.raises(JobSubmissionError, match="Could not find an executable"):
-        await submit_job_script(pending_job_submission, mocker.MagicMock())
+        await submit_job_script(pending_job_submission, mocker.AsyncMock(SlurmUserMapper))
 
 
 @pytest.mark.asyncio
@@ -158,12 +156,9 @@ async def test_submit_job_script__raises_exception_if_submit_call_response_is_no
     REST API is nota 200. Verifies that the error message is included in the raised
     exception.
     """
-    user_mapper = mocker.MagicMock()
+    user_mapper = mocker.AsyncMock(SlurmUserMapper)
     user_mapper.find_username.return_value = "dummy-user"
 
-    mocker.patch(
-        "cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token"
-    )
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
 
     async with respx.mock:
@@ -201,12 +196,9 @@ async def test_submit_job_script__raises_exception_if_response_cannot_be_unpacke
     REST API is nota 200. Verifies that the error message is included in the raised
     exception.
     """
-    user_mapper = mocker.MagicMock()
+    user_mapper = mocker.AsyncMock(SlurmUserMapper)
     user_mapper.find_username.return_value = "dummy-user"
 
-    mocker.patch(
-        "cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token"
-    )
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
 
     async with respx.mock:
@@ -225,17 +217,12 @@ async def test_submit_job_script__raises_exception_if_response_cannot_be_unpacke
 
 
 @pytest.mark.asyncio
-async def test_submit_pending_jobs(dummy_template_source, mocker, tweak_slurm_user_settings):
+async def test_submit_pending_jobs(dummy_template_source, tweak_settings):
     """
     Test that the ``submit_pending_jobs()`` function can fetch pending job submissions,
     submit each to slurm via the Slurm REST API, and update the job submission via the
     Jobbergate API.
     """
-
-    mocker.patch(
-        "cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token"
-    )
-
     pending_job_submissions_data = [
         dict(
             id=1,
@@ -322,7 +309,7 @@ async def test_submit_pending_jobs(dummy_template_source, mocker, tweak_slurm_us
         )
         submit_route.mock(side_effect=_submit_side_effect)
 
-        with tweak_slurm_user_settings(SINGLE_USER_SUBMITTER="dummy-user"):
+        with tweak_settings(SINGLE_USER_SUBMITTER="dummy-user"):
             await submit_pending_jobs()
 
         assert update_1_route.call_count == 1

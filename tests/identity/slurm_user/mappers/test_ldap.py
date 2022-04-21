@@ -8,10 +8,10 @@ import pytest
 
 from cluster_agent.identity.slurm_user.exceptions import LDAPError
 from cluster_agent.identity.slurm_user.mappers import ldap
-from cluster_agent.identity.slurm_user.settings import SLURM_USER_SETTINGS
+from cluster_agent.settings import SETTINGS
 
 
-def test_configure__success(mocker, tweak_slurm_user_settings):
+async def test_configure__success(mocker, tweak_settings):
     """
     Test that an LDAP instance will ``configure()`` if settings are correct.
     """
@@ -20,24 +20,24 @@ def test_configure__success(mocker, tweak_slurm_user_settings):
     mock_connection = mocker.patch.object(ldap, "Connection")
     mapper = ldap.LDAPMapper()
 
-    with tweak_slurm_user_settings(
+    with tweak_settings(
         LDAP_DOMAIN="dummy.domain.com",
         LDAP_HOST="dummy.domain.com",
         LDAP_USERNAME="dummyUser",
         LDAP_PASSWORD="dummy-password",
     ):
-        mapper.configure(SLURM_USER_SETTINGS)
-        mock_server.assert_called_once_with(SLURM_USER_SETTINGS.LDAP_DOMAIN, get_info=ldap.ALL)
+        await mapper.configure(SETTINGS)
+        mock_server.assert_called_once_with(SETTINGS.LDAP_DOMAIN, get_info=ldap.ALL)
         mock_connection.assert_called_once_with(
             mock_server_obj,
-            user=SLURM_USER_SETTINGS.LDAP_USERNAME,
-            password=SLURM_USER_SETTINGS.LDAP_PASSWORD,
+            user=SETTINGS.LDAP_USERNAME,
+            password=SETTINGS.LDAP_PASSWORD,
             authentication=ldap.SIMPLE,
         )
     assert mapper.search_base == "DC=dummy,DC=domain,DC=com"
 
 
-def test_configure__sets_up_ntlm_auth_type_correctly(mocker, tweak_slurm_user_settings):
+async def test_configure__sets_up_ntlm_auth_type_correctly(mocker, tweak_settings):
     """
     Test that an LDAP instance will ``configure()`` NTLM auth correctly.
     """
@@ -46,25 +46,25 @@ def test_configure__sets_up_ntlm_auth_type_correctly(mocker, tweak_slurm_user_se
     mock_connection = mocker.patch.object(ldap, "Connection")
     mapper = ldap.LDAPMapper()
 
-    with tweak_slurm_user_settings(
+    with tweak_settings(
         LDAP_DOMAIN="dummy.domain.com",
         LDAP_HOST="dummy.domain.com",
         LDAP_USERNAME="dummyUser",
         LDAP_PASSWORD="dummy-password",
         LDAP_AUTH_TYPE="NTLM",
     ):
-        mapper.configure(SLURM_USER_SETTINGS)
-        mock_server.assert_called_once_with(SLURM_USER_SETTINGS.LDAP_DOMAIN, get_info=ldap.ALL)
+        await mapper.configure(SETTINGS)
+        mock_server.assert_called_once_with(SETTINGS.LDAP_DOMAIN, get_info=ldap.ALL)
         mock_connection.assert_called_once_with(
             mock_server_obj,
-            user=f"{SLURM_USER_SETTINGS.LDAP_DOMAIN}\\{SLURM_USER_SETTINGS.LDAP_USERNAME}",
-            password=SLURM_USER_SETTINGS.LDAP_PASSWORD,
+            user=f"{SETTINGS.LDAP_DOMAIN}\\{SETTINGS.LDAP_USERNAME}",
+            password=SETTINGS.LDAP_PASSWORD,
             authentication=ldap.NTLM,
         )
     assert mapper.search_base == "DC=dummy,DC=domain,DC=com"
 
 
-def test_configure__raises_LDAPError_if_settings_are_missing(tweak_slurm_user_settings):
+async def test_configure__raises_LDAPError_if_settings_are_missing(tweak_settings):
     """
     Test that the ``configure()`` method will fail if settings are not correct.
 
@@ -73,44 +73,44 @@ def test_configure__raises_LDAPError_if_settings_are_missing(tweak_slurm_user_se
     """
     mapper = ldap.LDAPMapper()
 
-    with tweak_slurm_user_settings(
+    with tweak_settings(
         LDAP_DOMAIN=None,
         LDAP_HOST="dummy.domain.com",
         LDAP_USERNAME="dummyUser",
         LDAP_PASSWORD="dummy-password",
     ):
         with pytest.raises(LDAPError, match="LDAP is not configured"):
-            mapper.configure(SLURM_USER_SETTINGS)
+            await mapper.configure(SETTINGS)
 
-    with tweak_slurm_user_settings(
+    with tweak_settings(
         LDAP_DOMAIN="dummy.domain.com",
         LDAP_HOST=None,
         LDAP_USERNAME="dummyUser",
         LDAP_PASSWORD="dummy-password",
     ):
         with pytest.raises(LDAPError, match="LDAP is not configured"):
-            mapper.configure(SLURM_USER_SETTINGS)
+            await mapper.configure(SETTINGS)
 
-    with tweak_slurm_user_settings(
+    with tweak_settings(
         LDAP_DOMAIN="dummy.domain.com",
         LDAP_HOST="dummy.domain.com",
         LDAP_USERNAME=None,
         LDAP_PASSWORD="dummy-password",
     ):
         with pytest.raises(LDAPError, match="LDAP is not configured"):
-            mapper.configure(SLURM_USER_SETTINGS)
+            await mapper.configure(SETTINGS)
 
-    with tweak_slurm_user_settings(
+    with tweak_settings(
         LDAP_DOMAIN="dummy.domain.com",
         LDAP_HOST="dummy.domain.com",
         LDAP_USERNAME="dummyUser",
         LDAP_PASSWORD=None,
     ):
         with pytest.raises(LDAPError, match="LDAP is not configured"):
-            mapper.configure(SLURM_USER_SETTINGS)
+            await mapper.configure(SETTINGS)
 
 
-def test_find_username__success(mocker, tweak_slurm_user_settings):
+async def test_find_username__success(mocker, tweak_settings):
     """
     Test that the ``find_username()`` gets username from ldap server given email.
 
@@ -132,18 +132,21 @@ def test_find_username__success(mocker, tweak_slurm_user_settings):
 
     mapper = ldap.LDAPMapper()
 
-    with tweak_slurm_user_settings(
+    with tweak_settings(
         LDAP_HOST="dummy.domain.com",
         LDAP_DOMAIN="dummy.domain.com",
         LDAP_USERNAME="dummyUser",
         LDAP_PASSWORD="dummy-password",
     ):
-        mapper.configure(SLURM_USER_SETTINGS)
-        username = mapper.find_username("dummy_user@dummy.domain.com")
+        await mapper.configure(SETTINGS)
+        username = await mapper.find_username("dummy_user@dummy.domain.com")
     assert username == "xxx00x"
 
 
-def test_find_username__fails_if_server_does_not_return_1_entry(mocker, tweak_slurm_user_settings):
+async def test_find_username__fails_if_server_does_not_return_1_entry(
+    mocker,
+    tweak_settings,
+):
     """
     Test that the ``find_username()`` fails if server does not return exactly 1 entry.
 
@@ -160,24 +163,27 @@ def test_find_username__fails_if_server_does_not_return_1_entry(mocker, tweak_sl
 
     mapper = ldap.LDAPMapper()
 
-    with tweak_slurm_user_settings(
+    with tweak_settings(
         LDAP_HOST="dummy.domain.com",
         LDAP_DOMAIN="dummy.domain.com",
         LDAP_USERNAME="dummyUser",
         LDAP_PASSWORD="dummy-password",
     ):
-        mapper.configure(SLURM_USER_SETTINGS)
+        await mapper.configure(SETTINGS)
 
         mock_connection_obj.entries = []
         with pytest.raises(LDAPError, match="Did not find exactly one"):
-            mapper.find_username("dummy_user@dummy.domain.com")
+            await mapper.find_username("dummy_user@dummy.domain.com")
 
         mock_connection_obj.entries = [1, 2]
         with pytest.raises(LDAPError, match="Did not find exactly one"):
-            mapper.find_username("dummy_user@dummy.domain.com")
+            await mapper.find_username("dummy_user@dummy.domain.com")
 
 
-def test_find_username__fails_if_entries_cannot_be_extracted(mocker, tweak_slurm_user_settings):
+async def test_find_username__fails_if_entries_cannot_be_extracted(
+    mocker,
+    tweak_settings,
+):
     """
     Test that the ``find_username()`` fails if entries are invalid.
 
@@ -198,18 +204,18 @@ def test_find_username__fails_if_entries_cannot_be_extracted(mocker, tweak_slurm
 
     mapper = ldap.LDAPMapper()
 
-    with tweak_slurm_user_settings(
+    with tweak_settings(
         LDAP_DOMAIN="dummy.domain.com",
         LDAP_HOST="dummy.domain.com",
         LDAP_USERNAME="dummyUser",
         LDAP_PASSWORD="dummy-password",
     ):
-        mapper.configure(SLURM_USER_SETTINGS)
+        await mapper.configure(SETTINGS)
         with pytest.raises(LDAPError, match="Failed to extract data"):
-            mapper.find_username("dummy_user@dummy.domain.com")
+            await mapper.find_username("dummy_user@dummy.domain.com")
 
 
-def test_find_username__fails_if_user_has_more_than_one_CN(mocker, tweak_slurm_user_settings):
+async def test_find_username__fails_if_user_has_more_than_one_CN(mocker, tweak_settings):
     """
     Test that the ``find_username()`` fails if a user has more than one username.
 
@@ -230,17 +236,17 @@ def test_find_username__fails_if_user_has_more_than_one_CN(mocker, tweak_slurm_u
 
     mapper = ldap.LDAPMapper()
 
-    with tweak_slurm_user_settings(
+    with tweak_settings(
         LDAP_DOMAIN="dummy.domain.com",
         LDAP_HOST="dummy.domain.com",
         LDAP_USERNAME="dummyUser",
         LDAP_PASSWORD="dummy-password",
     ):
-        mapper.configure(SLURM_USER_SETTINGS)
+        await mapper.configure(SETTINGS)
         mock_entry.entry_to_json = lambda: json.dumps(dict(attributes=dict(cn=[])))
         with pytest.raises(LDAPError, match="User did not have exactly one CN"):
-            mapper.find_username("dummy_user@dummy.domain.com")
+            await mapper.find_username("dummy_user@dummy.domain.com")
 
         mock_entry.entry_to_json = lambda: json.dumps(dict(attributes=dict(cn=[1, 2])))
         with pytest.raises(LDAPError, match="User did not have exactly one CN"):
-            mapper.find_username("dummy_user@dummy.domain.com")
+            await mapper.find_username("dummy_user@dummy.domain.com")

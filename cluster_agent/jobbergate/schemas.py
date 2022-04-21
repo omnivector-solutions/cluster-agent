@@ -35,9 +35,9 @@ class SlurmJobParams(pydantic.BaseModel):
 
     name: str
     get_user_environment: int = 1
-    current_working_directory: Path
-    standard_error: Path
-    standard_output: Path
+    standard_error: Optional[Path]
+    standard_output: Optional[Path]
+    current_working_directory: Optional[Path]
 
 
 class SlurmJobSubmission(pydantic.BaseModel):
