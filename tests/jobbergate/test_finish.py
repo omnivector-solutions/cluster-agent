@@ -11,14 +11,11 @@ from cluster_agent.settings import SETTINGS
 
 
 @pytest.mark.asyncio
-async def test_fetch_pending_submissions__success(mocker):
+async def test_fetch_pending_submissions__success():
     """
     Test that the ``fetch_job_status()`` function can successfully retrieve
     job_state from Slurm and convert it into a JobSubmissionStatus.
     """
-    mocker.patch(
-        "cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token"
-    )
     async with respx.mock:
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
             return_value=httpx.Response(
@@ -63,15 +60,11 @@ async def test_fetch_pending_submissions__success(mocker):
 
 @pytest.mark.asyncio
 async def test_fetch_pending_submissions__raises_SlurmrestdError_if_response_is_not_200(
-    mocker,
 ):
     """
     Test that the ``fetch_job_status()`` will raise a ``SlurmrestdError`` if the
     response is not a 200.
     """
-    mocker.patch(
-        "cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token"
-    )
     async with respx.mock:
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
             return_value=httpx.Response(
@@ -88,17 +81,12 @@ async def test_fetch_pending_submissions__raises_SlurmrestdError_if_response_is_
 
 
 @pytest.mark.asyncio
-async def test_finish_active_jobs(
-    tweak_settings, tmp_path, mocker, dummy_template_source
-):
+async def test_finish_active_jobs():
     """
     Test that the ``finish_active_jobs()`` function can fetch active job submissions,
     retrieve the job state from slurm, map it to a ``JobSubmissionStatus``, and update
     the job submission status via the API.
     """
-    mocker.patch(
-        "cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token"
-    )
     active_job_submissions_data = [
         dict(id=1, slurm_job_id=11),  # Will complete
         dict(id=2, slurm_job_id=22),  # Jobbergate API gives a 400

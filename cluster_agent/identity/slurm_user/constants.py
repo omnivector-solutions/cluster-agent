@@ -12,6 +12,7 @@ class MapperType(str, Enum):
 
     LDAP = "LDAP"
     SINGLE_USER = "SINGLE_USER"
+    AZURE_AD = "AZURE_AD"
 
 
 class LDAPAuthType(str, Enum):

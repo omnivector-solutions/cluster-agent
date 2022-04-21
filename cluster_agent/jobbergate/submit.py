@@ -48,7 +48,7 @@ async def submit_job_script(
     name = pending_job_submission.application_name
     mapper_class_name = user_mapper.__class__.__name__
     logger.debug(f"Fetching username for email {email} with mapper {mapper_class_name}")
-    username = user_mapper.find_username(email)
+    username = await user_mapper.find_username(email)
     logger.debug(f"Using local slurm user {username} for job submission")
 
     JobSubmissionError.require_condition(
@@ -83,7 +83,7 @@ async def submit_job_script(
         response = await slurmrestd_client.post(
             "/slurm/v0.0.36/job/submit",
             auth=lambda r: inject_token(r, username=username),
-            data=payload.json(),
+            json=json.loads(payload.json()),  # This is so, so gross. However: https://github.com/samuelcolvin/pydantic/issues/1409#issuecomment-951890060
         )
         response.raise_for_status()
         sub_data = SlurmSubmitResponse.parse_raw(response.content)
@@ -107,7 +107,7 @@ async def submit_pending_jobs():
     logger.debug("Started submitting pending jobs...")
 
     logger.debug("Building user-mapper")
-    user_mapper = manufacture()
+    user_mapper = await manufacture()
 
     logger.debug("Fetching pending jobs...")
     pending_job_submissions = await fetch_pending_submissions()

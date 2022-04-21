@@ -72,6 +72,15 @@ def acquire_token() -> str:
 
     if token is None:
         logger.debug("Attempting to acquire token from Auth0")
+
+        AuthTokenError.require_condition(
+            SETTINGS.AUTH0_CLIENT_ID is not None,
+            "AUTH0_CLIENT_ID is required",
+        )
+        AuthTokenError.require_condition(
+            SETTINGS.AUTH0_CLIENT_SECRET is not None,
+            "AUTH0_CLIENT_SECRET is required",
+        )
         auth0_body = dict(
             audience=SETTINGS.AUTH0_AUDIENCE,
             client_id=SETTINGS.AUTH0_CLIENT_ID,

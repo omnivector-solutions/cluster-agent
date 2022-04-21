@@ -73,6 +73,7 @@ async def test_fetch_pending_submissions__success():
                 json=pending_job_submissions_data,
             )
         )
+        print(f"MOCKING GET {SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/pending")
 
         pending_job_submissions = await fetch_pending_submissions()
         for (i, pending_job_submission) in enumerate(pending_job_submissions):

@@ -3,10 +3,10 @@ Provide definition of the base SlurmUserMapper class.
 """
 import abc
 
-from cluster_agent.identity.slurm_user.settings import SlurmUserSettings
+from cluster_agent.settings import Settings
 
 
-class SlurmUserMapper:
+class SlurmUserMapper(metaclass=abc.ABCMeta):
     """
     Provide a base class for classes that map Armada users to local Slurm users.
 
@@ -16,17 +16,16 @@ class SlurmUserMapper:
     - find_username(): Map a provided email address to a local slurm user.
     """
 
-    @abc.abstractmethod
-    def configure(self, settings: SlurmUserSettings):
+    async def configure(self, settings: Settings):
         """
         Configure the mapper instance.
 
-        Must be implemented by any derived class
+        May be overridden by any derived class
         """
-        raise NotImplementedError
+        pass
 
     @abc.abstractmethod
-    def find_username(self, email: str) -> str:
+    async def find_username(self, email: str) -> str:
         """
         Find a slurm user name given an email.
 
