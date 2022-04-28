@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional, List
 
 import pydantic
@@ -15,6 +16,7 @@ class PendingJobSubmission(pydantic.BaseModel, extra=pydantic.Extra.ignore):
     job_script_name: str
     job_script_data_as_string: str
     application_name: str
+    execution_directory: Optional[Path]
 
 
 class ActiveJobSubmission(pydantic.BaseModel, extra=pydantic.Extra.ignore):
@@ -33,7 +35,9 @@ class SlurmJobParams(pydantic.BaseModel):
 
     name: str
     get_user_environment: int = 1
-    current_working_directory: Optional[str]
+    current_working_directory: Path
+    standard_error: Path
+    standard_output: Path
 
 
 class SlurmJobSubmission(pydantic.BaseModel):
