@@ -124,7 +124,6 @@ async def test_submit_job_script__with_non_default_execution_directory(
         ).json()
 
 
-
 @pytest.mark.asyncio
 async def test_submit_job_script__raises_exception_if_no_executable_script_was_found(
     dummy_pending_job_submission_data,
