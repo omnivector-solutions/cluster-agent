@@ -15,9 +15,10 @@ class LDAPMapper(SlurmUserMapper):
     """
     Provide a class to interface with the LDAP server
     """
+
     connection = None
 
-    def configure(self, settings: SlurmUserSettings):
+    async def configure(self, settings: SlurmUserSettings):
         """
         Connect to the the LDAP server.
         """
@@ -66,7 +67,7 @@ class LDAPMapper(SlurmUserMapper):
             self.connection.start_tls()
             self.connection.bind()
 
-    def find_username(self, email: str) -> str:
+    async def find_username(self, email: str) -> str:
         """
         Find an active diretory username given a user email.
 

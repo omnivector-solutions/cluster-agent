@@ -16,17 +16,16 @@ class SlurmUserMapper:
     - find_username(): Map a provided email address to a local slurm user.
     """
 
-    @abc.abstractmethod
-    def configure(self, settings: SlurmUserSettings):
+    async def configure(self, settings: SlurmUserSettings):
         """
         Configure the mapper instance.
 
-        Must be implemented by any derived class
+        May be overridden by any derived class
         """
-        raise NotImplementedError
+        pass
 
     @abc.abstractmethod
-    def find_username(self, email: str) -> str:
+    async def find_username(self, email: str) -> str:
         """
         Find a slurm user name given an email.
 

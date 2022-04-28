@@ -11,15 +11,16 @@ class SingleUserMapper(SlurmUserMapper):
     """
     Provide a class to interface with the LDAP server
     """
+
     submitter = None
 
-    def configure(self, settings: SlurmUserSettings):
+    async def configure(self, settings: SlurmUserSettings):
         """
         Connect to the the LDAP server.
         """
         self.submitter = settings.SINGLE_USER_SUBMITTER
 
-    def find_username(self, *_) -> str:
+    async def find_username(self, *_) -> str:
         """
         Find an active diretory username given a user email.
 
