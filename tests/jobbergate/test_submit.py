@@ -7,17 +7,62 @@ import json
 import httpx
 import pytest
 import respx
-
 from cluster_agent.identity.slurm_user.mappers.mapper_base import SlurmUserMapper
-from cluster_agent.settings import SETTINGS
-from cluster_agent.utils.exception import JobSubmissionError, SlurmrestdError
+from cluster_agent.jobbergate.constants import JobSubmissionStatus
 from cluster_agent.jobbergate.schemas import (
     PendingJobSubmission,
-    SlurmJobSubmission,
     SlurmJobParams,
+    SlurmJobSubmission,
 )
-from cluster_agent.jobbergate.submit import submit_job_script, submit_pending_jobs
-from cluster_agent.jobbergate.constants import JobSubmissionStatus
+from cluster_agent.jobbergate.submit import (
+    get_job_script,
+    submit_job_script,
+    submit_pending_jobs,
+)
+from cluster_agent.settings import SETTINGS
+from cluster_agent.utils.exception import JobSubmissionError, SlurmrestdError
+from cluster_agent.utils.parser import get_job_parameters
+
+
+@pytest.mark.asyncio
+async def test_get_job_script__success(
+    dummy_pending_job_submission_data, dummy_template_source
+):
+    """
+    Test if a job script is successfully recovered from a PendingJobSubmission.
+    """
+    pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
+    assert dummy_template_source == get_job_script(pending_job_submission)
+
+
+@pytest.mark.asyncio
+async def test_get_job_script__raises_exception_if_empty(
+    dummy_pending_job_submission_data,
+):
+    """
+    Test if JobSubmissionError is raised when a empty job script is
+    recovered from a PendingJobSubmission.
+    """
+    pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
+    pending_job_submission.job_script_data_as_string = json.dumps(
+        {"application.sh": ""}
+    )
+    with pytest.raises(JobSubmissionError):
+        get_job_script(pending_job_submission)
+
+
+@pytest.mark.asyncio
+async def test_get_job_script__raises_exception_if_missing(
+    dummy_pending_job_submission_data,
+):
+    """
+    Test if JobSubmissionError is raised when a job script is not successfully
+    recovered from a PendingJobSubmission.
+    """
+    pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
+    pending_job_submission.job_script_data_as_string = ""
+    with pytest.raises(JobSubmissionError):
+        get_job_script(pending_job_submission)
 
 
 @pytest.mark.asyncio
@@ -39,6 +84,13 @@ async def test_submit_job_script__success(
     )
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
 
+    job_script = get_job_script(pending_job_submission)
+    job_parameters = get_job_parameters(
+        job_script,
+        name=pending_job_submission.application_name,
+        current_working_directory=SETTINGS.DEFAULT_SLURM_WORK_DIR,
+    )
+
     async with respx.mock:
         submit_route = respx.post(
             f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/submit"
@@ -58,13 +110,15 @@ async def test_submit_job_script__success(
         assert last_request.method == "POST"
         assert last_request.headers["x-slurm-user-name"] == "dummy-user"
         assert last_request.headers["x-slurm-user-token"] == "dummy-token"
-        assert json.loads(last_request.content.decode("utf-8")) == SlurmJobSubmission(
-            script=dummy_template_source,
-            job=SlurmJobParams(
-                name=pending_job_submission.application_name,
-                current_working_directory=SETTINGS.DEFAULT_SLURM_WORK_DIR,
-            ),
-        ).dict()
+        assert (
+            json.loads(last_request.content.decode("utf-8"))
+            == SlurmJobSubmission(
+                script=dummy_template_source,
+                job=SlurmJobParams(
+                    **job_parameters,
+                ),
+            ).dict()
+        )
 
 
 @pytest.mark.asyncio
@@ -88,7 +142,9 @@ async def test_submit_job_script__raises_exception_if_no_executable_script_was_f
     )
 
     with pytest.raises(JobSubmissionError, match="Could not find an executable"):
-        await submit_job_script(pending_job_submission, mocker.AsyncMock(SlurmUserMapper))
+        await submit_job_script(
+            pending_job_submission, mocker.AsyncMock(SlurmUserMapper)
+        )
 
 
 @pytest.mark.asyncio
@@ -168,7 +224,9 @@ async def test_submit_job_script__raises_exception_if_response_cannot_be_unpacke
 
 
 @pytest.mark.asyncio
-async def test_submit_pending_jobs(dummy_template_source, mocker, tweak_slurm_user_settings):
+async def test_submit_pending_jobs(
+    dummy_template_source, mocker, tweak_slurm_user_settings
+):
     """
     Test that the ``submit_pending_jobs()`` function can fetch pending job submissions,
     submit each to slurm via the Slurm REST API, and update the job submission via the

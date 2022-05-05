@@ -35,6 +35,9 @@ class SlurmJobParams(pydantic.BaseModel):
     get_user_environment: int = 1
     current_working_directory: Optional[str]
 
+    class Config:
+        extra = "allow"
+
 
 class SlurmJobSubmission(pydantic.BaseModel):
     """

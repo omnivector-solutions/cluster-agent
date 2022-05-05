@@ -1,26 +1,43 @@
 import json
 from typing import cast
 
-from loguru import logger
-
-from cluster_agent.jobbergate.schemas import (
-    PendingJobSubmission,
-    SlurmSubmitResponse,
-    SlurmJobSubmission,
-    SlurmJobParams,
-)
-from cluster_agent.jobbergate.api import fetch_pending_submissions, mark_as_submitted
-from cluster_agent.jobbergate.constants import JobSubmissionStatus
-from cluster_agent.identity.slurmrestd import (
-    backend_client as slurmrestd_client,
-    inject_token,
-)
 from cluster_agent.identity.slurm_user.factory import manufacture
 from cluster_agent.identity.slurm_user.mappers import SlurmUserMapper
-from cluster_agent.utils.exception import JobSubmissionError
-from cluster_agent.utils.exception import SlurmrestdError
-from cluster_agent.utils.logging import log_error
+from cluster_agent.identity.slurmrestd import backend_client as slurmrestd_client
+from cluster_agent.identity.slurmrestd import inject_token
+from cluster_agent.jobbergate.api import fetch_pending_submissions, mark_as_submitted
+from cluster_agent.jobbergate.constants import JobSubmissionStatus
+from cluster_agent.jobbergate.schemas import (
+    PendingJobSubmission,
+    SlurmJobParams,
+    SlurmJobSubmission,
+    SlurmSubmitResponse,
+)
 from cluster_agent.settings import SETTINGS
+from cluster_agent.utils.exception import JobSubmissionError, SlurmrestdError
+from cluster_agent.utils.logging import log_error
+from cluster_agent.utils.parser import get_job_parameters
+from loguru import logger
+
+
+def get_job_script(pending_job_submission: PendingJobSubmission) -> str:
+    """
+    Get the job script from a PendingJobSubmission object.
+    Raise JobSubmissionError if no job script is found or if its empty.
+    """
+
+    try:
+        unpacked_data = json.loads(pending_job_submission.job_script_data_as_string)
+        job_script = unpacked_data.get("application.sh", "")
+    except json.JSONDecodeError:
+        job_script = ""
+
+    JobSubmissionError.require_condition(
+        bool(job_script),
+        "Could not find an executable script in retrieved job script data.",
+    )
+
+    return job_script
 
 
 async def submit_job_script(
@@ -33,16 +50,6 @@ async def submit_job_script(
     :param: pending_job_submission: A job_submission with fields needed to submit.
     :returns: The ``slurm_job_id`` for the submitted job
     """
-    unpacked_data = json.loads(pending_job_submission.job_script_data_as_string)
-
-    # TODO: Using Slurm REST API, we don't need to embed sbatch params.
-    #       Instead, we could put them in a prameter payload and send them in via
-    #       `job_properties`
-
-    job_script = None
-    for (filename, data) in unpacked_data.items():
-        if filename == "application.sh":
-            job_script = data
 
     email = pending_job_submission.job_submission_owner_email
     mapper_class_name = user_mapper.__class__.__name__
@@ -50,17 +57,16 @@ async def submit_job_script(
     username = await user_mapper.find_username(email)
     logger.debug(f"Using local slurm user {username} for job submission")
 
-    JobSubmissionError.require_condition(
-        job_script is not None,
-        "Could not find an executable script in retrieved job script data.",
+    job_script = get_job_script(pending_job_submission)
+    job_parameters = get_job_parameters(
+        job_script,
+        name=pending_job_submission.application_name,
+        current_working_directory=SETTINGS.DEFAULT_SLURM_WORK_DIR,
     )
 
     payload = SlurmJobSubmission(
         script=job_script,
-        job=SlurmJobParams(
-            name=pending_job_submission.application_name,
-            current_working_directory=SETTINGS.DEFAULT_SLURM_WORK_DIR,
-        ),
+        job=SlurmJobParams(**job_parameters),
     )
     logger.debug(
         f"Submitting pending job submission {pending_job_submission.id} "
