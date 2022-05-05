@@ -36,7 +36,7 @@ async def submit_job_script(
     unpacked_data = json.loads(pending_job_submission.job_script_data_as_string)
 
     # TODO: Using Slurm REST API, we don't need to embed sbatch params.
-    #       Instead, we could put them in a prameter payload and send them in via
+    #       Instead, we could put them in a parameter payload and send them in via
     #       `job_properties`
 
     job_script = None
@@ -57,10 +57,15 @@ async def submit_job_script(
     )
 
     submit_dir = pending_job_submission.execution_directory or SETTINGS.DEFAULT_SLURM_WORK_DIR
+
+    local_script_path = submit_dir / f"{name}.job"
+    local_script_path.write_text(job_script)
+    logger.debug(f"Copied job_script to local file {local_script_path}.")
+
     payload = SlurmJobSubmission(
         script=job_script,
         job=SlurmJobParams(
-            name=pending_job_submission.application_name,
+            name=name,
             current_working_directory=submit_dir,
             standard_output=submit_dir / f"{name}.out",
             standard_error=submit_dir / f"{name}.err",
