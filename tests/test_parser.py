@@ -1,6 +1,7 @@
 import inspect
 
 import pytest
+from bidict import bidict
 from cluster_agent.utils.parser import (
     _IDENTIFICATION_FLAG,
     _INLINE_COMMENT_MARK,
@@ -88,3 +89,25 @@ def test_clean_jobscript(dummy_slurm_script):
     }
     computed_result = set(_clean_jobscript(dummy_slurm_script))
     assert computed_result == expected_result
+
+
+@pytest.fixture
+def dummy_mapping():
+    return {f"key_{i}": f"value_{i}" for i in range(5)}
+
+
+def test_bidict_mapping(dummy_mapping):
+    """
+    Integration test with the requirement bidict
+    """
+    assert dummy_mapping == bidict(dummy_mapping)
+
+
+def test_bidict_mapping_reversed(dummy_mapping):
+    """
+    Integration test with the requirement bidict,
+    this time checking its inverse capability
+    """
+    desired_value = {value: key for key, value in dummy_mapping.items()}
+
+    assert desired_value == bidict(dummy_mapping).inverse
