@@ -3,6 +3,7 @@ import inspect
 import pytest
 from bidict import bidict
 from cluster_agent.utils.parser import (
+    parser,
     _IDENTIFICATION_FLAG,
     _INLINE_COMMENT_MARK,
     _clean_jobscript,
@@ -95,9 +96,28 @@ def test_clean_jobscript(dummy_slurm_script):
     ]
     actual_list = list(_clean_jobscript(dummy_slurm_script))
     assert actual_list == desired_list
+
+
+def test_parser(dummy_slurm_script):
+
+    desired_dict = {
+        "account": "<account>",
+        "job_name": "serial_job_test",
+        "mail_type": "END,FAIL",
+        "mail_user": "email@somewhere.com",
+        "mem": "1gb",
+        "ntasks": "4",
+        "output": "serial_test_%j.log",
+        "time": "00:05:00",
+        "verbose": True,
     }
-    computed_result = set(_clean_jobscript(dummy_slurm_script))
-    assert computed_result == expected_result
+
+    values = parser.parse_args(_clean_jobscript(dummy_slurm_script))
+    actual_dict = {
+        key: value for key, value in vars(values).items() if value if not None
+    }
+
+    assert actual_dict == desired_dict
 
 
 @pytest.fixture
