@@ -187,5 +187,25 @@ def build_mapping_sbatch_to_slurm():
     return mapping
 
 
+def jobscript_to_dict(parser: ArgumentParser, jobscript: str) -> dict:
+    values = parser.parse_args(_clean_jobscript(jobscript))
+    return {key: value for key, value in vars(values).items() if value if not None}
+
+
+def convert_sbatch_to_slurm_api(input_dict) -> dict:
+    try:
+        return {
+            mapping_sbatch_to_slurm[key]: value for key, value in input_dict.items()
+        }
+    except KeyError:
+        raise KeyError("Parameter not found at the mapper")
+
+
+def jobscript_to_slurm_api(jobscript: str, parser=None) -> dict:
+    if parser is None:
+        parser = build_parser()
+    return convert_sbatch_to_slurm_api(jobscript_to_dict(parser, jobscript))
+
+
 parser = build_parser()
 mapping_sbatch_to_slurm = build_mapping_sbatch_to_slurm()

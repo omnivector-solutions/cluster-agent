@@ -1,26 +1,23 @@
 import json
 from typing import cast
 
-from loguru import logger
-
-from cluster_agent.jobbergate.schemas import (
-    PendingJobSubmission,
-    SlurmSubmitResponse,
-    SlurmJobSubmission,
-    SlurmJobParams,
-)
-from cluster_agent.jobbergate.api import fetch_pending_submissions, mark_as_submitted
-from cluster_agent.jobbergate.constants import JobSubmissionStatus
-from cluster_agent.identity.slurmrestd import (
-    backend_client as slurmrestd_client,
-    inject_token,
-)
 from cluster_agent.identity.slurm_user.factory import manufacture
 from cluster_agent.identity.slurm_user.mappers import SlurmUserMapper
-from cluster_agent.utils.exception import JobSubmissionError
-from cluster_agent.utils.exception import SlurmrestdError
-from cluster_agent.utils.logging import log_error
+from cluster_agent.identity.slurmrestd import backend_client as slurmrestd_client
+from cluster_agent.identity.slurmrestd import inject_token
+from cluster_agent.jobbergate.api import fetch_pending_submissions, mark_as_submitted
+from cluster_agent.jobbergate.constants import JobSubmissionStatus
+from cluster_agent.jobbergate.schemas import (
+    PendingJobSubmission,
+    SlurmJobParams,
+    SlurmJobSubmission,
+    SlurmSubmitResponse,
+)
 from cluster_agent.settings import SETTINGS
+from cluster_agent.utils.exception import JobSubmissionError, SlurmrestdError
+from cluster_agent.utils.logging import log_error
+from cluster_agent.utils.parser import jobscript_to_slurm_api
+from loguru import logger
 
 
 async def submit_job_script(
@@ -61,14 +58,19 @@ async def submit_job_script(
     local_script_path = submit_dir / f"{name}.job"
     local_script_path.write_text(job_script)
     logger.debug(f"Copied job_script to local file {local_script_path}.")
+    default_job_parameters = dict(
+        name=pending_job_submission.application_name,
+        current_working_directory=submit_dir,
+        standard_output=submit_dir / f"{name}.out",
+        standard_error=submit_dir / f"{name}.err",
+    )
+
+    job_parameters = default_job_parameters.update(jobscript_to_slurm_api(job_script))
 
     payload = SlurmJobSubmission(
         script=job_script,
         job=SlurmJobParams(
-            name=name,
-            current_working_directory=submit_dir,
-            standard_output=submit_dir / f"{name}.out",
-            standard_error=submit_dir / f"{name}.err",
+            **job_parameters,
         ),
     )
     logger.debug(
