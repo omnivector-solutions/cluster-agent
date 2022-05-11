@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
+from dataclasses import dataclass, field
 from itertools import chain
 from typing import Iterator, List
-from dataclasses import dataclass, field
 
 from bidict import bidict
 
@@ -11,8 +11,7 @@ _INLINE_COMMENT_MARK = "#"
 
 def _flagged_line(line: str) -> bool:
     """
-    Identify if a provided line starts with the
-    identification flag
+    Identify if a provided line starts with the identification flag.
     """
     return line.startswith(_IDENTIFICATION_FLAG)
 
@@ -22,12 +21,16 @@ def _clean_line(line: str) -> str:
     Clean the provided line by removing the
     identification flag at the beguining of the line,
     then remove the inline comment mark and anything
-    after it, and finally strip white spaces at both sides
+    after it, and finally strip white spaces at both sides.
     """
     return line.lstrip(_IDENTIFICATION_FLAG).split(_INLINE_COMMENT_MARK)[0].strip()
 
 
 def _split_line(line: str) -> List[str]:
+    """
+    Split the provided line at the `=` charactere if it is found at the line,
+    otherwise split at the white spaces.
+    """
     if "=" in line:
         return line.split("=")
     return line.split()
@@ -49,6 +52,13 @@ def _clean_jobscript(jobscript: str) -> Iterator[str]:
 
 @dataclass(frozen=True)
 class SbatchToSlurm:
+    """
+    Store the information for each parameter, including its name at Slurm API
+    and SBATCH, besides any extra argument this parameter needs when added to
+    the parser. This information is used to build the jobscript/SBATCH parser
+    and the two-way mapping between Slurm API and SBATCH names.
+    """
+
     slurm_api: str
     sbatch: str
     sbatch_short: str = ""
@@ -169,7 +179,11 @@ sbatch_to_slurm = [
 ]
 
 
-def build_parser():
+def build_parser() -> ArgumentParser:
+    """
+    Build and ArgumentParser to handle all SBATCH
+    parameters declared at sbatch_to_slurm.
+    """
     parser = ArgumentParser()
     for item in sbatch_to_slurm:
         args = (i for i in (item.sbatch_short, item.sbatch) if i)
@@ -177,34 +191,59 @@ def build_parser():
     return parser
 
 
-def build_mapping_sbatch_to_slurm():
+def build_mapping_sbatch_to_slurm() -> bidict:
+    """
+    Create a mapper that can translate both ways between the parameter
+    names expected by Slurm REST API and SBATCH
+    """
     mapping = bidict()
 
     for item in sbatch_to_slurm:
         if item.slurm_api:
-            mapping[item.sbatch.lstrip("-")] = item.slurm_api
+            sbatch_name = item.sbatch.lstrip("-").replace("-", "_")
+            mapping[sbatch_name] = item.slurm_api
 
     return mapping
 
 
-def jobscript_to_dict(parser: ArgumentParser, jobscript: str) -> dict:
+def jobscript_to_dict(jobscript: str) -> dict:
+    """
+    Pull the SBATCH params out of the job-script and convert them into a
+    key-value pairing of parameter name to value
+    """
+    # TODO: have a more expressive error message for argparse
     values = parser.parse_args(_clean_jobscript(jobscript))
-    return {key: value for key, value in vars(values).items() if value if not None}
+    return {key: value for key, value in vars(values).items() if value is not None}
 
 
-def convert_sbatch_to_slurm_api(input_dict) -> dict:
+def convert_sbatch_to_slurm_api(input: dict) -> dict:
+    """
+    Take a dictionary containing key-value pairing of SBATCH parameter name
+    to value and change the keys to Slurm API parameter name while keeping
+    the values intact.
+
+    Raise KeyError If any of the keys is unknown to the mapper.
+    """
     try:
-        return {
-            mapping_sbatch_to_slurm[key]: value for key, value in input_dict.items()
-        }
+        return {mapping_sbatch_to_slurm[key]: value for key, value in input.items()}
     except KeyError:
         raise KeyError("Parameter not found at the mapper")
 
 
-def jobscript_to_slurm_api(jobscript: str, parser=None) -> dict:
-    if parser is None:
-        parser = build_parser()
-    return convert_sbatch_to_slurm_api(jobscript_to_dict(parser, jobscript))
+def get_job_parameters(jobscript: str, **kwargs) -> dict:
+    """
+    Parse all SBATCH parameters from a job script, map their names to Slurm API
+    parameters, and return them as a key-value pairing dictionary.
+
+    Extra key arguments can be used to supply default values for any parameter
+    (like name or current_working_directory). Note they may be overwritten by
+    values at the job script.
+    """
+    job_parameters = kwargs.copy()
+
+    job_parameters.update(convert_sbatch_to_slurm_api(jobscript_to_dict(jobscript)))
+
+    return job_parameters
 
 
 parser = build_parser()
