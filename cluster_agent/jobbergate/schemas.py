@@ -28,7 +28,7 @@ class ActiveJobSubmission(pydantic.BaseModel, extra=pydantic.Extra.ignore):
     slurm_job_id: int
 
 
-class SlurmJobParams(pydantic.BaseModel):
+class SlurmJobParams(pydantic.BaseModel, extra=pydantic.Extra.allow):
     """
     Specialized model for describing job submission parameters for Slurm REST API.
     """
