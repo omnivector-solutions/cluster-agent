@@ -1,22 +1,22 @@
-from argparse import ArgumentParser
 import inspect
+from argparse import ArgumentParser
 from typing import MutableMapping
 
 import pytest
 from bidict import bidict
 from cluster_agent.utils.parser import (
-    build_mapping_sbatch_to_slurm,
-    build_parser,
-    convert_sbatch_to_slurm_api,
-    get_job_parameters,
-    sbatch_to_slurm,
-    jobscript_to_dict,
     _IDENTIFICATION_FLAG,
     _INLINE_COMMENT_MARK,
     _clean_jobscript,
     _clean_line,
     _flagged_line,
     _split_line,
+    build_mapping_sbatch_to_slurm,
+    build_parser,
+    convert_sbatch_to_slurm_api,
+    get_job_parameters,
+    jobscript_to_dict,
+    sbatch_to_slurm,
 )
 
 
@@ -160,7 +160,7 @@ def test_build_mapping_sbatch_to_slurm():
     build_mapping_sbatch_to_slurm()
 
 
-def test_jobscript_to_dict(dummy_slurm_script):
+def test_jobscript_to_dict__success(dummy_slurm_script):
 
     desired_dict = {
         "account": "<account>",
@@ -178,14 +178,28 @@ def test_jobscript_to_dict(dummy_slurm_script):
     assert actual_dict == desired_dict
 
 
+def test_jobscript_to_dict__raises_exception_for_unknown_parameter():
+
+    with pytest.raises(ValueError) as e:
+        jobscript_to_dict("#SBATCH --foo\n#SBATCH --bar 0")
+        assert e.message == "Unrecognized SBATCH arguments: --foo --bar 0"
+
+
 @pytest.mark.parametrize("item", filter(lambda i: i.slurm_api, sbatch_to_slurm))
-def test_convert_sbatch_to_slurm_api(item):
+def test_convert_sbatch_to_slurm_api__success(item):
     desired_dict = {item.slurm_api: None}
 
     sbatch_name = item.sbatch.lstrip("-").replace("-", "_")
     actual_dict = convert_sbatch_to_slurm_api({sbatch_name: None})
 
     assert actual_dict == desired_dict
+
+
+def test_convert_sbatch_to_slurm_api__raises_exception_for_unknown_parameter():
+
+    with pytest.raises(KeyError) as e:
+        convert_sbatch_to_slurm_api(dict(foo=0, bar=1))
+        assert e.message == "Unrecognized Slurm REST api parameters: foo, bar"
 
 
 def test_get_job_parameters(dummy_slurm_script):
