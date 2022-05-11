@@ -209,11 +209,16 @@ def build_mapping_sbatch_to_slurm() -> bidict:
 def jobscript_to_dict(jobscript: str) -> dict:
     """
     Pull the SBATCH params out of the job-script and convert them into a
-    key-value pairing of parameter name to value
+    key-value pairing of parameter name to value.
+
+    Raise ValueError if any of the parameters are unknown to the parser.
     """
-    # TODO: have a more expressive error message for argparse
-    values = parser.parse_args(_clean_jobscript(jobscript))
-    return {key: value for key, value in vars(values).items() if value is not None}
+    args, argv = parser.parse_known_args(_clean_jobscript(jobscript))
+
+    if argv:
+        raise ValueError("Unrecognized SBATCH arguments: {}".format(" ".join(argv)))
+
+    return {key: value for key, value in vars(args).items() if value is not None}
 
 
 def convert_sbatch_to_slurm_api(input: dict) -> dict:
@@ -222,12 +227,26 @@ def convert_sbatch_to_slurm_api(input: dict) -> dict:
     to value and change the keys to Slurm API parameter name while keeping
     the values intact.
 
-    Raise KeyError If any of the keys is unknown to the mapper.
+    Raise KeyError if any of the keys are unknown to the mapper.
     """
-    try:
-        return {mapping_sbatch_to_slurm[key]: value for key, value in input.items()}
-    except KeyError:
-        raise KeyError("Parameter not found at the mapper")
+
+    mapped = {}
+    unknown_keys = []
+
+    for sbatch_name, value in input.items():
+        try:
+            slurm_name = mapping_sbatch_to_slurm[sbatch_name]
+        except KeyError:
+            unknown_keys.append(sbatch_name)
+        else:
+            mapped[slurm_name] = value
+
+    if unknown_keys:
+        raise KeyError(
+            "Unrecognized Slurm REST api parameters: {}".format(", ".join(unknown_keys))
+        )
+
+    return mapped
 
 
 def get_job_parameters(jobscript: str, **kwargs) -> dict:
