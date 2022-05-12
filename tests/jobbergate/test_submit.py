@@ -3,7 +3,6 @@ Define tests for the submission functions of the jobbergate section.
 """
 
 import json
-import pathlib
 
 import httpx
 import pytest
