@@ -21,10 +21,16 @@ from cluster_agent.utils.parser import (
 
 
 def test_identification_flag():
+    """
+    Check if the value of the identification flag is the same codded in the tests.
+    """
     assert _IDENTIFICATION_FLAG == "#SBATCH"
 
 
 def test_inline_comment_mark():
+    """
+    Check if the inline comment mark is the same codded in the tests.
+    """
     assert _INLINE_COMMENT_MARK == "#"
 
 
@@ -38,6 +44,9 @@ def test_inline_comment_mark():
     ),
 )
 def test_flagged_line(line, desired_value):
+    """
+    Check if the flagged lines are identified properly.
+    """
     actual_value = _flagged_line(line)
     assert actual_value == desired_value
 
@@ -49,9 +58,15 @@ def test_flagged_line(line, desired_value):
         ("#SBATCH#SBATCH", ""),
         ("#SBATCH -abc # A comment", "-abc"),
         ("#SBATCH --abc=0 # A comment", "--abc=0"),
+        ("#SBATCH --abc 0 # A comment", "--abc 0"),
+        ("#SBATCH --a=0 # A comment", "--a=0"),
     ),
 )
 def test_clean_line(line, desired_value):
+    """
+    Check if the provided lines are cleaned properly, i.e.,
+    identification flag, inline comments, and comment mark are all removed.
+    """
     actual_value = _clean_line(line)
     assert actual_value == desired_value
 
@@ -63,9 +78,17 @@ def test_clean_line(line, desired_value):
         ("--abc=0", ["--abc", "0"]),
         ("-J job_name", ["-J", "job_name"]),
         ("-v -J job_name", ["-v", "-J", "job_name"]),
+        ("-J job_name -v", ["-J", "job_name", "-v"]),
+        ("-a=0", ["-a", "0"]),
+        ("-a 0", ["-a", "0"]),
     ),
 )
 def test_split_line(line, desired_value):
+    """
+    Check if the provided lines are splitted properly at white spaces and equal
+    character. This procedure is important because it is the way argparse
+    expects to receive the parameters.
+    """
     actual_value = _split_line(line)
     assert actual_value == desired_value
 
@@ -97,6 +120,11 @@ def dummy_slurm_script():
 
 
 def test_clean_jobscript(dummy_slurm_script):
+    """
+    Check if all sbatch parameters are correctly extracted from a job script.
+    This operation combines many of the functions tested above (filter,
+    clean, and slit the parameters on each line).
+    """
     desired_list = [
         "-n",
         "4",
@@ -120,14 +148,21 @@ def test_clean_jobscript(dummy_slurm_script):
 
 
 @pytest.mark.parametrize("item", sbatch_to_slurm)
-def test_sbatch_to_slurm_list__slurm_api(item):
-    assert isinstance(item.slurm_api, str)
-    if item.slurm_api:
-        assert item.slurm_api.replace("_", "").isalpha()
+def test_sbatch_to_slurm_list__slurmrestd_var_name(item):
+    """
+    Check if the field slurmrestd_var_name for each item at sbatch_to_slurm
+    is appropriated.
+    """
+    assert isinstance(item.slurmrestd_var_name, str)
+    if item.slurmrestd_var_name:
+        assert item.slurmrestd_var_name.replace("_", "").isalpha()
 
 
 @pytest.mark.parametrize("item", sbatch_to_slurm)
 def test_sbatch_to_slurm_list__sbatch(item):
+    """
+    Check if the field sbatch for each item at sbatch_to_slurm is appropriated.
+    """
     assert isinstance(item.sbatch, str)
     assert item.sbatch.startswith("--")
     assert len(item.sbatch) >= 3
@@ -136,6 +171,9 @@ def test_sbatch_to_slurm_list__sbatch(item):
 
 @pytest.mark.parametrize("item", sbatch_to_slurm)
 def test_sbatch_to_slurm_list__sbatch_short(item):
+    """
+    Check if the field sbatch_short for each item at sbatch_to_slurm is appropriated.
+    """
     assert isinstance(item.sbatch_short, str)
     if item.sbatch_short:
         assert item.sbatch_short.startswith("-")
@@ -145,6 +183,9 @@ def test_sbatch_to_slurm_list__sbatch_short(item):
 
 @pytest.mark.parametrize("item", sbatch_to_slurm)
 def test_sbatch_to_slurm_list__argparser_param(item):
+    """
+    Check if the field sbatch_short for each item at sbatch_to_slurm is appropriated.
+    """
     assert isinstance(item.argparser_param, MutableMapping)
     if item.argparser_param:
         args = (i for i in (item.sbatch_short, item.sbatch) if i)
@@ -185,9 +226,11 @@ def test_jobscript_to_dict__raises_exception_for_unknown_parameter():
         assert e.message == "Unrecognized SBATCH arguments: --foo --bar 0"
 
 
-@pytest.mark.parametrize("item", filter(lambda i: i.slurm_api, sbatch_to_slurm))
+@pytest.mark.parametrize(
+    "item", filter(lambda i: i.slurmrestd_var_name, sbatch_to_slurm)
+)
 def test_convert_sbatch_to_slurm_api__success(item):
-    desired_dict = {item.slurm_api: None}
+    desired_dict = {item.slurmrestd_var_name: None}
 
     sbatch_name = item.sbatch.lstrip("-").replace("-", "_")
     actual_dict = convert_sbatch_to_slurm_api({sbatch_name: None})

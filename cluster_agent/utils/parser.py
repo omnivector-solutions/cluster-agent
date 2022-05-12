@@ -29,17 +29,16 @@ def _clean_line(line: str) -> str:
 def _split_line(line: str) -> List[str]:
     """
     Split the provided line at the `=` charactere if it is found at the line,
-    otherwise split at the white spaces.
+    otherwise split at the white spaces. This procedure is important because
+    it is the way argparse expects to receive the parameters.
     """
-    if "=" in line:
-        return line.split("=")
-    return line.split()
+    return line.replace("=", " ").split()
 
 
 def _clean_jobscript(jobscript: str) -> Iterator[str]:
     """
     Transform a job script string by filtering only the lines that start with
-    the identification flag and mapping a cleaning procedure to them, in order
+    the identification flag and mapping a cleaning procedure to them in order
     to remove the identification flag, remove inline comments, and strip extra
     white spaces. Finally, split each pair of parameter/value and chain them
     in a single iterator.
@@ -59,7 +58,7 @@ class SbatchToSlurm:
     and the two-way mapping between Slurm API and SBATCH names.
     """
 
-    slurm_api: str
+    slurmrestd_var_name: str
     sbatch: str
     sbatch_short: str = ""
     argparser_param: dict = field(default_factory=dict)
@@ -181,7 +180,7 @@ sbatch_to_slurm = [
 
 def build_parser() -> ArgumentParser:
     """
-    Build and ArgumentParser to handle all SBATCH
+    Build an ArgumentParser to handle all SBATCH
     parameters declared at sbatch_to_slurm.
     """
     parser = ArgumentParser()
@@ -194,14 +193,14 @@ def build_parser() -> ArgumentParser:
 def build_mapping_sbatch_to_slurm() -> bidict:
     """
     Create a mapper that can translate both ways between the parameter
-    names expected by Slurm REST API and SBATCH
+    names expected by Slurm REST API and SBATCH.
     """
     mapping = bidict()
 
     for item in sbatch_to_slurm:
-        if item.slurm_api:
+        if item.slurmrestd_var_name:
             sbatch_name = item.sbatch.lstrip("-").replace("-", "_")
-            mapping[sbatch_name] = item.slurm_api
+            mapping[sbatch_name] = item.slurmrestd_var_name
 
     return mapping
 
@@ -243,7 +242,9 @@ def convert_sbatch_to_slurm_api(input: dict) -> dict:
 
     if unknown_keys:
         raise KeyError(
-            "Unrecognized Slurm REST api parameters: {}".format(", ".join(unknown_keys))
+            "Impossible to convert from SBATCH to Slurm REST API: {}".format(
+                ", ".join(unknown_keys)
+            )
         )
 
     return mapped
@@ -258,11 +259,12 @@ def get_job_parameters(jobscript: str, **kwargs) -> dict:
     (like name or current_working_directory). Note they may be overwritten by
     values at the job script.
     """
-    job_parameters = kwargs.copy()
 
-    job_parameters.update(convert_sbatch_to_slurm_api(jobscript_to_dict(jobscript)))
+    slurm_parameters = convert_sbatch_to_slurm_api(jobscript_to_dict(jobscript))
 
-    return job_parameters
+    merged_parameters = {**kwargs, **slurm_parameters}
+
+    return merged_parameters
 
 
 parser = build_parser()
