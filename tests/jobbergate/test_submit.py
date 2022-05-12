@@ -72,7 +72,7 @@ async def test_submit_job_script__success(
 
 @pytest.mark.asyncio
 async def test_submit_job_script__with_non_default_execution_directory(
-    dummy_pending_job_submission_data, dummy_template_source, mocker
+    dummy_pending_job_submission_data, dummy_template_source, mocker, tmp_path,
 ):
     """
     Test that the ``submit_job_script()`` successfully submits a job with an exec dir.
@@ -87,10 +87,11 @@ async def test_submit_job_script__with_non_default_execution_directory(
     mocker.patch(
         "cluster_agent.identity.slurmrestd.acquire_token", return_value="dummy-token"
     )
-    fake_path = pathlib.Path("/some/fake/path")
+    exe_path = tmp_path / "exec"
+    exe_path.mkdir()
     pending_job_submission = PendingJobSubmission(
         **dummy_pending_job_submission_data,
-        execution_directory=fake_path,
+        execution_directory=exe_path,
     )
     name = pending_job_submission.application_name
 
@@ -117,9 +118,9 @@ async def test_submit_job_script__with_non_default_execution_directory(
             script=dummy_template_source,
             job=SlurmJobParams(
                 name=name,
-                current_working_directory=fake_path,
-                standard_output=fake_path / f"{name}.out",
-                standard_error=fake_path / f"{name}.err",
+                current_working_directory=exe_path,
+                standard_output=exe_path / f"{name}.out",
+                standard_error=exe_path / f"{name}.err",
             ),
         ).json()
 
