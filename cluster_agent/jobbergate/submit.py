@@ -23,7 +23,7 @@ from loguru import logger
 def get_job_script(pending_job_submission: PendingJobSubmission) -> str:
     """
     Get the job script from a PendingJobSubmission object.
-    Raise JobSubmissionError if no job script is found.
+    Raise JobSubmissionError if no job script is found or if its empty.
     """
 
     try:

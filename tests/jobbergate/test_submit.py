@@ -28,6 +28,9 @@ from cluster_agent.utils.parser import get_job_parameters
 async def test_get_job_script__success(
     dummy_pending_job_submission_data, dummy_template_source
 ):
+    """
+    Test if a job script is successfully recovered from a PendingJobSubmission.
+    """
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
     assert dummy_template_source == get_job_script(pending_job_submission)
 
@@ -36,6 +39,10 @@ async def test_get_job_script__success(
 async def test_get_job_script__raises_exception_if_empty(
     dummy_pending_job_submission_data,
 ):
+    """
+    Test if JobSubmissionError is raised when a empty job script is
+    recovered from a PendingJobSubmission.
+    """
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
     pending_job_submission.job_script_data_as_string = json.dumps(
         {"application.sh": ""}
@@ -48,6 +55,10 @@ async def test_get_job_script__raises_exception_if_empty(
 async def test_get_job_script__raises_exception_if_missing(
     dummy_pending_job_submission_data,
 ):
+    """
+    Test if JobSubmissionError is raised when a job script is not successfully
+    recovered from a PendingJobSubmission.
+    """
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
     pending_job_submission.job_script_data_as_string = ""
     with pytest.raises(JobSubmissionError):

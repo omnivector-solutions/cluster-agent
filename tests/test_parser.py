@@ -59,7 +59,10 @@ def test_flagged_line(line, desired_value):
         ("#SBATCH -abc # A comment", "-abc"),
         ("#SBATCH --abc=0 # A comment", "--abc=0"),
         ("#SBATCH --abc 0 # A comment", "--abc 0"),
-        ("#SBATCH --a=0 # A comment", "--a=0"),
+        ("#SBATCH -a 0 # A comment", "-a 0"),
+        ("#SBATCH -a=0 # A comment", "-a=0"),
+        ("#SBATCH -a = 0 # A comment", "-a = 0"),
+        ("#SBATCH -a=C&Aaccount # A comment", "-a=C&Aaccount"),
     ),
 )
 def test_clean_line(line, desired_value):
@@ -76,10 +79,12 @@ def test_clean_line(line, desired_value):
     (
         ("--help", ["--help"]),
         ("--abc=0", ["--abc", "0"]),
+        ("--abc = 0", ["--abc", "0"]),
         ("-J job_name", ["-J", "job_name"]),
         ("-v -J job_name", ["-v", "-J", "job_name"]),
         ("-J job_name -v", ["-J", "job_name", "-v"]),
         ("-a=0", ["-a", "0"]),
+        ("-a = 0", ["-a", "0"]),
         ("-a 0", ["-a", "0"]),
     ),
 )
@@ -95,17 +100,21 @@ def test_split_line(line, desired_value):
 
 @pytest.fixture
 def dummy_slurm_script():
+    """
+    Provide a dummy job script for testing.
+    """
     # TODO: DRY, integrate this one with conftest/dummy_template_source
     return inspect.cleandoc(
         """
         #!/bin/bash
-        #SBATCH -n 4 -A <account>
+        #SBATCH                                 # Empty line
+        #SBATCH -n 4 -A <account>               # Multiple args per line
         #SBATCH --job-name=serial_job_test      # Job name
         #SBATCH --mail-type=END,FAIL            # Mail events (NONE, BEGIN, END, FAIL, ALL)
         #SBATCH --mail-user=email@somewhere.com # Where to send mail
         #SBATCH --mem=1gb                       # Job memory request
         #SBATCH --time=00:05:00                 # Time limit hrs:min:sec
-        #SBATCH --output=serial_test_%j.log     # Standard output and error log
+        #SBATCH --output = serial_test_%j.log   # Standard output and error log
         pwd; hostname; date
 
         module load python
@@ -184,7 +193,8 @@ def test_sbatch_to_slurm_list__sbatch_short(item):
 @pytest.mark.parametrize("item", sbatch_to_slurm)
 def test_sbatch_to_slurm_list__argparser_param(item):
     """
-    Check if the field sbatch_short for each item at sbatch_to_slurm is appropriated.
+    Check if the field argparser_param for each item at sbatch_to_slurm
+    is appropriated by adding it to a new parser.
     """
     assert isinstance(item.argparser_param, MutableMapping)
     if item.argparser_param:
@@ -193,15 +203,42 @@ def test_sbatch_to_slurm_list__argparser_param(item):
         parser.add_argument(*args, **item.argparser_param)
 
 
+@pytest.mark.parametrize("field", ["slurmrestd_var_name", "sbatch", "sbatch_short"])
+def test_sbatch_to_slurm_list__only_unique_values(field):
+    """
+    Test that any given field has no duplicated values for all parameters stored
+    at sbatch_to_slurm. This aims to avoid ambiguity at the SBATCH argparser and
+    the two-way mapping between SBATCH and Slurm Rest API namespaces.
+    """
+    list_of_values = [
+        getattr(i, field) for i in sbatch_to_slurm if bool(getattr(i, field))
+    ]
+
+    assert len(list_of_values) == len(set(list_of_values))
+
+
 def test_build_parser():
-    build_parser()
+    """
+    Test if build_parser runs with no problem and returns the correct type.
+    """
+    parser = build_parser()
+    assert isinstance(parser, ArgumentParser)
 
 
 def test_build_mapping_sbatch_to_slurm():
-    build_mapping_sbatch_to_slurm()
+    """
+    Test if build_mapping_sbatch_to_slurm runs with no problem and
+    returns the correct type.
+    """
+    mapping = build_mapping_sbatch_to_slurm()
+    assert isinstance(mapping, bidict)
 
 
 def test_jobscript_to_dict__success(dummy_slurm_script):
+    """
+    Test if the SBATCH parameters are properly extracted from a job script
+    and returned in a dictionary mapping parameters to their value.
+    """
 
     desired_dict = {
         "account": "<account>",
@@ -220,16 +257,23 @@ def test_jobscript_to_dict__success(dummy_slurm_script):
 
 
 def test_jobscript_to_dict__raises_exception_for_unknown_parameter():
-
-    with pytest.raises(ValueError) as e:
-        jobscript_to_dict("#SBATCH --foo\n#SBATCH --bar 0")
-        assert e.message == "Unrecognized SBATCH arguments: --foo --bar 0"
+    """
+    Test if jobscript_to_dict raises a ValueError when facing unknown parameters.
+    """
+    with pytest.raises(
+        ValueError, match="Unrecognized SBATCH arguments: --foo --bar 0"
+    ):
+        jobscript_to_dict("#SBATCH --foo\n#SBATCH --bar=0")
 
 
 @pytest.mark.parametrize(
     "item", filter(lambda i: i.slurmrestd_var_name, sbatch_to_slurm)
 )
 def test_convert_sbatch_to_slurm_api__success(item):
+    """
+    Test if the keys in a dictionary are properly renamed from SBATCH to Slurm
+    Rest API namespace. Notice the values should not be affected.
+    """
     desired_dict = {item.slurmrestd_var_name: None}
 
     sbatch_name = item.sbatch.lstrip("-").replace("-", "_")
@@ -239,14 +283,23 @@ def test_convert_sbatch_to_slurm_api__success(item):
 
 
 def test_convert_sbatch_to_slurm_api__raises_exception_for_unknown_parameter():
-
-    with pytest.raises(KeyError) as e:
+    """
+    Test if the conversion of dictionary keys from SBATCH to Slurm Rest API
+    namespace raises KeyError when facing unknown names.
+    """
+    with pytest.raises(
+        KeyError, match="Impossible to convert from SBATCH to Slurm REST API: foo, bar"
+    ):
         convert_sbatch_to_slurm_api(dict(foo=0, bar=1))
-        assert e.message == "Unrecognized Slurm REST api parameters: foo, bar"
 
 
 def test_get_job_parameters(dummy_slurm_script):
-
+    """
+    Test if all SBATCH parameters are properly extrated from a given job script,
+    the name of each of them is mapper to Slurm Rest API namespace and returned
+    in a dictionary. Notice get_job_parameters accepts extra keywords as
+    default values that may be overwritten by the values at the job script.
+    """
     extra_options = {"name": "name", "current_working_directory": "cwd"}
 
     desired_dict = extra_options.copy()
@@ -271,21 +324,26 @@ def test_get_job_parameters(dummy_slurm_script):
 
 @pytest.fixture
 def dummy_mapping():
+    """
+    A dummy dictionary used to test the integration with the requirement bidict.
+    """
     return {f"key_{i}": f"value_{i}" for i in range(5)}
 
 
 @pytest.mark.asyncio
 def test_bidict_mapping(dummy_mapping):
     """
-    Integration test with the requirement bidict
+    Integration test with the requirement bidict.
+    Check if it really behaves as a dictionary.
     """
+    assert issubclass(bidict, MutableMapping)
     assert dummy_mapping == bidict(dummy_mapping)
 
 
 def test_bidict_mapping_reversed(dummy_mapping):
     """
-    Integration test with the requirement bidict,
-    this time checking its inverse capability
+    Integration test with the requirement bidict, this time checking
+    its inverse capability (i.e., swaping keys and values).
     """
     desired_value = {value: key for key, value in dummy_mapping.items()}
 

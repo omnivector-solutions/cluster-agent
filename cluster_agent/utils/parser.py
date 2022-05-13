@@ -87,6 +87,7 @@ sbatch_to_slurm = [
     SbatchToSlurm("", "--contiguous", "", dict(action="store_const", const=True)),
     SbatchToSlurm("core_specification", "--core-spec", "-S"),
     SbatchToSlurm("cores_per_socket", "--cores-per-socket"),
+    SbatchToSlurm("cpu_binding", "--cpu-bind"),
     SbatchToSlurm("cpu_frequency", "--cpu-freq"),
     SbatchToSlurm("cpus_per_gpu", "--cpus-per-gpu"),
     SbatchToSlurm("cpus_per_task", "--cpus-per-task", "-c"),
@@ -255,7 +256,7 @@ def get_job_parameters(jobscript: str, **kwargs) -> dict:
     Parse all SBATCH parameters from a job script, map their names to Slurm API
     parameters, and return them as a key-value pairing dictionary.
 
-    Extra key arguments can be used to supply default values for any parameter
+    Extra keyword arguments can be used to supply default values for any parameter
     (like name or current_working_directory). Note they may be overwritten by
     values at the job script.
     """
