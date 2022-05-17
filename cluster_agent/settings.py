@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     # slurmrestd info
     BASE_SLURMRESTD_URL: str = Field("http://127.0.0.1:6820", regex=_URL_REGEX)
     X_SLURM_USER_NAME: str = Field("ubuntu")
-    DEFAULT_SLURM_WORK_DIR: str = Field("/tmp")
+    DEFAULT_SLURM_WORK_DIR: Path = Field("/tmp")
 
     # cluster api info
     BASE_API_URL: str = Field("https://rats.omnivector.solutions", regex=_URL_REGEX)
