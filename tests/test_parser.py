@@ -157,54 +157,96 @@ def test_clean_jobscript(dummy_slurm_script):
 
 
 @pytest.mark.parametrize("item", sbatch_to_slurm)
-def test_sbatch_to_slurm_list__slurmrestd_var_name(item):
+class TestSbatchToSlurmList:
     """
-    Check if the field slurmrestd_var_name for each item at sbatch_to_slurm
-    is appropriated.
+    Test all the fields of the objects SbatchToSlurm that are
+    stored in the list sbatch_to_slurm.
     """
-    assert isinstance(item.slurmrestd_var_name, str)
-    if item.slurmrestd_var_name:
-        assert item.slurmrestd_var_name.replace("_", "").isalpha()
 
+    def test_slurmrestd_var_name__is_string(self, item):
+        """
+        Check if the field slurmrestd_var_name is a string.
+        """
+        assert isinstance(item.slurmrestd_var_name, str)
 
-@pytest.mark.parametrize("item", sbatch_to_slurm)
-def test_sbatch_to_slurm_list__sbatch(item):
-    """
-    Check if the field sbatch for each item at sbatch_to_slurm is appropriated.
-    """
-    assert isinstance(item.sbatch, str)
-    assert item.sbatch.startswith("--")
-    assert len(item.sbatch) >= 3
-    assert item.sbatch.replace("-", "").isalpha()
+    def test_slurmrestd_var_name__only_contains_letters(self, item):
+        """
+        Check if the field slurmrestd_var_name contains only underscores and letters.
+        """
+        if item.slurmrestd_var_name:
+            assert item.slurmrestd_var_name.replace("_", "").isalpha()
 
+    def test_sbatch__is_string(self, item):
+        """
+        Check if the field sbatch is a string.
+        """
+        assert isinstance(item.sbatch, str)
 
-@pytest.mark.parametrize("item", sbatch_to_slurm)
-def test_sbatch_to_slurm_list__sbatch_short(item):
-    """
-    Check if the field sbatch_short for each item at sbatch_to_slurm is appropriated.
-    """
-    assert isinstance(item.sbatch_short, str)
-    if item.sbatch_short:
-        assert item.sbatch_short.startswith("-")
-        assert len(item.sbatch_short) == 2
-        assert item.sbatch_short.replace("-", "").isalpha()
+    def test_sbatch__starts_with_double_hyphen(self, item):
+        """
+        Check if the field sbatch starts with a double hyphen.
+        """
+        assert item.sbatch.startswith("--")
 
+    def test_sbatch__is_not_empty(self, item):
+        """
+        Check if the field sbatch is not empty by asserting that it has more
+        than three characters, since it starts with a double hyphen.
+        """
+        assert len(item.sbatch) >= 3
 
-@pytest.mark.parametrize("item", sbatch_to_slurm)
-def test_sbatch_to_slurm_list__argparser_param(item):
-    """
-    Check if the field argparser_param for each item at sbatch_to_slurm
-    is appropriated by adding it to a new parser.
-    """
-    assert isinstance(item.argparser_param, MutableMapping)
-    if item.argparser_param:
-        args = (i for i in (item.sbatch_short, item.sbatch) if i)
-        parser = ArgumentParser()
-        parser.add_argument(*args, **item.argparser_param)
+    def test_sbatch__only_contains_letters(self, item):
+        """
+        Check if the field sbatch contains only hyphens and letters.
+        """
+        assert item.sbatch.replace("-", "").isalpha()
+
+    def test_sbatch_short__is_string(self, item):
+        """
+        Check if the optional field sbatch_short  is a string.
+        """
+        assert isinstance(item.sbatch_short, str)
+
+    def test_sbatch_short__starts_with_hyphen(self, item):
+        """
+        Check if the optional field sbatch_short starts with a hyphen.
+        """
+        if item.sbatch_short:
+            assert item.sbatch_short.startswith("-")
+
+    def test_sbatch_short__is_not_empty(self, item):
+        """
+        Check if of the optional field sbatch_short is equal to two, since it
+        should be a hyphen and a letter.
+        """
+        if item.sbatch_short:
+            assert len(item.sbatch_short) == 2
+
+    def test_sbatch_short__only_contains_letters(self, item):
+        """
+        Check if the optional field sbatch_short contains only hyphens and letters.
+        """
+        if item.sbatch_short:
+            assert item.sbatch_short.replace("-", "").isalpha()
+
+    def test_argparser_param__is_mutable_mapping(self, item):
+        """
+        Check if the field argparser_param is a MutableMapping.
+        """
+        assert isinstance(item.argparser_param, MutableMapping)
+
+    def test_argparser_param__is_valid_for_parser(self, item):
+        """
+        Check if the field argparser_param can be added in a parser.
+        """
+        if item.argparser_param:
+            args = (i for i in (item.sbatch_short, item.sbatch) if i)
+            parser = ArgumentParser()
+            parser.add_argument(*args, **item.argparser_param)
 
 
 @pytest.mark.parametrize("field", ["slurmrestd_var_name", "sbatch", "sbatch_short"])
-def test_sbatch_to_slurm_list__only_unique_values(field):
+def test_sbatch_to_slurm_list__contains_only_unique_values(field):
     """
     Test that any given field has no duplicated values for all parameters stored
     at sbatch_to_slurm. This aims to avoid ambiguity at the SBATCH argparser and
@@ -260,9 +302,7 @@ def test_jobscript_to_dict__raises_exception_for_unknown_parameter():
     """
     Test if jobscript_to_dict raises a ValueError when facing unknown parameters.
     """
-    with pytest.raises(
-        ValueError, match="Unrecognized SBATCH arguments: --foo --bar 0"
-    ):
+    with pytest.raises(ValueError, match="Unrecognized SBATCH arguments:"):
         jobscript_to_dict("#SBATCH --foo\n#SBATCH --bar=0")
 
 
@@ -288,15 +328,15 @@ def test_convert_sbatch_to_slurm_api__raises_exception_for_unknown_parameter():
     namespace raises KeyError when facing unknown names.
     """
     with pytest.raises(
-        KeyError, match="Impossible to convert from SBATCH to Slurm REST API: foo, bar"
+        KeyError, match="Impossible to convert from SBATCH to Slurm REST API:"
     ):
         convert_sbatch_to_slurm_api(dict(foo=0, bar=1))
 
 
 def test_get_job_parameters(dummy_slurm_script):
     """
-    Test if all SBATCH parameters are properly extrated from a given job script,
-    the name of each of them is mapper to Slurm Rest API namespace and returned
+    Test if all SBATCH parameters are properly extracted from a given job script,
+    the name of each of them is mapped to Slurm Rest API namespace and returned
     in a dictionary. Notice get_job_parameters accepts extra keywords as
     default values that may be overwritten by the values at the job script.
     """
@@ -322,29 +362,35 @@ def test_get_job_parameters(dummy_slurm_script):
     assert desired_dict == actual_dict
 
 
-@pytest.fixture
-def dummy_mapping():
+class TestBidictMapping:
     """
-    A dummy dictionary used to test the integration with the requirement bidict.
+    Integration test with the requirement bidict (used for two-way mapping).
     """
-    return {f"key_{i}": f"value_{i}" for i in range(5)}
 
+    @pytest.fixture
+    def dummy_mapping(self):
+        """
+        A dummy dictionary used for testing.
+        """
+        return {f"key_{i}": f"value_{i}" for i in range(5)}
 
-@pytest.mark.asyncio
-def test_bidict_mapping(dummy_mapping):
-    """
-    Integration test with the requirement bidict.
-    Check if it really behaves as a dictionary.
-    """
-    assert issubclass(bidict, MutableMapping)
-    assert dummy_mapping == bidict(dummy_mapping)
+    def test_bidict__is_mutable_mapping(self):
+        """
+        Check if bidict implements all the necessary protocols to be a MutableMapping.
+        """
+        assert issubclass(bidict, MutableMapping)
 
+    def test_bidict__can_be_compared_to_a_dictionary(self, dummy_mapping):
+        """
+        Check if bidict can be really comparable to a dictionary.
+        """
+        assert dummy_mapping == bidict(dummy_mapping)
 
-def test_bidict_mapping_reversed(dummy_mapping):
-    """
-    Integration test with the requirement bidict, this time checking
-    its inverse capability (i.e., swaping keys and values).
-    """
-    desired_value = {value: key for key, value in dummy_mapping.items()}
+    def test_bidict__can_be_compared_to_a_dictionary_inverse(self, dummy_mapping):
+        """
+        Check if bidict can be comparable to a dictionary, this time checking
+        its inverse capability (i.e., swapping keys and values).
+        """
+        desired_value = {value: key for key, value in dummy_mapping.items()}
 
-    assert desired_value == bidict(dummy_mapping).inverse
+        assert desired_value == bidict(dummy_mapping).inverse
