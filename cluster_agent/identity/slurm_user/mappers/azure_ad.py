@@ -60,8 +60,12 @@ class AzureADMapper(SlurmUserMapper):
 
             member_list = MemberList.parse_raw(response.content)
             AzureADError.require_condition(
-                len(member_list.members) == 1,
-                f"Did not find exactly one match for email {email}",
+                len(member_list.members) > 0,
+                f"Did not find any matches for email {email}",
+            )
+            AzureADError.require_condition(
+                len(member_list.members) < 2,
+                f"Found more than one match for email {email}: {member_list}",
             )
             member = member_list.members.pop()
 
@@ -73,8 +77,12 @@ class AzureADMapper(SlurmUserMapper):
 
             member_detail = MemberDetail.parse_raw(response.content)
             AzureADError.require_condition(
-                len(member_detail.identities) == 1,
-                "Did not find exactly one embedded identity for the user",
+                len(member_detail.identities) > 0,
+                "Did not find any embedded identities for the user",
+            )
+            AzureADError.require_condition(
+                len(member_detail.identities) < 2,
+                "Found more than one embedded identity: {member_detail.identities}",
             )
             identity = member_detail.identities.pop()
 

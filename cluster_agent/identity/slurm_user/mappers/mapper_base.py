@@ -6,7 +6,7 @@ import abc
 from cluster_agent.identity.slurm_user.settings import SlurmUserSettings
 
 
-class SlurmUserMapper:
+class SlurmUserMapper(metaclass=abc.ABCMeta):
     """
     Provide a base class for classes that map Armada users to local Slurm users.
 

@@ -142,7 +142,7 @@ async def test_find_username__fails_if_email_search_has_multiple_hits():
 
         with pytest.raises(
             AzureADError,
-            match="Failed to fetch username from Azure AD.*Did not find exactly one",
+            match="Failed to fetch username from Azure AD.*Found more than one",
         ):
             mapper = azure_ad.AzureADMapper()
             await mapper.find_username("dummy_user@dummy.domain.com")
@@ -249,7 +249,7 @@ async def test_find_username__fails_if_multiple_identities_found():
 
         with pytest.raises(
             AzureADError,
-            match="Failed to fetch username.*Did not find exactly one embedded",
+            match="Failed to fetch username.*Found more than one",
         ):
             mapper = azure_ad.AzureADMapper()
             await mapper.find_username("dummy_user@dummy.domain.com")
