@@ -58,6 +58,7 @@ async def submit_job_script(
     username = await user_mapper.find_username(email)
     logger.debug(f"Using local slurm user {username} for job submission")
 
+    job_script = get_job_script(pending_job_submission)
 
     submit_dir = pending_job_submission.execution_directory or SETTINGS.DEFAULT_SLURM_WORK_DIR
 
@@ -65,7 +66,6 @@ async def submit_job_script(
     local_script_path.write_text(job_script)
     logger.debug(f"Copied job_script to local file {local_script_path}.")
 
-    job_script = get_job_script(pending_job_submission)
     job_parameters = get_job_parameters(
         job_script,
         name=pending_job_submission.application_name,
