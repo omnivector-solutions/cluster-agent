@@ -63,7 +63,6 @@ class Settings(BaseSettings):
 
         return values
 
-
     class Config:
 
         env_file = ".env"
