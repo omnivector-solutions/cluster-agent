@@ -108,6 +108,7 @@ async def test_submit_job_script__success(
                 current_working_directory=SETTINGS.DEFAULT_SLURM_WORK_DIR,
                 standard_output=SETTINGS.DEFAULT_SLURM_WORK_DIR / f"{name}.out",
                 standard_error=SETTINGS.DEFAULT_SLURM_WORK_DIR / f"{name}.err",
+                time_limit="60",
             ),
         ).json()
 
@@ -165,15 +166,10 @@ async def test_submit_job_script__with_non_default_execution_directory(
         assert last_request.method == "POST"
         assert last_request.headers["x-slurm-user-name"] == "dummy-user"
         assert last_request.headers["x-slurm-user-token"] == "dummy-token"
-        assert (
-            json.loads(last_request.content.decode("utf-8"))
-            == SlurmJobSubmission(
-                script=dummy_template_source,
-                job=SlurmJobParams(
-                    **job_parameters,
-                ),
-            ).dict()
-        )
+        assert last_request.content.decode("utf-8") == SlurmJobSubmission(
+            script=dummy_template_source,
+            job=SlurmJobParams(**job_parameters),
+        ).json()
 
 
 @pytest.mark.asyncio
