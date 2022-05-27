@@ -15,7 +15,3 @@ class LDAPError(ClusterAgentError):
 
 class SingleUserError(ClusterAgentError):
     """Raise exception when there is a problem with single-user submission."""
-
-
-class AzureADError(ClusterAgentError):
-    """Raise exception when communication with Azure AD fails."""
