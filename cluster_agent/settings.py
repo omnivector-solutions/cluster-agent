@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     # slurmrestd info
     BASE_SLURMRESTD_URL: AnyHttpUrl = Field("http://127.0.0.1:6820")
     X_SLURM_USER_NAME: str = "ubuntu"
+    X_SLURM_USER_TOKEN: Optional[str]
     DEFAULT_SLURM_WORK_DIR: Path = Path("/tmp")
 
     # cluster api info
