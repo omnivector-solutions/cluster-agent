@@ -4,7 +4,7 @@ from typing import MutableMapping
 
 import pytest
 from bidict import bidict
-from cluster_agent.utils.parser import (
+from cluster_agent.utils.job_script_parser import (
     _IDENTIFICATION_FLAG,
     _INLINE_COMMENT_MARK,
     _clean_jobscript,
@@ -108,6 +108,7 @@ def dummy_slurm_script():
         """
         #!/bin/bash
         #SBATCH                                 # Empty line
+        #SBATCH --no-kill                       # Flagged param
         #SBATCH -n 4 -A <account>               # Multiple args per line
         #SBATCH --job-name=serial_job_test      # Job name
         #SBATCH --mail-type=END,FAIL            # Mail events (NONE, BEGIN, END, FAIL, ALL)
@@ -135,6 +136,7 @@ def test_clean_jobscript(dummy_slurm_script):
     clean, and slit the parameters on each line).
     """
     desired_list = [
+        "--no-kill",
         "-n",
         "4",
         "-A",
@@ -283,6 +285,7 @@ def test_jobscript_to_dict__success(dummy_slurm_script):
     """
 
     desired_dict = {
+        "no_kill": True,
         "account": "<account>",
         "job_name": "serial_job_test",
         "mail_type": "END,FAIL",
@@ -346,6 +349,7 @@ def test_get_job_parameters(dummy_slurm_script):
 
     desired_dict.update(
         {
+            "no_kill": True,
             "account": "<account>",
             "name": "serial_job_test",
             "mail_type": "END,FAIL",

@@ -1,9 +1,10 @@
 from argparse import ArgumentParser
 from dataclasses import dataclass, field
 from itertools import chain
-from typing import Iterator, List
+from typing import Any, Dict, Iterator, List, Union
 
 from bidict import bidict
+from cluster_agent.utils.logging import logger
 
 _IDENTIFICATION_FLAG = "#SBATCH"
 _INLINE_COMMENT_MARK = "#"
@@ -19,7 +20,7 @@ def _flagged_line(line: str) -> bool:
 def _clean_line(line: str) -> str:
     """
     Clean the provided line by removing the
-    identification flag at the beguining of the line,
+    identification flag at the beginning of the line,
     then remove the inline comment mark and anything
     after it, and finally strip white spaces at both sides.
     """
@@ -28,7 +29,7 @@ def _clean_line(line: str) -> str:
 
 def _split_line(line: str) -> List[str]:
     """
-    Split the provided line at the `=` charactere if it is found at the line,
+    Split the provided line at the `=` character if it is found at the line,
     otherwise split at the white spaces. This procedure is important because
     it is the way argparse expects to receive the parameters.
     """
@@ -64,12 +65,6 @@ class SbatchToSlurm:
     argparser_param: dict = field(default_factory=dict)
 
 
-# TODO: argv - Arguments to the script (it doesn't have it)
-#       cpu_binding - Cpu binding
-#       cpu_binding_hint - Cpu binding hint
-#       environment - Dictionary of environment entries  (it doesn't have it).
-#
-# TODO: make a table on google docs of the missing parameters
 sbatch_to_slurm = [
     SbatchToSlurm("account", "--account", "-A"),
     SbatchToSlurm("account_gather_freqency", "--acctg-freq"),
@@ -206,22 +201,30 @@ def build_mapping_sbatch_to_slurm() -> bidict:
     return mapping
 
 
-def jobscript_to_dict(jobscript: str) -> dict:
+def jobscript_to_dict(jobscript: str) -> Dict[str, Union[str, bool]]:
     """
-    Pull the SBATCH params out of the job-script and convert them into a
-    key-value pairing of parameter name to value.
+    Extract the SBATCH params from a given job script and return them in a
+    dictionary for mapping the parameter names to their values.
 
     Raise ValueError if any of the parameters are unknown to the parser.
     """
-    args, argv = parser.parse_known_args(_clean_jobscript(jobscript))
+    parsed_args, unknown_arg = parser.parse_known_args(_clean_jobscript(jobscript))
 
-    if argv:
-        raise ValueError("Unrecognized SBATCH arguments: {}".format(" ".join(argv)))
+    if unknown_arg:
+        raise ValueError(
+            "Unrecognized SBATCH arguments: {}".format(" ".join(unknown_arg))
+        )
 
-    return {key: value for key, value in vars(args).items() if value is not None}
+    sbatch_params = {
+        key: value for key, value in vars(parsed_args).items() if value is not None
+    }
+
+    logger.debug(f"SBATCH params parsed from job script: {sbatch_params}")
+
+    return sbatch_params
 
 
-def convert_sbatch_to_slurm_api(input: dict) -> dict:
+def convert_sbatch_to_slurm_api(input: Dict[str, Any]) -> Dict[str, Any]:
     """
     Take a dictionary containing key-value pairing of SBATCH parameter name
     to value and change the keys to Slurm API parameter name while keeping
@@ -242,16 +245,15 @@ def convert_sbatch_to_slurm_api(input: dict) -> dict:
             mapped[slurm_name] = value
 
     if unknown_keys:
-        raise KeyError(
-            "Impossible to convert from SBATCH to Slurm REST API: {}".format(
-                ", ".join(unknown_keys)
-            )
-        )
+        error_message = "Impossible to convert from SBATCH to Slurm REST API: {}"
+        raise KeyError(error_message.format(", ".join(unknown_keys)))
+
+    logger.debug(f"Slurm API params mapped from SBATCH: {mapped}")
 
     return mapped
 
 
-def get_job_parameters(jobscript: str, **kwargs) -> dict:
+def get_job_parameters(jobscript: str, **kwargs) -> Dict[str, Union[str, bool]]:
     """
     Parse all SBATCH parameters from a job script, map their names to Slurm API
     parameters, and return them as a key-value pairing dictionary.

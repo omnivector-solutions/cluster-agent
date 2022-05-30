@@ -16,7 +16,7 @@ from cluster_agent.jobbergate.schemas import (
 from cluster_agent.settings import SETTINGS
 from cluster_agent.utils.exception import JobSubmissionError, SlurmrestdError
 from cluster_agent.utils.logging import log_error
-from cluster_agent.utils.parser import get_job_parameters
+from cluster_agent.utils.job_script_parser import get_job_parameters
 from loguru import logger
 
 
