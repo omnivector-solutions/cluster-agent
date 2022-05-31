@@ -73,10 +73,7 @@ class Settings(BaseSettings):
 
         _test_mode = "pytest" in sys.modules
         if not _test_mode:
-            print("NOT TEST MODE!!!")
             env_file = ".env"
-        else:
-            print("TEST MODE!!!")
 
 
 @lru_cache()
