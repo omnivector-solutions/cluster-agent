@@ -9,7 +9,6 @@ import pytest
 from loguru import logger
 
 from cluster_agent.settings import SETTINGS
-from cluster_agent.identity.slurm_user.settings import SLURM_USER_SETTINGS
 
 
 @pytest.fixture
@@ -42,6 +41,22 @@ def mock_slurmrestd_api_cache_dir(tmp_path):
     _cache_dir = tmp_path / ".cache/cluster-agent/slurmrestd"
     with mock.patch("cluster_agent.identity.slurmrestd.CACHE_DIR", new=_cache_dir):
         yield _cache_dir
+
+
+@pytest.fixture(autouse=True)
+def mock_slurmrestd_acquire_token(mocker):
+    mocker.patch(
+        "cluster_agent.identity.slurmrestd.acquire_token",
+        return_value="default-dummy-token",
+    )
+
+
+@pytest.fixture(autouse=True)
+def mock_cluster_api_acquire_token(mocker):
+    mocker.patch(
+        "cluster_agent.identity.cluster_api.acquire_token",
+        return_value="default-dummy-token",
+    )
 
 
 @pytest.fixture
@@ -91,30 +106,5 @@ def tweak_settings():
         finally:
             for (key, value) in previous_values.items():
                 setattr(SETTINGS, key, value)
-
-    return _helper
-
-
-@pytest.fixture
-def tweak_slurm_user_settings():
-    """
-    Provides a fixture to use as a context manager where the local user settings may be
-    temporarily changed.
-    """
-
-    @contextlib.contextmanager
-    def _helper(**kwargs):
-        """
-        Context manager for tweaking app settings temporarily.
-        """
-        previous_values = {}
-        for (key, value) in kwargs.items():
-            previous_values[key] = getattr(SLURM_USER_SETTINGS, key)
-            setattr(SLURM_USER_SETTINGS, key, value)
-        try:
-            yield
-        finally:
-            for (key, value) in previous_values.items():
-                setattr(SLURM_USER_SETTINGS, key, value)
 
     return _helper

@@ -132,7 +132,7 @@ def test_acquire_token__gets_a_token_from_the_cache(mock_cluster_api_cache_dir):
 
 
 def test_acquire_token__gets_a_token_from_auth_0_if_one_is_not_in_the_cache(
-    mock_cluster_api_cache_dir, respx_mock
+    mock_cluster_api_cache_dir, respx_mock, tweak_settings,
 ):  # noqa
     """
     Verifies that a token is pulled from auth0 if it is not found in the cache.
@@ -142,7 +142,8 @@ def test_acquire_token__gets_a_token_from_auth_0_if_one_is_not_in_the_cache(
     token_path = mock_cluster_api_cache_dir / "token"
     assert not token_path.exists()
 
-    retrieved_token = acquire_token()
+    with tweak_settings(AUTH0_CLIENT_ID="dummy", AUTH0_CLIENT_SECRET="dummy"):
+        retrieved_token = acquire_token()
     assert retrieved_token == "dummy-token"
 
     token_path = mock_cluster_api_cache_dir / "token"

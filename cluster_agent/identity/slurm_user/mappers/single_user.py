@@ -4,22 +4,23 @@ Define the a single-user mapper.
 
 from cluster_agent.identity.slurm_user.exceptions import SingleUserError
 from cluster_agent.identity.slurm_user.mappers.mapper_base import SlurmUserMapper
-from cluster_agent.identity.slurm_user.settings import SlurmUserSettings
+from cluster_agent.settings import Settings
 
 
 class SingleUserMapper(SlurmUserMapper):
     """
     Provide a class to interface with the LDAP server
     """
+
     submitter = None
 
-    def configure(self, settings: SlurmUserSettings):
+    async def configure(self, settings: Settings):
         """
         Connect to the the LDAP server.
         """
         self.submitter = settings.SINGLE_USER_SUBMITTER
 
-    def find_username(self, *_) -> str:
+    async def find_username(self, *_) -> str:
         """
         Find an active diretory username given a user email.
 

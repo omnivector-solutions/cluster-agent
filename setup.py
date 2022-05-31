@@ -27,6 +27,10 @@ setup(
         "pytest-asyncio==0.18.2",
         "black==22.3.0",
         "flake8==4.0.1",
+        "pytest-env==0.6.2",
+        "pytest-random-order==1.0.4",
+        "pytest-cov==3.0.0",
+
     ]),
     packages=find_packages(),
     keywords=["armada", "hpc"],

@@ -1,23 +1,23 @@
 import json
 
-from ldap3 import Server, Connection, ALL, SIMPLE, NTLM
+from ldap3 import ALL, NTLM, SIMPLE, Connection, Server
 from loguru import logger
 
-from cluster_agent.utils.logging import log_error
-
+from cluster_agent.identity.slurm_user.constants import LDAPAuthType
 from cluster_agent.identity.slurm_user.exceptions import LDAPError
 from cluster_agent.identity.slurm_user.mappers.mapper_base import SlurmUserMapper
-from cluster_agent.identity.slurm_user.settings import SlurmUserSettings
-from cluster_agent.identity.slurm_user.constants import LDAPAuthType
+from cluster_agent.settings import Settings
+from cluster_agent.utils.logging import log_error
 
 
 class LDAPMapper(SlurmUserMapper):
     """
     Provide a class to interface with the LDAP server
     """
+
     connection = None
 
-    def configure(self, settings: SlurmUserSettings):
+    async def configure(self, settings: Settings):
         """
         Connect to the the LDAP server.
         """
@@ -66,7 +66,7 @@ class LDAPMapper(SlurmUserMapper):
             self.connection.start_tls()
             self.connection.bind()
 
-    def find_username(self, email: str) -> str:
+    async def find_username(self, email: str) -> str:
         """
         Find an active diretory username given a user email.
 
