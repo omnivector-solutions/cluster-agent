@@ -1,3 +1,4 @@
+import os
 import sys
 from functools import lru_cache
 from pathlib import Path
@@ -27,8 +28,8 @@ class Settings(BaseSettings):
     # Auth0 config for machine-to-machine security
     AUTH0_DOMAIN: str = "omnivector.us.auth0.com"
     AUTH0_AUDIENCE: str = "https://armada.omnivector.solutions"
-    AUTH0_CLIENT_ID: Optional[str]
-    AUTH0_CLIENT_SECRET: Optional[str]
+    AUTH0_CLIENT_ID: str
+    AUTH0_CLIENT_SECRET: str
 
     CACHE_DIR = Path.home() / ".cache/cluster-agent"
 
@@ -64,9 +65,21 @@ class Settings(BaseSettings):
         return values
 
     class Config:
+        """
+        Provide configuration for the project settings.
 
-        env_file = ".env"
+        Note that if the ``Settings()`` object is being invoked in test-mode, loading
+        environment from a ".env" file is disabled and non-optional settings values
+        are supplied.
+        """
         env_prefix = "CLUSTER_AGENT_"
+
+        test_mode = "pytest" in sys.modules
+        if not test_mode:
+            env_file = ".env"
+        else:
+            os.environ["CLUSTER_AGENT_AUTH0_CLIENT_ID"] = "DUMMY-TEST-CLIENT-ID"
+            os.environ["CLUSTER_AGENT_AUTH0_CLIENT_SECRET"] = "DUMMY-TEST-CLIENT-SECRET"
 
 
 @lru_cache()
