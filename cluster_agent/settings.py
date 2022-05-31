@@ -68,18 +68,16 @@ class Settings(BaseSettings):
         """
         Provide configuration for the project settings.
 
-        Note that if the ``Settings()`` object is being invoked in test-mode, loading
-        environment from a ".env" file is disabled and non-optional settings values
-        are supplied.
+        Note that we disable use of ``dotenv`` if we are in test mode.
         """
         env_prefix = "CLUSTER_AGENT_"
 
-        test_mode = "pytest" in sys.modules
-        if not test_mode:
+        _test_mode = "pytest" in sys.modules
+        if not _test_mode:
+            print("NOT TEST MODE!!!")
             env_file = ".env"
         else:
-            os.environ["CLUSTER_AGENT_AUTH0_CLIENT_ID"] = "DUMMY-TEST-CLIENT-ID"
-            os.environ["CLUSTER_AGENT_AUTH0_CLIENT_SECRET"] = "DUMMY-TEST-CLIENT-SECRET"
+            print("TEST MODE!!!")
 
 
 @lru_cache()
