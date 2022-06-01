@@ -8,7 +8,7 @@ Unreleased
 ----------
 
 - Added job-script parser to extract the name and values of the SBATCH parameters contained in the file.
-- Added a two-way mapping to translate parameters' names between the SBATCH namespace and the SLURM Rest API namespace.
+- Added a two-way mapping to translate parameters' names between the SBATCH namespace and the Slurm Rest API namespace.
 
 1.5.0 - 2022-04-12
 ------------------
