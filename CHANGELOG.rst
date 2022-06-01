@@ -7,6 +7,9 @@ This file keeps track of all notable changes to the Cluster Agent.
 Unreleased
 ----------
 
+- Added job-script parser to extract the name and values of the SBATCH parameters contained in the file.
+- Added a two-way mapping to translate parameters' names between the SBATCH namespace and the Slurm Rest API namespace.
+
 1.5.0 - 2022-04-12
 ------------------
 
@@ -23,7 +26,7 @@ Unreleased
 ------------------
 
 - Added jobbergate section for retrieving, submitting, and updating jobs from Jobbergate
-- Adde support for looking up usernames from LDAP via email from auth token
+- Added support for looking up usernames from LDAP via email from auth token
 - Added unit tests for jobbergate section
 
 1.2.0 - 2022-02-15

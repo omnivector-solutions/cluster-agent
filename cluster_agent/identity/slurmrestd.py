@@ -112,8 +112,12 @@ def inject_token(
     if username is None:
         username = SETTINGS.X_SLURM_USER_NAME
 
+    token = SETTINGS.X_SLURM_USER_TOKEN
+    if token is None:
+        token = acquire_token(username)
+
     request.headers["x-slurm-user-name"] = username
-    request.headers["x-slurm-user-token"] = acquire_token(username)
+    request.headers["x-slurm-user-token"] = token
     return request
 
 

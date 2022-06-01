@@ -17,7 +17,6 @@ def dummy_template_source():
         """
         #!/bin/python3
 
-        #SBATCH -J dummy_job
         #SBATCH -t 60
         print("I am a very, very dumb job script")
         print(f"foo='{{foo}}'")
