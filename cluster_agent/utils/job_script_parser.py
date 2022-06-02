@@ -170,7 +170,7 @@ sbatch_to_slurm = [
     SbatchToSlurm("", "--verbose", "-v", dict(action="store_const", const=True)),
     SbatchToSlurm("", "--version", "-V", dict(action="store_const", const=True)),
     SbatchToSlurm("", "--wait", "-W", dict(action="store_const", const=True)),
-    SbatchToSlurm("wait_all_nodes", "--wait-all-nodes", "", {"type": bool}),
+    SbatchToSlurm("wait_all_nodes", "--wait-all-nodes", "", dict(type=bool)),
     SbatchToSlurm("wckey", "--wckey"),
     SbatchToSlurm("", "--wrap"),
 ]
