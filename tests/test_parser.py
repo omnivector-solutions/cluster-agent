@@ -113,7 +113,7 @@ def dummy_slurm_script():
         #SBATCH --job-name=serial_job_test      # Job name
         #SBATCH --mail-type=END,FAIL            # Mail events (NONE, BEGIN, END, FAIL, ALL)
         #SBATCH --mail-user=email@somewhere.com # Where to send mail
-        #SBATCH --mem=10                        # Job memory request
+        #SBATCH --mem=1gb                       # Job memory request
         #SBATCH --time=00:05:00                 # Time limit hrs:min:sec
         #SBATCH --output = serial_test_%j.log   # Standard output and error log
         pwd; hostname; date
@@ -148,7 +148,7 @@ def test_clean_jobscript(dummy_slurm_script):
         "--mail-user",
         "email@somewhere.com",
         "--mem",
-        "10",
+        "1gb",
         "--time",
         "00:05:00",
         "--output",
@@ -290,7 +290,7 @@ def test_jobscript_to_dict__success(dummy_slurm_script):
         "job_name": "serial_job_test",
         "mail_type": "END,FAIL",
         "mail_user": "email@somewhere.com",
-        "mem": 10,
+        "mem": "1gb",
         "ntasks": 4,
         "output": "serial_test_%j.log",
         "time": "00:05:00",
@@ -354,7 +354,7 @@ def test_get_job_parameters(dummy_slurm_script):
             "name": "serial_job_test",
             "mail_type": "END,FAIL",
             "mail_user": "email@somewhere.com",
-            "memory_per_node": 10,
+            "memory_per_node": "1gb",
             "tasks": 4,
             "standard_output": "serial_test_%j.log",
             "time_limit": "00:05:00",
