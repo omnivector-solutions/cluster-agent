@@ -7,6 +7,7 @@ from bidict import bidict
 from cluster_agent.utils.job_script_parser import (
     _IDENTIFICATION_FLAG,
     _INLINE_COMMENT_MARK,
+    ArgumentParserCustomExit,
     _clean_jobscript,
     _clean_line,
     _flagged_line,
@@ -17,6 +18,7 @@ from cluster_agent.utils.job_script_parser import (
     get_job_parameters,
     jobscript_to_dict,
     sbatch_to_slurm,
+    _string_to_boolean,
 )
 
 
@@ -116,6 +118,7 @@ def dummy_slurm_script():
         #SBATCH --mem=1gb                       # Job memory request
         #SBATCH --time=00:05:00                 # Time limit hrs:min:sec
         #SBATCH --output = serial_test_%j.log   # Standard output and error log
+        #SBATCH --kill-on-invalid-dep no        # False boolean is tested
         pwd; hostname; date
 
         module load python
@@ -153,6 +156,8 @@ def test_clean_jobscript(dummy_slurm_script):
         "00:05:00",
         "--output",
         "serial_test_%j.log",
+        "--kill-on-invalid-dep",
+        "False",
     ]
     actual_list = list(_clean_jobscript(dummy_slurm_script))
     assert actual_list == desired_list
@@ -243,7 +248,7 @@ class TestSbatchToSlurmList:
         """
         if item.argparser_param:
             args = (i for i in (item.sbatch_short, item.sbatch) if i)
-            parser = ArgumentParser()
+            parser = ArgumentParserCustomExit()
             parser.add_argument(*args, **item.argparser_param)
 
 
@@ -259,6 +264,65 @@ def test_sbatch_to_slurm_list__contains_only_unique_values(field):
     ]
 
     assert len(list_of_values) == len(set(list_of_values))
+
+
+@pytest.mark.parametrize("value", ["y", "yes", "t", "true", "on", "1"])
+def test_string_to_boolean__true(value):
+    """
+    Test the string values that are considered True by string_to_boolean.
+    """
+    assert _string_to_boolean(value)
+
+
+@pytest.mark.parametrize("value", ["n", "no", "f", "false", "off", "0"])
+def test_string_to_boolean__false(value):
+    """
+    Test the string values that are considered False by string_to_boolean.
+    """
+    assert not _string_to_boolean(value)
+
+
+class TestArgumentParserCustomExit:
+    """
+    Test the custom error handling implemented over the built-in argument parser.
+    """
+
+    @pytest.fixture(scope="module")
+    def parser(self):
+        """
+        An instance of parser, used to support the tests in this class.
+        """
+        parser = ArgumentParserCustomExit()
+        parser.add_argument("--foo", type=int)
+        parser.add_argument("--bar", type="str2bool")
+        return parser
+
+    def test_argument_parser_success(self, parser):
+        """
+        Test the base case, where the arguments are successfully parsed and
+        converted to the expected type.
+        """
+        args = parser.parse_args("--foo=10 --bar=False".split())
+        assert {"foo": 10, "bar": False} == vars(args)
+
+    def test_argument_parser_raise_value_error_when_value_is_missing(self, parser):
+        """
+        Test that ValueError is raised when the value for one parameter is missing.
+        """
+        with pytest.raises(
+            ValueError, match="error: argument --foo: expected one argument"
+        ):
+            parser.parse_args("--foo".split())
+
+    def test_argument_parser_raise_value_error_in_case_of_wrong_type(self, parser):
+        """
+        Test that ValueError is raised when the value for some parameter is
+        incompatible with its type.
+        """
+        with pytest.raises(
+            ValueError, match="error: argument --foo: invalid int value:"
+        ):
+            parser.parse_args("--foo some_text".split())
 
 
 def test_build_parser():
@@ -294,6 +358,7 @@ def test_jobscript_to_dict__success(dummy_slurm_script):
         "ntasks": 4,
         "output": "serial_test_%j.log",
         "time": "00:05:00",
+        "kill_on_invalid_dep": False,
     }
 
     actual_dict = jobscript_to_dict(dummy_slurm_script)
@@ -358,6 +423,7 @@ def test_get_job_parameters(dummy_slurm_script):
             "tasks": 4,
             "standard_output": "serial_test_%j.log",
             "time_limit": "00:05:00",
+            "kill_on_invalid_dependency": False,
         }
     )
 
