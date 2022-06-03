@@ -157,7 +157,7 @@ def test_clean_jobscript(dummy_slurm_script):
         "--output",
         "serial_test_%j.log",
         "--kill-on-invalid-dep",
-        "False",
+        "no",
     ]
     actual_list = list(_clean_jobscript(dummy_slurm_script))
     assert actual_list == desired_list
