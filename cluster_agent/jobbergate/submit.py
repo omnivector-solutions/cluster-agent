@@ -92,6 +92,8 @@ async def submit_job_script(
             auth=lambda r: inject_token(r, username=username),
             json=json.loads(payload.json()),  # noqa: This is so, so gross. However: https://github.com/samuelcolvin/pydantic/issues/1409#issuecomment-951890060
         )
+        logger.debug("#### Slurmrestd response #####")
+        logger.debug(response.json())
         response.raise_for_status()
         sub_data = SlurmSubmitResponse.parse_raw(response.content)
 
