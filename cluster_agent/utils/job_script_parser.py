@@ -111,9 +111,10 @@ sbatch_to_slurm = [
     SbatchToSlurm("", "--ignore-pbs", "", dict(action="store_const", const=True)),
     SbatchToSlurm("standard_input", "--input", "-i"),
     SbatchToSlurm("name", "--job-name", "-J"),
-    SbatchToSlurm(
-        "kill_on_invalid_dependency", "--kill-on-invalid-dep", "", dict(type="str2bool")
-    ),
+    # kill_on_invalid_dependency is an invalid key for Slurm API according to our tests
+    # SbatchToSlurm(
+    #     "kill_on_invalid_dependency", "--kill-on-invalid-dep", "", dict(type=int)
+    # ),
     SbatchToSlurm("licenses", "--licenses", "-L"),
     SbatchToSlurm("mail_type", "--mail-type"),
     SbatchToSlurm("mail_user", "--mail-user"),
@@ -126,7 +127,7 @@ sbatch_to_slurm = [
     SbatchToSlurm("", "--network"),
     SbatchToSlurm("nice", "--nice"),
     SbatchToSlurm("no_kill", "--no-kill", "-k", dict(action="store_const", const=True)),
-    SbatchToSlurm("", "--no-requeue", "", dict(action="store_const", const=True)),
+    SbatchToSlurm("", "--no-requeue", "", dict(action="store_false", dest="requeue")),
     SbatchToSlurm("", "--nodefile", "-F"),
     SbatchToSlurm("", "--nodelist", "-w"),
     SbatchToSlurm("nodes", "--nodes", "-N"),
@@ -205,6 +206,8 @@ def build_parser() -> ArgumentParser:
     for item in sbatch_to_slurm:
         args = (i for i in (item.sbatch_short, item.sbatch) if i)
         parser.add_argument(*args, **item.argparser_param)
+    # make --requeue and --no-requeue work together, with default to None
+    parser.set_defaults(requeue=None)
     return parser
 
 
