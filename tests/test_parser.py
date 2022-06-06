@@ -109,7 +109,7 @@ def dummy_slurm_script():
         """
         #!/bin/bash
         #SBATCH                                 # Empty line
-        #SBATCH --no-kill                       # Flagged param
+        #SBATCH --no-kill --no-requeue          # Flagged params
         #SBATCH -n 4 -A <account>               # Multiple args per line
         #SBATCH --job-name=serial_job_test      # Job name
         #SBATCH --mail-type=END,FAIL            # Mail events (NONE, BEGIN, END, FAIL, ALL)
@@ -117,7 +117,7 @@ def dummy_slurm_script():
         #SBATCH --mem=1gb                       # Job memory request
         #SBATCH --time=00:05:00                 # Time limit hrs:min:sec
         #SBATCH --output = serial_test_%j.log   # Standard output and error log
-        #SBATCH --kill-on-invalid-dep no        # False boolean is tested
+        #SBATCH --wait-all-nodes=0              #
         pwd; hostname; date
 
         module load python
@@ -139,6 +139,7 @@ def test_clean_jobscript(dummy_slurm_script):
     """
     desired_list = [
         "--no-kill",
+        "--no-requeue",
         "-n",
         "4",
         "-A",
@@ -155,8 +156,8 @@ def test_clean_jobscript(dummy_slurm_script):
         "00:05:00",
         "--output",
         "serial_test_%j.log",
-        "--kill-on-invalid-dep",
-        "no",
+        "--wait-all-nodes",
+        "0",
     ]
     actual_list = list(_clean_jobscript(dummy_slurm_script))
     assert actual_list == desired_list
@@ -333,6 +334,7 @@ def test_jobscript_to_dict__success(dummy_slurm_script):
 
     desired_dict = {
         "no_kill": True,
+        "requeue": False,
         "account": "<account>",
         "job_name": "serial_job_test",
         "mail_type": "END,FAIL",
@@ -341,7 +343,7 @@ def test_jobscript_to_dict__success(dummy_slurm_script):
         "ntasks": 4,
         "output": "serial_test_%j.log",
         "time": "00:05:00",
-        "kill_on_invalid_dep": False,
+        "wait_all_nodes": 0,
     }
 
     actual_dict = jobscript_to_dict(dummy_slurm_script)
@@ -398,6 +400,7 @@ def test_get_job_parameters(dummy_slurm_script):
     desired_dict.update(
         {
             "no_kill": True,
+            "requeue": False,
             "account": "<account>",
             "name": "serial_job_test",
             "mail_type": "END,FAIL",
@@ -406,7 +409,7 @@ def test_get_job_parameters(dummy_slurm_script):
             "tasks": 4,
             "standard_output": "serial_test_%j.log",
             "time_limit": "00:05:00",
-            "kill_on_invalid_dependency": False,
+            "wait_all_nodes": 0,
         }
     )
 
