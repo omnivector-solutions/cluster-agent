@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from dataclasses import dataclass, field
+from distutils.util import strtobool
 from itertools import chain
 from typing import Any, Dict, Iterator, List, Union
 
@@ -80,14 +81,14 @@ sbatch_to_slurm = [
     SbatchToSlurm("constraints", "--constraint", "-C"),
     SbatchToSlurm("", "--container"),
     SbatchToSlurm("", "--contiguous", "", dict(action="store_const", const=True)),
-    SbatchToSlurm("core_specification", "--core-spec", "-S"),
-    SbatchToSlurm("cores_per_socket", "--cores-per-socket"),
+    SbatchToSlurm("core_specification", "--core-spec", "-S", dict(type=int)),
+    SbatchToSlurm("cores_per_socket", "--cores-per-socket", "", dict(type=int)),
     SbatchToSlurm("cpu_binding", "--cpu-bind"),
     SbatchToSlurm("cpu_frequency", "--cpu-freq"),
     SbatchToSlurm("cpus_per_gpu", "--cpus-per-gpu"),
-    SbatchToSlurm("cpus_per_task", "--cpus-per-task", "-c"),
+    SbatchToSlurm("cpus_per_task", "--cpus-per-task", "-c", dict(type=int)),
     SbatchToSlurm("deadline", "--deadline"),
-    SbatchToSlurm("delay_boot", "--delay-boot"),
+    SbatchToSlurm("delay_boot", "--delay-boot", "", dict(type=int)),
     SbatchToSlurm("dependency", "--dependency", "-d"),
     SbatchToSlurm("distribution", "--distribution", "-m"),
     SbatchToSlurm("standard_error", "--error", "-e"),
@@ -96,7 +97,7 @@ sbatch_to_slurm = [
     SbatchToSlurm("", "--export"),
     SbatchToSlurm("", "--export-file"),
     SbatchToSlurm("", "--extra-node-info", "-B"),
-    SbatchToSlurm("get_user_environment", "--get-user-env"),
+    SbatchToSlurm("get_user_environment", "--get-user-env", "", dict(type="str2bool")),
     SbatchToSlurm("", "--gid"),
     SbatchToSlurm("gpu_binding", "--gpu-bind"),
     SbatchToSlurm("gpu_frequency", "--gpu-freq"),
@@ -111,7 +112,9 @@ sbatch_to_slurm = [
     SbatchToSlurm("", "--ignore-pbs", "", dict(action="store_const", const=True)),
     SbatchToSlurm("standard_input", "--input", "-i"),
     SbatchToSlurm("name", "--job-name", "-J"),
-    SbatchToSlurm("kill_on_invalid_dependency", "--kill-on-invalid-dep"),
+    SbatchToSlurm(
+        "kill_on_invalid_dependency", "--kill-on-invalid-dep", "", dict(type="str2bool")
+    ),
     SbatchToSlurm("licenses", "--licenses", "-L"),
     SbatchToSlurm("mail_type", "--mail-type"),
     SbatchToSlurm("mail_user", "--mail-user"),
@@ -120,7 +123,7 @@ sbatch_to_slurm = [
     SbatchToSlurm("memory_binding", "--mem-bind"),
     SbatchToSlurm("memory_per_cpu", "--mem-per-cpu"),
     SbatchToSlurm("memory_per_gpu", "--mem-per-gpu"),
-    SbatchToSlurm("minimum_cpus_per_node", "--mincpus"),
+    SbatchToSlurm("minimum_cpus_per_node", "--mincpus", "", dict(type=int)),
     SbatchToSlurm("", "--network"),
     SbatchToSlurm("nice", "--nice"),
     SbatchToSlurm("no_kill", "--no-kill", "-k", dict(action="store_const", const=True)),
@@ -128,11 +131,11 @@ sbatch_to_slurm = [
     SbatchToSlurm("", "--nodefile", "-F"),
     SbatchToSlurm("", "--nodelist", "-w"),
     SbatchToSlurm("nodes", "--nodes", "-N"),
-    SbatchToSlurm("tasks", "--ntasks", "-n"),
-    SbatchToSlurm("tasks_per_core", "--ntasks-per-core"),
+    SbatchToSlurm("tasks", "--ntasks", "-n", dict(type=int)),
+    SbatchToSlurm("tasks_per_core", "--ntasks-per-core", "", dict(type=int)),
     SbatchToSlurm("", "--ntasks-per-gpu"),
-    SbatchToSlurm("tasks_per_node", "--ntasks-per-node"),
-    SbatchToSlurm("tasks_per_socket", "--ntasks-per-socket"),
+    SbatchToSlurm("tasks_per_node", "--ntasks-per-node", "", dict(type=int)),
+    SbatchToSlurm("tasks_per_socket", "--ntasks-per-socket", "", dict(type=int)),
     SbatchToSlurm("open_mode", "--open-mode"),
     SbatchToSlurm("standard_output", "--output", "-o"),
     SbatchToSlurm("", "--overcommit", "-O", dict(action="store_const", const=True)),
@@ -149,14 +152,14 @@ sbatch_to_slurm = [
     SbatchToSlurm("requeue", "--requeue", "", dict(action="store_const", const=True)),
     SbatchToSlurm("reservation", "--reservation"),
     SbatchToSlurm("signal", "--signal"),
-    SbatchToSlurm("sockets_per_node", "--sockets-per-node"),
+    SbatchToSlurm("sockets_per_node", "--sockets-per-node", "", dict(type=int)),
     SbatchToSlurm(
         "spread_job", "--spread-job", "", dict(action="store_const", const=True)
     ),
     SbatchToSlurm("", "--switches"),
     SbatchToSlurm("", "--test-only", "", dict(action="store_const", const=True)),
-    SbatchToSlurm("thread_specification", "--thread-spec"),
-    SbatchToSlurm("threads_per_core", "--threads-per-core"),
+    SbatchToSlurm("thread_specification", "--thread-spec", "", dict(type=int)),
+    SbatchToSlurm("threads_per_core", "--threads-per-core", "", dict(type=int)),
     SbatchToSlurm("time_limit", "--time", "-t"),
     SbatchToSlurm("time_minimum", "--time-min"),
     SbatchToSlurm("", "--tmp"),
@@ -168,10 +171,54 @@ sbatch_to_slurm = [
     SbatchToSlurm("", "--verbose", "-v", dict(action="store_const", const=True)),
     SbatchToSlurm("", "--version", "-V", dict(action="store_const", const=True)),
     SbatchToSlurm("", "--wait", "-W", dict(action="store_const", const=True)),
-    SbatchToSlurm("wait_all_nodes", "--wait-all-nodes"),
+    SbatchToSlurm("wait_all_nodes", "--wait-all-nodes", "", dict(type="str2bool")),
     SbatchToSlurm("wckey", "--wckey"),
     SbatchToSlurm("", "--wrap"),
 ]
+
+
+def _string_to_boolean(value: str) -> bool:
+    """
+    Convert a string representation of truth to boolean (True or False).
+
+    True values are 'y', 'yes', 't', 'true', 'on', and '1' (case insensitive).
+    False values are 'n', 'no', 'f', 'false', 'off', and '0' (case insensitive).
+
+    Raises ValueError if 'value' is anything else.
+    """
+    return bool(strtobool(value))
+
+
+class ArgumentParserCustomExit(ArgumentParser):
+    """
+    Custom implementation of the built-in class for argument parsing.
+    The sys.exit triggered by the original code is replaced by a ValueError,
+    besides some friendly logging messages.
+
+    A new type `str2bool` is also registered at the parser at initialization,
+    a workaround to allow boolean parameters to be parsed to False.
+    The original type `bool` basically converts any string to True.
+    """
+
+    def __init__(self, *args, **kwargs):
+        """
+        All positional and key arguments are sent to the initialization of the
+        base class. After that, `str2bool` is registered.
+        """
+        super().__init__(*args, **kwargs)
+        self.register("type", "str2bool", _string_to_boolean)
+
+    def exit(self, status=0, message=None):
+        """
+        Raise ValueError when parsing invalid parameters or if the type of their
+        values is not correct.
+        """
+        log_message = f"Argparse exit status {status}: {message}"
+        if status:
+            logger.error(log_message)
+        else:
+            logger.info(log_message)
+        raise ValueError(message)
 
 
 def build_parser() -> ArgumentParser:
@@ -179,7 +226,7 @@ def build_parser() -> ArgumentParser:
     Build an ArgumentParser to handle all SBATCH
     parameters declared at sbatch_to_slurm.
     """
-    parser = ArgumentParser()
+    parser = ArgumentParserCustomExit()
     for item in sbatch_to_slurm:
         args = (i for i in (item.sbatch_short, item.sbatch) if i)
         parser.add_argument(*args, **item.argparser_param)
