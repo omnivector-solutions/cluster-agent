@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 from dataclasses import dataclass, field
-from distutils.util import strtobool
 from itertools import chain
 from typing import Any, Dict, Iterator, List, Union
 
@@ -177,36 +176,12 @@ sbatch_to_slurm = [
 ]
 
 
-def _string_to_boolean(value: str) -> bool:
-    """
-    Convert a string representation of truth to boolean (True or False).
-
-    True values are 'y', 'yes', 't', 'true', 'on', and '1' (case insensitive).
-    False values are 'n', 'no', 'f', 'false', 'off', and '0' (case insensitive).
-
-    Raises ValueError if 'value' is anything else.
-    """
-    return bool(strtobool(value))
-
-
 class ArgumentParserCustomExit(ArgumentParser):
     """
     Custom implementation of the built-in class for argument parsing.
     The sys.exit triggered by the original code is replaced by a ValueError,
     besides some friendly logging messages.
-
-    A new type `str2bool` is also registered at the parser at initialization,
-    a workaround to allow boolean parameters to be parsed to False.
-    The original type `bool` basically converts any string to True.
     """
-
-    def __init__(self, *args, **kwargs):
-        """
-        All positional and key arguments are sent to the initialization of the
-        base class. After that, `str2bool` is registered.
-        """
-        super().__init__(*args, **kwargs)
-        self.register("type", "str2bool", _string_to_boolean)
 
     def exit(self, status=0, message=None):
         """
