@@ -18,7 +18,6 @@ from cluster_agent.utils.job_script_parser import (
     get_job_parameters,
     jobscript_to_dict,
     sbatch_to_slurm,
-    _string_to_boolean,
 )
 
 
@@ -266,22 +265,6 @@ def test_sbatch_to_slurm_list__contains_only_unique_values(field):
     assert len(list_of_values) == len(set(list_of_values))
 
 
-@pytest.mark.parametrize("value", ["y", "yes", "t", "true", "on", "1"])
-def test_string_to_boolean__true(value):
-    """
-    Test the string values that are considered True by string_to_boolean.
-    """
-    assert _string_to_boolean(value)
-
-
-@pytest.mark.parametrize("value", ["n", "no", "f", "false", "off", "0"])
-def test_string_to_boolean__false(value):
-    """
-    Test the string values that are considered False by string_to_boolean.
-    """
-    assert not _string_to_boolean(value)
-
-
 class TestArgumentParserCustomExit:
     """
     Test the custom error handling implemented over the built-in argument parser.
@@ -294,7 +277,7 @@ class TestArgumentParserCustomExit:
         """
         parser = ArgumentParserCustomExit()
         parser.add_argument("--foo", type=int)
-        parser.add_argument("--bar", type="str2bool")
+        parser.add_argument("--bar", action="store_true")
         return parser
 
     def test_argument_parser_success(self, parser):
@@ -302,8 +285,8 @@ class TestArgumentParserCustomExit:
         Test the base case, where the arguments are successfully parsed and
         converted to the expected type.
         """
-        args = parser.parse_args("--foo=10 --bar=False".split())
-        assert {"foo": 10, "bar": False} == vars(args)
+        args = parser.parse_args("--foo=10 --bar".split())
+        assert {"foo": 10, "bar": True} == vars(args)
 
     def test_argument_parser_raise_value_error_when_value_is_missing(self, parser):
         """
