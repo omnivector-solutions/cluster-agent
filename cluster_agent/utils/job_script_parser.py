@@ -97,7 +97,7 @@ sbatch_to_slurm = [
     SbatchToSlurm("", "--export"),
     SbatchToSlurm("", "--export-file"),
     SbatchToSlurm("", "--extra-node-info", "-B"),
-    SbatchToSlurm("get_user_environment", "--get-user-env", "", dict(type="str2bool")),
+    SbatchToSlurm("get_user_environment", "--get-user-env", "", dict(type=int)),
     SbatchToSlurm("", "--gid"),
     SbatchToSlurm("gpu_binding", "--gpu-bind"),
     SbatchToSlurm("gpu_frequency", "--gpu-freq"),
@@ -171,7 +171,7 @@ sbatch_to_slurm = [
     SbatchToSlurm("", "--verbose", "-v", dict(action="store_const", const=True)),
     SbatchToSlurm("", "--version", "-V", dict(action="store_const", const=True)),
     SbatchToSlurm("", "--wait", "-W", dict(action="store_const", const=True)),
-    SbatchToSlurm("wait_all_nodes", "--wait-all-nodes", "", dict(type="str2bool")),
+    SbatchToSlurm("wait_all_nodes", "--wait-all-nodes", "", dict(type=int)),
     SbatchToSlurm("wckey", "--wckey"),
     SbatchToSlurm("", "--wrap"),
 ]
