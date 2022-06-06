@@ -66,6 +66,7 @@ try:
         dsn=SETTINGS.SENTRY_DSN,
         integrations=[sentry_logging],
         traces_sample_rate=1.0,
+        environment=SETTINGS.SENTRY_ENV,
     )
 
     logger.debug("##### Enabled Sentry since a valid DSN key was provided.")

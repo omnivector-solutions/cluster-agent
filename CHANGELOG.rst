@@ -13,6 +13,7 @@ Unreleased
 - Added job-script parser to extract the name and values of the SBATCH parameters contained in the file.
 - Added a two-way mapping to translate parameters' names between the SBATCH namespace and the Slurm Rest API namespace.
 - Added execution directory support.
+- Add environment option for sentry.
 
 1.5.0 - 2022-04-12
 ------------------
