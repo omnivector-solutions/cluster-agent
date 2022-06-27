@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     BASE_API_URL: AnyHttpUrl = Field("https://armada-k8s.staging.omnivector.solutions")
 
     SENTRY_DSN: Optional[AnyHttpUrl] = None
+    SENTRY_ENV: str = "local"
 
     # Auth0 config for machine-to-machine security
     AUTH0_DOMAIN: str = "omnivector.us.auth0.com"
