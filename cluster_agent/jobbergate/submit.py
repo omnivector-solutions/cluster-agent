@@ -1,11 +1,17 @@
 import json
+from functools import partial
 from typing import cast
 
+from buzz import DoExceptParams
 from cluster_agent.identity.slurm_user.factory import manufacture
 from cluster_agent.identity.slurm_user.mappers import SlurmUserMapper
 from cluster_agent.identity.slurmrestd import backend_client as slurmrestd_client
 from cluster_agent.identity.slurmrestd import inject_token
-from cluster_agent.jobbergate.api import fetch_pending_submissions, mark_as_submitted
+from cluster_agent.jobbergate.api import (
+    fetch_pending_submissions,
+    mark_as_submitted,
+    update_status,
+)
 from cluster_agent.jobbergate.constants import JobSubmissionStatus
 from cluster_agent.jobbergate.schemas import (
     PendingJobSubmission,
@@ -15,8 +21,8 @@ from cluster_agent.jobbergate.schemas import (
 )
 from cluster_agent.settings import SETTINGS
 from cluster_agent.utils.exception import JobSubmissionError, SlurmrestdError
-from cluster_agent.utils.logging import log_error
 from cluster_agent.utils.job_script_parser import get_job_parameters
+from cluster_agent.utils.logging import log_error
 from loguru import logger
 
 
@@ -60,7 +66,9 @@ async def submit_job_script(
 
     job_script = get_job_script(pending_job_submission)
 
-    submit_dir = pending_job_submission.execution_directory or SETTINGS.DEFAULT_SLURM_WORK_DIR
+    submit_dir = (
+        pending_job_submission.execution_directory or SETTINGS.DEFAULT_SLURM_WORK_DIR
+    )
 
     local_script_path = submit_dir / f"{name}.job"
     local_script_path.write_text(job_script)
@@ -90,7 +98,9 @@ async def submit_job_script(
         response = await slurmrestd_client.post(
             "/slurm/v0.0.36/job/submit",
             auth=lambda r: inject_token(r, username=username),
-            json=json.loads(payload.json()),  # noqa: This is so, so gross. However: https://github.com/samuelcolvin/pydantic/issues/1409#issuecomment-951890060
+            json=json.loads(
+                payload.json()
+            ),  # noqa: This is so, so gross. However: https://github.com/samuelcolvin/pydantic/issues/1409#issuecomment-951890060
         )
         logger.debug(f"Slurmrestd response: {response.json()}")
         response.raise_for_status()
@@ -104,6 +114,22 @@ async def submit_job_script(
     )
 
     return slurm_job_id
+
+
+def notify_submission_aborted(params: DoExceptParams, job_submission_id: int) -> None:
+    """
+    Notify Jobbergate that a job submission has been aborted.
+    """
+    print(f"{job_submission_id=}" + "#" * 80)
+    log_error(params)
+    update_status(
+        job_submission_id,
+        JobSubmissionStatus.ABORTED,
+        reported_message=params.final_message,
+    )
+    logger.debug(
+        f"Jobbergate was notified about the error and {job_submission_id=} was marked as ABORTED."
+    )
 
 
 async def submit_pending_jobs():
@@ -124,10 +150,12 @@ async def submit_pending_jobs():
         logger.debug(f"Submitting pending job_submission {pending_job_submission.id}")
         with JobSubmissionError.handle_errors(
             (
-                f"Failed to sumbit pending job_submission {pending_job_submission.id}"
+                f"Failed to submit pending job_submission {pending_job_submission.id}"
                 "...skipping to next pending job"
             ),
-            do_except=log_error,
+            do_except=partial(
+                notify_submission_aborted, job_submission_id=pending_job_submission.id
+            ),
             do_else=lambda: logger.debug(
                 f"Finished submitting pending job_submission {pending_job_submission.id}"
             ),

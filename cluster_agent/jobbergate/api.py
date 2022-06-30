@@ -63,7 +63,9 @@ async def mark_as_submitted(job_submission_id: int, slurm_job_id: int):
         response.raise_for_status()
 
 
-async def update_status(job_submission_id: int, status: JobSubmissionStatus):
+async def update_status(
+    job_submission_id: int, status: JobSubmissionStatus, *, reported_message: str = ""
+) -> None:
     """
     Update a job submission with a status
     """
@@ -75,6 +77,6 @@ async def update_status(job_submission_id: int, status: JobSubmissionStatus):
     ):
         response = await backend_client.put(
             f"jobbergate/job-submissions/agent/{job_submission_id}",
-            json=dict(new_status=status),
+            json=dict(new_status=status, reported_message=reported_message),
         )
         response.raise_for_status()

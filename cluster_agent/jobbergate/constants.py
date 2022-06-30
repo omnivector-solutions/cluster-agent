@@ -12,6 +12,7 @@ class JobSubmissionStatus(str, Enum):
     SUBMITTED = "SUBMITTED"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
+    ABORTED = "ABORTED"
 
 
 status_map: DefaultDict[str, JobSubmissionStatus] = defaultdict(
