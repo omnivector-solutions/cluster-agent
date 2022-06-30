@@ -47,7 +47,9 @@ async def mark_as_submitted(job_submission_id: int, slurm_job_id: int):
     """
     Mark job_submission as submitted in the Jobbergate API.
     """
-    logger.debug(f"Marking job submission {job_submission_id} as submitted")
+    logger.debug(
+        f"Marking job {job_submission_id=} as {JobSubmissionStatus.SUBMITTED} ({slurm_job_id=})"
+    )
 
     with JobbergateApiError.handle_errors(
         f"Could not mark job submission {job_submission_id} as updated via the API",

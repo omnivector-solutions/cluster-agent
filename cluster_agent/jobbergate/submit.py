@@ -120,7 +120,6 @@ def notify_submission_aborted(params: DoExceptParams, job_submission_id: int) ->
     """
     Notify Jobbergate that a job submission has been aborted.
     """
-    print(f"{job_submission_id=}" + "#" * 80)
     log_error(params)
     update_status(
         job_submission_id,
@@ -164,11 +163,6 @@ async def submit_pending_jobs():
 
             slurm_job_id = await submit_job_script(pending_job_submission, user_mapper)
 
-            logger.debug(
-                "Updating job_submission with "
-                f"status='{JobSubmissionStatus.SUBMITTED}' {slurm_job_id=}"
-            )
-
-            await mark_as_submitted(pending_job_submission.id, slurm_job_id)
+        await mark_as_submitted(pending_job_submission.id, slurm_job_id)
 
     logger.debug("...Finished submitting pending jobs")
