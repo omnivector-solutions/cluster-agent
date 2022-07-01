@@ -72,6 +72,7 @@ async def notify_submission_aborted(
     Notify Jobbergate that a job submission has been aborted.
     """
     log_error(params)
+    logger.debug("Informing Jobbergate that job-submission was aborted")
     await update_status(
         job_submission_id,
         JobSubmissionStatus.ABORTED,
@@ -85,7 +86,7 @@ async def update_status(
     """
     Update a job submission with a status
     """
-    logger.debug(f"Updating {job_submission_id=} with {status=}")
+    logger.debug(f"Updating {job_submission_id=} with status={status}")
 
     with JobbergateApiError.handle_errors(
         f"Could not update status for job submission {job_submission_id} via the API",

@@ -1,6 +1,7 @@
 import json
-from functools import partial
 from typing import cast
+
+from buzz import DoExceptParams, get_traceback, reformat_exception
 
 from cluster_agent.identity.slurm_user.factory import manufacture
 from cluster_agent.identity.slurm_user.mappers import SlurmUserMapper
@@ -90,12 +91,7 @@ async def submit_job_script(
         f"to slurm with payload {payload}"
     )
 
-    with SlurmrestdError.handle_errors(
-        "Failed to submit job to slurm",
-        do_except=partial(
-            notify_submission_aborted, job_submission_id=pending_job_submission.id
-        ),
-    ):
+    try:
         response = await slurmrestd_client.post(
             "/slurm/v0.0.36/job/submit",
             auth=lambda r: inject_token(r, username=username),
@@ -105,7 +101,19 @@ async def submit_job_script(
         )
         logger.debug(f"Slurmrestd response: {response.json()}")
         response.raise_for_status()
-        sub_data = SlurmSubmitResponse.parse_raw(response.content)
+    except Exception as err:
+        final_message = reformat_exception("Failed to submit job to slurm", err)
+        await notify_submission_aborted(
+            DoExceptParams(
+                SlurmrestdError,
+                final_message=final_message,
+                trace=get_traceback(),
+            ),
+            pending_job_submission.id,
+        )
+        raise SlurmrestdError(final_message)
+
+    sub_data = SlurmSubmitResponse.parse_raw(response.content)
 
     # Make static type checkers happy.
     slurm_job_id = cast(int, sub_data.job_id)
