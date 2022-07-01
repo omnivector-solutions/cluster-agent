@@ -92,7 +92,9 @@ async def submit_job_script(
 
     with SlurmrestdError.handle_errors(
         "Failed to submit job to slurm",
-        do_except=log_error,
+        do_except=partial(
+            notify_submission_aborted, job_submission_id=pending_job_submission.id
+        ),
     ):
         response = await slurmrestd_client.post(
             "/slurm/v0.0.36/job/submit",
@@ -136,9 +138,7 @@ async def submit_pending_jobs():
                 f"Failed to submit pending job_submission {pending_job_submission.id}"
                 "...skipping to next pending job"
             ),
-            do_except=partial(
-                notify_submission_aborted, job_submission_id=pending_job_submission.id
-            ),
+            do_except=log_error,
             do_else=lambda: logger.debug(
                 f"Finished submitting pending job_submission {pending_job_submission.id}"
             ),
@@ -147,6 +147,11 @@ async def submit_pending_jobs():
 
             slurm_job_id = await submit_job_script(pending_job_submission, user_mapper)
 
-        await mark_as_submitted(pending_job_submission.id, slurm_job_id)
+            logger.debug(
+                "Updating job_submission with "
+                f"status='{JobSubmissionStatus.SUBMITTED}' {slurm_job_id=}"
+            )
+
+            await mark_as_submitted(pending_job_submission.id, slurm_job_id)
 
     logger.debug("...Finished submitting pending jobs")
