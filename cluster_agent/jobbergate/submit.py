@@ -2,7 +2,6 @@ import json
 from functools import partial
 from typing import cast
 
-from buzz import DoExceptParams
 from cluster_agent.identity.slurm_user.factory import manufacture
 from cluster_agent.identity.slurm_user.mappers import SlurmUserMapper
 from cluster_agent.identity.slurmrestd import backend_client as slurmrestd_client
@@ -10,7 +9,7 @@ from cluster_agent.identity.slurmrestd import inject_token
 from cluster_agent.jobbergate.api import (
     fetch_pending_submissions,
     mark_as_submitted,
-    update_status,
+    notify_submission_aborted,
 )
 from cluster_agent.jobbergate.constants import JobSubmissionStatus
 from cluster_agent.jobbergate.schemas import (
@@ -114,21 +113,6 @@ async def submit_job_script(
     )
 
     return slurm_job_id
-
-
-def notify_submission_aborted(params: DoExceptParams, job_submission_id: int) -> None:
-    """
-    Notify Jobbergate that a job submission has been aborted.
-    """
-    log_error(params)
-    update_status(
-        job_submission_id,
-        JobSubmissionStatus.ABORTED,
-        reported_message=params.final_message,
-    )
-    logger.debug(
-        f"Jobbergate was notified about the error and {job_submission_id=} was marked as ABORTED."
-    )
 
 
 async def submit_pending_jobs():

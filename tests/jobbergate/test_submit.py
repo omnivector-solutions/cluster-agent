@@ -3,7 +3,6 @@ Define tests for the submission functions of the jobbergate section.
 """
 
 import json
-from buzz import DoExceptParams
 
 import httpx
 import pytest
@@ -17,7 +16,6 @@ from cluster_agent.jobbergate.schemas import (
 )
 from cluster_agent.jobbergate.submit import (
     get_job_script,
-    notify_submission_aborted,
     submit_job_script,
     submit_pending_jobs,
 )
@@ -392,40 +390,3 @@ async def test_submit_pending_jobs(dummy_template_source, tweak_settings):
         ).encode("utf-8")
 
         assert not update_3_route.called
-
-
-@pytest.mark.asyncio
-async def test_notify_submission_aborted():
-    """
-    Test that ``notify_submission_aborted`` can send a message to Jobbergate
-    and set the job status to ABORTED.
-    """
-    job_submission_id = 1
-    reported_message = "Failed to submit pending job_submission"
-
-    params = DoExceptParams(
-        JobSubmissionError,
-        final_message=reported_message,
-        trace=None,
-    )
-    async with respx.mock:
-        respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
-            return_value=httpx.Response(
-                status_code=200,
-                json=dict(access_token="dummy-token"),
-            )
-        )
-        update_route = respx.put(
-            f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/{job_submission_id}"
-        )
-        update_route.mock(return_value=httpx.Response(status_code=200))
-
-        await notify_submission_aborted(params, job_submission_id)
-
-        assert update_route.call_count == 1
-        assert update_route.calls.last.request.content == json.dumps(
-            dict(
-                new_status=JobSubmissionStatus.ABORTED,
-                reported_message=reported_message,
-            ),
-        ).encode("utf-8")

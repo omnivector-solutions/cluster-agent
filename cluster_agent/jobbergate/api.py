@@ -1,12 +1,12 @@
 from typing import List
 
-from loguru import logger
-
+from buzz import DoExceptParams
+from cluster_agent.identity.cluster_api import backend_client
+from cluster_agent.jobbergate.constants import JobSubmissionStatus
+from cluster_agent.jobbergate.schemas import ActiveJobSubmission, PendingJobSubmission
 from cluster_agent.utils.exception import JobbergateApiError
 from cluster_agent.utils.logging import log_error
-from cluster_agent.jobbergate.schemas import PendingJobSubmission, ActiveJobSubmission
-from cluster_agent.jobbergate.constants import JobSubmissionStatus
-from cluster_agent.identity.cluster_api import backend_client
+from loguru import logger
 
 
 async def fetch_pending_submissions() -> List[PendingJobSubmission]:
@@ -65,13 +65,27 @@ async def mark_as_submitted(job_submission_id: int, slurm_job_id: int):
         response.raise_for_status()
 
 
+async def notify_submission_aborted(
+    params: DoExceptParams, job_submission_id: int
+) -> None:
+    """
+    Notify Jobbergate that a job submission has been aborted.
+    """
+    log_error(params)
+    await update_status(
+        job_submission_id,
+        JobSubmissionStatus.ABORTED,
+        reported_message=params.final_message,
+    )
+
+
 async def update_status(
     job_submission_id: int, status: JobSubmissionStatus, *, reported_message: str = ""
 ) -> None:
     """
     Update a job submission with a status
     """
-    logger.debug(f"Updating job submission {job_submission_id} with status {status}")
+    logger.debug(f"Updating {job_submission_id=} with {status=}")
 
     with JobbergateApiError.handle_errors(
         f"Could not update status for job submission {job_submission_id} via the API",
