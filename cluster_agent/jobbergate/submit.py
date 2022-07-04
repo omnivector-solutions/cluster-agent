@@ -91,7 +91,10 @@ async def submit_job_script(
         f"to slurm with payload {payload}"
     )
 
-    try:
+    with SlurmrestdError.handle_errors(
+        "Failed to submit job to slurm",
+        do_except=log_error,
+    ):
         response = await slurmrestd_client.post(
             "/slurm/v0.0.36/job/submit",
             auth=lambda r: inject_token(r, username=username),
@@ -101,19 +104,7 @@ async def submit_job_script(
         )
         logger.debug(f"Slurmrestd response: {response.json()}")
         response.raise_for_status()
-    except Exception as err:
-        final_message = reformat_exception("Failed to submit job to slurm", err)
-        await notify_submission_aborted(
-            DoExceptParams(
-                SlurmrestdError,
-                final_message=final_message,
-                trace=get_traceback(),
-            ),
-            pending_job_submission.id,
-        )
-        raise SlurmrestdError(final_message)
-
-    sub_data = SlurmSubmitResponse.parse_raw(response.content)
+        sub_data = SlurmSubmitResponse.parse_raw(response.content)
 
     # Make static type checkers happy.
     slurm_job_id = cast(int, sub_data.job_id)
