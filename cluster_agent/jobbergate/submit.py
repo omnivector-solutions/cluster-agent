@@ -12,7 +12,7 @@ from cluster_agent.jobbergate.api import (
     mark_as_submitted,
     notify_submission_aborted,
 )
-from cluster_agent.jobbergate.constants import JobSubmissionStatus
+
 from cluster_agent.jobbergate.schemas import (
     PendingJobSubmission,
     SlurmJobParams,
@@ -20,7 +20,11 @@ from cluster_agent.jobbergate.schemas import (
     SlurmSubmitResponse,
 )
 from cluster_agent.settings import SETTINGS
-from cluster_agent.utils.exception import JobSubmissionError, SlurmrestdError
+from cluster_agent.utils.exception import (
+    JobSubmissionError,
+    JobbergateApiError,
+    SlurmrestdError,
+)
 from cluster_agent.utils.job_script_parser import get_job_parameters
 from cluster_agent.utils.logging import log_error
 from loguru import logger
@@ -132,25 +136,38 @@ async def submit_pending_jobs():
 
     for pending_job_submission in pending_job_submissions:
         logger.debug(f"Submitting pending job_submission {pending_job_submission.id}")
-        with JobSubmissionError.handle_errors(
-            (
-                f"Failed to submit pending job_submission {pending_job_submission.id}"
-                "...skipping to next pending job"
-            ),
-            do_except=log_error,
-            do_else=lambda: logger.debug(
-                f"Finished submitting pending job_submission {pending_job_submission.id}"
-            ),
-            re_raise=False,
-        ):
-
+        try:
             slurm_job_id = await submit_job_script(pending_job_submission, user_mapper)
-
-            logger.debug(
-                "Updating job_submission with "
-                f"status='{JobSubmissionStatus.SUBMITTED}' {slurm_job_id=}"
+        except Exception as err:
+            final_message = reformat_exception(
+                (
+                    f"Failed to submit pending job_submission {pending_job_submission.id}"
+                    "...skipping to next pending job"
+                ),
+                err,
             )
+            with JobbergateApiError.handle_errors(
+                f"Could not update status='ABORTED' for {pending_job_submission.id=} via the API",
+                do_except=log_error,
+                re_raise=False,
+            ):
+                await notify_submission_aborted(
+                    DoExceptParams(
+                        JobSubmissionError,
+                        final_message=final_message,
+                        trace=get_traceback(),
+                    ),
+                    pending_job_submission.id,
+                )
+        else:
+            with JobbergateApiError.handle_errors(
+                f"Could not update status='SUBMITTED' for {pending_job_submission.id=} via the API",
+                do_except=log_error,
+                re_raise=False,
+            ):
+                await mark_as_submitted(pending_job_submission.id, slurm_job_id)
 
-            await mark_as_submitted(pending_job_submission.id, slurm_job_id)
-
+        logger.debug(
+            f"Finished processing pending job_submission {pending_job_submission.id}"
+        )
     logger.debug("...Finished submitting pending jobs")
