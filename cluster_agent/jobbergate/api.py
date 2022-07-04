@@ -72,7 +72,7 @@ async def notify_submission_aborted(
     Notify Jobbergate that a job submission has been aborted.
     """
     log_error(params)
-    logger.debug("Informing Jobbergate that job-submission was aborted")
+    logger.debug("Informing Jobbergate that the job submission was aborted")
     await update_status(
         job_submission_id,
         JobSubmissionStatus.ABORTED,
