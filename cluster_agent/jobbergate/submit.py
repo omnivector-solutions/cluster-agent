@@ -10,7 +10,7 @@ from cluster_agent.identity.slurmrestd import inject_token
 from cluster_agent.jobbergate.api import (
     fetch_pending_submissions,
     mark_as_submitted,
-    notify_submission_aborted,
+    notify_submission_rejected,
 )
 
 from cluster_agent.jobbergate.schemas import (
@@ -145,11 +145,11 @@ async def submit_pending_jobs():
                 err,
             )
             with JobbergateApiError.handle_errors(
-                f"Could not update status='ABORTED' for {pending_job_submission.id=} via the API",
+                f"Could not update status='REJECTED' for {pending_job_submission.id=} via the API",
                 do_except=log_error,
                 re_raise=False,
             ):
-                await notify_submission_aborted(
+                await notify_submission_rejected(
                     DoExceptParams(
                         JobSubmissionError,
                         final_message=final_message,

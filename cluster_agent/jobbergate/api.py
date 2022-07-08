@@ -65,17 +65,17 @@ async def mark_as_submitted(job_submission_id: int, slurm_job_id: int):
         response.raise_for_status()
 
 
-async def notify_submission_aborted(
+async def notify_submission_rejected(
     params: DoExceptParams, job_submission_id: int
 ) -> None:
     """
-    Notify Jobbergate that a job submission has been aborted.
+    Notify Jobbergate that a job submission has been rejected.
     """
     log_error(params)
-    logger.debug("Informing Jobbergate that the job submission was aborted")
+    logger.debug("Informing Jobbergate that the job submission was rejected")
     await update_status(
         job_submission_id,
-        JobSubmissionStatus.ABORTED,
+        JobSubmissionStatus.REJECTED,
         reported_message=params.final_message,
     )
 

@@ -17,7 +17,7 @@ from cluster_agent.jobbergate.api import (
     fetch_pending_submissions,
     fetch_active_submissions,
     mark_as_submitted,
-    notify_submission_aborted,
+    notify_submission_rejected,
     update_status,
 )
 
@@ -334,10 +334,10 @@ async def test_update_status__raises_JobbergateApiError_if_the_response_is_not_2
 
 
 @pytest.mark.asyncio
-async def test_notify_submission_aborted():
+async def test_notify_submission_rejected():
     """
-    Test that ``notify_submission_aborted`` can send a message to Jobbergate
-    and set the job status to ABORTED.
+    Test that ``notify_submission_rejected`` can send a message to Jobbergate
+    and set the job status to REJECTED.
     """
     job_submission_id = 1
     reported_message = (
@@ -361,12 +361,12 @@ async def test_notify_submission_aborted():
         )
         update_route.mock(return_value=httpx.Response(status_code=200))
 
-        await notify_submission_aborted(params, job_submission_id)
+        await notify_submission_rejected(params, job_submission_id)
 
         assert update_route.call_count == 1
         assert update_route.calls.last.request.content == json.dumps(
             dict(
-                new_status=JobSubmissionStatus.ABORTED,
+                new_status=JobSubmissionStatus.REJECTED,
                 reported_message=reported_message,
             ),
         ).encode("utf-8")

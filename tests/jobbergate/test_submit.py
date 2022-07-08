@@ -389,4 +389,4 @@ async def test_submit_pending_jobs(dummy_template_source, tweak_settings):
             )
         ).encode("utf-8")
 
-        assert update_3_route.call_count == 1  # called to notify the job was aborted
+        assert update_3_route.call_count == 1  # called to notify the job was rejected
