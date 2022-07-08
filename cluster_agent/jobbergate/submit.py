@@ -102,9 +102,7 @@ async def submit_job_script(
         response = await slurmrestd_client.post(
             "/slurm/v0.0.36/job/submit",
             auth=lambda r: inject_token(r, username=username),
-            json=json.loads(
-                payload.json()
-            ),  # noqa: This is so, so gross. However: https://github.com/samuelcolvin/pydantic/issues/1409#issuecomment-951890060
+            json=json.loads(payload.json()),
         )
         logger.debug(f"Slurmrestd response: {response.json()}")
         response.raise_for_status()
