@@ -101,21 +101,27 @@ async def test_submit_job_script__success(
         assert last_request.method == "POST"
         assert last_request.headers["x-slurm-user-name"] == "dummy-user"
         assert last_request.headers["x-slurm-user-token"] == "default-dummy-token"
-        assert last_request.content.decode("utf-8") == SlurmJobSubmission(
-            script=dummy_template_source,
-            job=SlurmJobParams(
-                name=name,
-                current_working_directory=SETTINGS.DEFAULT_SLURM_WORK_DIR,
-                standard_output=SETTINGS.DEFAULT_SLURM_WORK_DIR / f"{name}.out",
-                standard_error=SETTINGS.DEFAULT_SLURM_WORK_DIR / f"{name}.err",
-                time_limit="60",
-            ),
-        ).json()
+        assert (
+            last_request.content.decode("utf-8")
+            == SlurmJobSubmission(
+                script=dummy_template_source,
+                job=SlurmJobParams(
+                    name=name,
+                    current_working_directory=SETTINGS.DEFAULT_SLURM_WORK_DIR,
+                    standard_output=SETTINGS.DEFAULT_SLURM_WORK_DIR / f"{name}.out",
+                    standard_error=SETTINGS.DEFAULT_SLURM_WORK_DIR / f"{name}.err",
+                    time_limit="60",
+                ),
+            ).json()
+        )
 
 
 @pytest.mark.asyncio
 async def test_submit_job_script__with_non_default_execution_directory(
-    dummy_pending_job_submission_data, dummy_template_source, mocker, tmp_path,
+    dummy_pending_job_submission_data,
+    dummy_template_source,
+    mocker,
+    tmp_path,
 ):
     """
     Test that the ``submit_job_script()`` successfully submits a job with an exec dir.
@@ -166,10 +172,13 @@ async def test_submit_job_script__with_non_default_execution_directory(
         assert last_request.method == "POST"
         assert last_request.headers["x-slurm-user-name"] == "dummy-user"
         assert last_request.headers["x-slurm-user-token"] == "dummy-token"
-        assert last_request.content.decode("utf-8") == SlurmJobSubmission(
-            script=dummy_template_source,
-            job=SlurmJobParams(**job_parameters),
-        ).json()
+        assert (
+            last_request.content.decode("utf-8")
+            == SlurmJobSubmission(
+                script=dummy_template_source,
+                job=SlurmJobParams(**job_parameters),
+            ).json()
+        )
 
 
 @pytest.mark.asyncio
@@ -380,4 +389,4 @@ async def test_submit_pending_jobs(dummy_template_source, tweak_settings):
             )
         ).encode("utf-8")
 
-        assert not update_3_route.called
+        assert update_3_route.call_count == 1  # called to notify the job was rejected

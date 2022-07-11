@@ -3,19 +3,21 @@ Define tests for the Jobbergate API interface functions.
 """
 
 import json
+from buzz import DoExceptParams
 
 import httpx
 import pytest
 import respx
 
 from cluster_agent.settings import SETTINGS
-from cluster_agent.utils.exception import JobbergateApiError
+from cluster_agent.utils.exception import JobSubmissionError, JobbergateApiError
 from cluster_agent.jobbergate.schemas import PendingJobSubmission, ActiveJobSubmission
 from cluster_agent.jobbergate.constants import JobSubmissionStatus
 from cluster_agent.jobbergate.api import (
     fetch_pending_submissions,
     fetch_active_submissions,
     mark_as_submitted,
+    notify_submission_rejected,
     update_status,
 )
 
@@ -294,16 +296,12 @@ async def test_update_status__success():
 
         await update_status(1, JobSubmissionStatus.COMPLETED)
         assert update_route.calls.last.request.content == json.dumps(
-            dict(
-                new_status=JobSubmissionStatus.COMPLETED,
-            )
+            dict(new_status=JobSubmissionStatus.COMPLETED, reported_message="")
         ).encode("utf-8")
 
         await update_status(2, JobSubmissionStatus.FAILED)
         assert update_route.calls.last.request.content == json.dumps(
-            dict(
-                new_status=JobSubmissionStatus.FAILED,
-            )
+            dict(new_status=JobSubmissionStatus.FAILED, reported_message="")
         ).encode("utf-8")
 
         assert update_route.call_count == 2
@@ -333,3 +331,42 @@ async def test_update_status__raises_JobbergateApiError_if_the_response_is_not_2
         ):
             await update_status(1, JobSubmissionStatus.CREATED)
         assert update_route.called
+
+
+@pytest.mark.asyncio
+async def test_notify_submission_rejected():
+    """
+    Test that ``notify_submission_rejected`` can send a message to Jobbergate
+    and set the job status to REJECTED.
+    """
+    job_submission_id = 1
+    reported_message = (
+        f"An expected failure occurred when submit {job_submission_id=} at 'unittest'"
+    )
+
+    params = DoExceptParams(
+        JobSubmissionError,
+        final_message=reported_message,
+        trace=None,
+    )
+    async with respx.mock:
+        respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
+            return_value=httpx.Response(
+                status_code=200,
+                json=dict(access_token="dummy-token"),
+            )
+        )
+        update_route = respx.put(
+            f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/{job_submission_id}"
+        )
+        update_route.mock(return_value=httpx.Response(status_code=200))
+
+        await notify_submission_rejected(params, job_submission_id)
+
+        assert update_route.call_count == 1
+        assert update_route.calls.last.request.content == json.dumps(
+            dict(
+                new_status=JobSubmissionStatus.REJECTED,
+                reported_message=reported_message,
+            ),
+        ).encode("utf-8")

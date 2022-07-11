@@ -1,12 +1,12 @@
 from typing import List
 
-from loguru import logger
-
+from buzz import DoExceptParams
+from cluster_agent.identity.cluster_api import backend_client
+from cluster_agent.jobbergate.constants import JobSubmissionStatus
+from cluster_agent.jobbergate.schemas import ActiveJobSubmission, PendingJobSubmission
 from cluster_agent.utils.exception import JobbergateApiError
 from cluster_agent.utils.logging import log_error
-from cluster_agent.jobbergate.schemas import PendingJobSubmission, ActiveJobSubmission
-from cluster_agent.jobbergate.constants import JobSubmissionStatus
-from cluster_agent.identity.cluster_api import backend_client
+from loguru import logger
 
 
 async def fetch_pending_submissions() -> List[PendingJobSubmission]:
@@ -47,7 +47,9 @@ async def mark_as_submitted(job_submission_id: int, slurm_job_id: int):
     """
     Mark job_submission as submitted in the Jobbergate API.
     """
-    logger.debug(f"Marking job submission {job_submission_id} as submitted")
+    logger.debug(
+        f"Marking job {job_submission_id=} as {JobSubmissionStatus.SUBMITTED} ({slurm_job_id=})"
+    )
 
     with JobbergateApiError.handle_errors(
         f"Could not mark job submission {job_submission_id} as updated via the API",
@@ -63,11 +65,28 @@ async def mark_as_submitted(job_submission_id: int, slurm_job_id: int):
         response.raise_for_status()
 
 
-async def update_status(job_submission_id: int, status: JobSubmissionStatus):
+async def notify_submission_rejected(
+    params: DoExceptParams, job_submission_id: int
+) -> None:
+    """
+    Notify Jobbergate that a job submission has been rejected.
+    """
+    log_error(params)
+    logger.debug("Informing Jobbergate that the job submission was rejected")
+    await update_status(
+        job_submission_id,
+        JobSubmissionStatus.REJECTED,
+        reported_message=params.final_message,
+    )
+
+
+async def update_status(
+    job_submission_id: int, status: JobSubmissionStatus, *, reported_message: str = ""
+) -> None:
     """
     Update a job submission with a status
     """
-    logger.debug(f"Updating job submission {job_submission_id} with status {status}")
+    logger.debug(f"Updating {job_submission_id=} with status={status}")
 
     with JobbergateApiError.handle_errors(
         f"Could not update status for job submission {job_submission_id} via the API",
@@ -75,6 +94,6 @@ async def update_status(job_submission_id: int, status: JobSubmissionStatus):
     ):
         response = await backend_client.put(
             f"jobbergate/job-submissions/agent/{job_submission_id}",
-            json=dict(new_status=status),
+            json=dict(new_status=status, reported_message=reported_message),
         )
         response.raise_for_status()
