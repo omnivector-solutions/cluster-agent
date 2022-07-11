@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     AUTH0_DOMAIN: str = "omnivector.us.auth0.com"
     AUTH0_AUDIENCE: str = "https://armada.omnivector.solutions"
     AUTH0_CLIENT_ID: str
-    AUTH0_CLIENT_SECRET: str
+    AUTH0_CLIENT_SECRET: Optional[str] = None
 
     CACHE_DIR = Path.home() / ".cache/cluster-agent"
 
