@@ -17,7 +17,7 @@ from cluster_agent.jobbergate.api import (
     fetch_pending_submissions,
     fetch_active_submissions,
     mark_as_submitted,
-    notify_submission_rejected,
+    NotifySubmission,
     update_status,
 )
 
@@ -270,7 +270,7 @@ async def test_mark_as_submitted__raises_JobbergateApiError_if_the_response_is_n
 
         with pytest.raises(
             JobbergateApiError,
-            match="Could not mark job submission 1 as updated",
+            match="Could not mark job submission 1 as submitted",
         ):
             await mark_as_submitted(1, 111)
         assert update_route.called
@@ -349,6 +349,11 @@ async def test_notify_submission_rejected():
         final_message=reported_message,
         trace=None,
     )
+
+    notify_submission_rejected = NotifySubmission(
+        job_submission_id, JobSubmissionStatus.REJECTED
+    )
+
     async with respx.mock:
         respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
             return_value=httpx.Response(
@@ -361,7 +366,7 @@ async def test_notify_submission_rejected():
         )
         update_route.mock(return_value=httpx.Response(status_code=200))
 
-        await notify_submission_rejected(params, job_submission_id)
+        await notify_submission_rejected.update_status(params)
 
         assert update_route.call_count == 1
         assert update_route.calls.last.request.content == json.dumps(
