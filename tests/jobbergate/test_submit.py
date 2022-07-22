@@ -183,12 +183,12 @@ async def test_submit_job_script__with_non_default_execution_directory(
 
 @pytest.mark.asyncio
 async def test_submit_job_script__raises_exception_if_no_executable_script_was_found(
-    dummy_pending_job_submission_data,
-    mocker,
+    dummy_pending_job_submission_data, mocker
 ):
     """
     Test that the ``submit_job_script()`` will raise a JobSubmissionError if it cannot
-    find an executable job script in the retrieved pending job submission data.
+    find an executable job script in the retrieved pending job submission data
+    and that the job submission status is updated to rejected.
     """
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
     pending_job_submission.job_script_data_as_string = json.dumps(
@@ -201,21 +201,34 @@ async def test_submit_job_script__raises_exception_if_no_executable_script_was_f
         }
     )
 
-    with pytest.raises(JobSubmissionError, match="Could not find an executable"):
-        await submit_job_script(
-            pending_job_submission, mocker.AsyncMock(SlurmUserMapper)
+    async with respx.mock:
+        respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
+            return_value=httpx.Response(
+                status_code=200,
+                json=dict(access_token="dummy-token"),
+            )
         )
+        update_route = respx.put(
+            f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/{pending_job_submission.id}"
+        )
+        update_route.mock(return_value=httpx.Response(status_code=200))
+
+        with pytest.raises(JobSubmissionError, match="Could not find an executable"):
+            await submit_job_script(
+                pending_job_submission, mocker.AsyncMock(SlurmUserMapper)
+            )
+
+    assert update_route.call_count == 1
 
 
 @pytest.mark.asyncio
 async def test_submit_job_script__raises_exception_if_submit_call_response_is_not_200(
-    dummy_pending_job_submission_data,
-    mocker,
+    dummy_pending_job_submission_data, mocker
 ):
     """
     Test that ``submit_job_script()`` raises an exception if the response from Slurm
     REST API is nota 200. Verifies that the error message is included in the raised
-    exception.
+    exception and that the job submission status is updated to rejected.
     """
     user_mapper = mocker.AsyncMock(SlurmUserMapper)
     user_mapper.find_username.return_value = "dummy-user"
@@ -223,6 +236,17 @@ async def test_submit_job_script__raises_exception_if_submit_call_response_is_no
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
 
     async with respx.mock:
+        respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
+            return_value=httpx.Response(
+                status_code=200,
+                json=dict(access_token="dummy-token"),
+            )
+        )
+        update_route = respx.put(
+            f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/{pending_job_submission.id}"
+        )
+        update_route.mock(return_value=httpx.Response(status_code=200))
+
         submit_route = respx.post(
             f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/submit"
         )
@@ -246,6 +270,8 @@ async def test_submit_job_script__raises_exception_if_submit_call_response_is_no
         ):
             await submit_job_script(pending_job_submission, user_mapper)
 
+    assert update_route.call_count == 1
+
 
 @pytest.mark.asyncio
 async def test_submit_job_script__raises_exception_if_response_cannot_be_unpacked(
@@ -255,7 +281,7 @@ async def test_submit_job_script__raises_exception_if_response_cannot_be_unpacke
     """
     Test that ``submit_job_script()`` raises an exception if the response from Slurm
     REST API is nota 200. Verifies that the error message is included in the raised
-    exception.
+    exception and that the job submission status is updated to rejected.
     """
     user_mapper = mocker.AsyncMock(SlurmUserMapper)
     user_mapper.find_username.return_value = "dummy-user"
@@ -263,6 +289,17 @@ async def test_submit_job_script__raises_exception_if_response_cannot_be_unpacke
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
 
     async with respx.mock:
+        respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
+            return_value=httpx.Response(
+                status_code=200,
+                json=dict(access_token="dummy-token"),
+            )
+        )
+        update_route = respx.put(
+            f"{SETTINGS.BASE_API_URL}/jobbergate/job-submissions/agent/{pending_job_submission.id}"
+        )
+        update_route.mock(return_value=httpx.Response(status_code=200))
+
         submit_route = respx.post(
             f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/submit"
         )
@@ -275,6 +312,8 @@ async def test_submit_job_script__raises_exception_if_response_cannot_be_unpacke
 
         with pytest.raises(SlurmrestdError, match="Failed to submit job to slurm"):
             await submit_job_script(pending_job_submission, user_mapper)
+
+    assert update_route.call_count == 1
 
 
 @pytest.mark.asyncio
