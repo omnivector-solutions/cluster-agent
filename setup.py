@@ -1,10 +1,9 @@
 from setuptools import setup, find_packages
 from os.path import dirname, join
-from pathlib import Path
 
 here = dirname(__file__)
 
-_VERSION = Path("VERSION").read_text().strip()
+_VERSION = "1.6.0"
 
 setup(
     name="cluster-agent",
