@@ -1,6 +1,5 @@
 from setuptools import setup, find_packages
 from os.path import dirname, join
-from pathlib import Path
 
 here = dirname(__file__)
 
