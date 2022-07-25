@@ -153,8 +153,3 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-
-cdk.out
-python
-layer.zip
-VERSION

@@ -1,19 +1,6 @@
 name: Create Release
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: Code version. It follows semantic versioning pattern
-        required: true
-      branch:
-        description: Branch which carries the code to be released
-        required: true
-      region:
-        description: AWS region to which upload the package
-        required: true
-      domain:
-        description: AWS codeartifact domain name
-        required: true
 
 jobs:
   publish:
@@ -23,21 +10,19 @@ jobs:
 
     steps:
 
+      - name: Fail if ref is not a tag
+        if: github.ref_type != 'tag'
+        run: |
+          echo "Publish only supported from tag refs!"
+          echo "Got ref_type=${{ github.ref_type }} instead"
+          exit 1
+
       - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.inputs.branch }}
 
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.8
-
-      - name: Setup AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id    : ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_ID }}
-          aws-region           : ${{ github.event.inputs.region }}
+          python-version: 3.8.10
 
       - name: Install twine
         run: |
@@ -45,51 +30,8 @@ jobs:
 
       - name: Build package
         run: |
-          echo ${{ github.event.inputs.version }} > VERSION
           python3 setup.py sdist bdist_wheel
 
       - name: Publish to codeartifact
         run: |
-          token=$(aws codeartifact get-authorization-token --domain ${{ github.event.inputs.domain }} --query authorizationToken --output text)
-          twine upload --repository-url ${{ secrets.PYPI_URL }} \
-                       -u aws \
-                       -p $token dist/* --verbose
-
-  release:
-    name: Release cluster-agent
-
-    runs-on: ubuntu-latest
-
-    steps:
-
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.inputs.branch }}
-
-      - name: Zip code
-        run: |
-          zip -r source.zip cluster_agent
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.event.inputs.version }}
-          release_name: Release ${{ github.event.inputs.version }}
-          body:  ${{ github.event.head_commit.message }} # get commit message
-          draft: false
-          prerelease: false
-
-      - name: Upload Release Asset
-        id: upload-release-asset 
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the step above
-          asset_path: ./source.zip
-          asset_name: source.zip
-          asset_content_type: application/zip
+          twine upload -u __token__ -p ${{ secrets.OMNIVECTOR_PYPI_TOKEN }} dist/* --verbose

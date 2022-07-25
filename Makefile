@@ -1,21 +1,14 @@
 dependencies: ## Install project dependencies needed to run the application
-	echo "0.1.0-ci" > VERSION # create VERSION file for avoinding the CI to break
 	pip3 install -U pip wheel
 	pip3 install -e .[dev]
 
 .PHONY: lint
 lint: ## Run flake8 linter
-	echo "0.1.0-ci" > VERSION # create VERSION file for avoinding the CI to break
 	tox -e lint
-
-.PHONY: version
-version: ## Create/update VERSION file
-	@git describe --tags > VERSION
 
 .PHONY: clean
 clean: clean-eggs clean-build ## Remove temporary file holding the app settings
 	rm .env
-	rm VERSION
 	rm -rf env/
 	find . -iname '*.pyc' -delete
 	find . -iname '*.pyo' -delete
@@ -36,7 +29,6 @@ clean-build: ## Clean build folders
 
 .PHONY: test
 test: ## Run tests against the application
-	echo "0.1.0-ci" > VERSION # create VERSION file for avoinding the CI to break
 	tox -e unit
 
 # Display target comments in 'make help'
