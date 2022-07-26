@@ -7,6 +7,11 @@ This file keeps track of all notable changes to the Cluster Agent.
 Unreleased
 ----------
 
+1.6.1 - 2022-07-26
+------------------
+
+* Update patch version for publishing on Pypi.
+
 1.6.0 - 2022-06-01
 ------------------
 
