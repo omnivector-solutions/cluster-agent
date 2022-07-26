@@ -6,15 +6,16 @@ here = dirname(__file__)
 _VERSION = "1.6.0"
 
 setup(
-    name="cluster-agent",
+    name="ovs-cluster-agent",
     version=_VERSION,
     description="Cluster API data aggregator",
     long_description=open(join(here, "README.md")).read(),
+    long_description_content_type="text/markdown",
     license="MIT",
     author="omnivector-solutions",
     author_email="info@omnivector.solutions",
-    url="https://github.com/omnivector-solutions/cluster-agent/",
-    download_url="https://github.com/omnivector-solutions/cluster-agent/dist/cluster-agent-"
+    url="https://github.com/omnivector-solutions/ovs-cluster-agent/",
+    download_url="https://github.com/omnivector-solutions/ovs-cluster-agent/dist/cluster-agent-"
     + _VERSION
     + "tar.gz",
     install_requires=list(map(lambda string: string.strip("\n"), open("requirements.txt", "r"))),
