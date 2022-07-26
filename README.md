@@ -4,6 +4,7 @@
 
 - [Project setup](#project-setup)
   - [Dependencies](#dependencies)
+- [Install the package](#install-the-package)
 - [Setup parameters](#setup-parameters)
 - [Local usage example](#local-usage-exemple)
 
@@ -12,6 +13,10 @@
 ### Dependencies
 
 * python3-venv
+
+## Install the package
+
+To install the package from Pypi simply run `pip install ovs-cluster-agent`.
 
 ## Setup parameters
 
