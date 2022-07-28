@@ -26,11 +26,11 @@ class Settings(BaseSettings):
     SENTRY_DSN: Optional[AnyHttpUrl] = None
     SENTRY_ENV: str = "local"
 
-    # Auth0 config for machine-to-machine security
-    AUTH0_DOMAIN: str = "omnivector.us.auth0.com"
-    AUTH0_AUDIENCE: str = "https://armada.omnivector.solutions"
-    AUTH0_CLIENT_ID: str
-    AUTH0_CLIENT_SECRET: str
+    # OIDC config for machine-to-machine security
+    OIDC_DOMAIN: str
+    OIDC_AUDIENCE: str = "https://apis.omnivector.solutions"
+    OIDC_CLIENT_ID: str
+    OIDC_CLIENT_SECRET: str
 
     CACHE_DIR = Path.home() / ".cache/cluster-agent"
 
