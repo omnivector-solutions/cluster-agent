@@ -72,15 +72,15 @@ def acquire_token() -> str:
 
     if token is None:
         logger.debug("Attempting to acquire token from OIDC")
-        OIDC_body = dict(
+        oidc_body = dict(
             audience=SETTINGS.OIDC_AUDIENCE,
             client_id=SETTINGS.OIDC_CLIENT_ID,
             client_secret=SETTINGS.OIDC_CLIENT_SECRET,
             grant_type="client_credentials",
         )
-        OIDC_url = f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token"
-        logger.debug(f"Posting OIDC request to {OIDC_url}")
-        response = httpx.post(OIDC_url, data=OIDC_body)
+        oidc_url = f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token"
+        logger.debug(f"Posting OIDC request to {oidc_url}")
+        response = httpx.post(oidc_url, data=oidc_body)
         AuthTokenError.require_condition(
             response.status_code == 200,
             f"Failed to get auth token from OIDC: {response.text}",
