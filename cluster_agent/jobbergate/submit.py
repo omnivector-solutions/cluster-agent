@@ -6,7 +6,7 @@ from cluster_agent.identity.slurm_user.mappers import SlurmUserMapper
 from cluster_agent.identity.slurmrestd import backend_client as slurmrestd_client
 from cluster_agent.identity.slurmrestd import inject_token
 from cluster_agent.jobbergate.api import (
-    NotifySubmission,
+    SubmissionNotifier,
     fetch_pending_submissions,
     mark_as_submitted,
 )
@@ -60,14 +60,14 @@ async def submit_job_script(
     :returns: The ``slurm_job_id`` for the submitted job
     """
 
-    notify_submission_rejected = NotifySubmission(
+    notify_submission_rejected = SubmissionNotifier(
         pending_job_submission.id, JobSubmissionStatus.REJECTED
     )
 
     async with handle_errors_async(
         "An internal error occurred while processing the job-submission",
         raise_exc_class=JobSubmissionError,
-        do_except=notify_submission_rejected.update_status,
+        do_except=notify_submission_rejected.report_error,
     ):
 
         email = pending_job_submission.job_submission_owner_email
@@ -94,7 +94,7 @@ async def submit_job_script(
     async with handle_errors_async(
         "Failed to extract Slurm parameters",
         raise_exc_class=SlurmParameterParserError,
-        do_except=notify_submission_rejected.update_status,
+        do_except=notify_submission_rejected.report_error,
     ):
 
         job_parameters = get_job_parameters(
@@ -117,7 +117,7 @@ async def submit_job_script(
     async with handle_errors_async(
         "Failed to submit job to slurm",
         raise_exc_class=SlurmrestdError,
-        do_except=notify_submission_rejected.update_status,
+        do_except=notify_submission_rejected.report_error,
     ):
         response = await slurmrestd_client.post(
             "/slurm/v0.0.36/job/submit",

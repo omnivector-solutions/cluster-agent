@@ -17,7 +17,7 @@ from cluster_agent.jobbergate.api import (
     fetch_pending_submissions,
     fetch_active_submissions,
     mark_as_submitted,
-    NotifySubmission,
+    SubmissionNotifier,
     update_status,
 )
 
@@ -350,7 +350,7 @@ async def test_notify_submission_rejected():
         trace=None,
     )
 
-    notify_submission_rejected = NotifySubmission(
+    notify_submission_rejected = SubmissionNotifier(
         job_submission_id, JobSubmissionStatus.REJECTED
     )
 
@@ -366,7 +366,7 @@ async def test_notify_submission_rejected():
         )
         update_route.mock(return_value=httpx.Response(status_code=200))
 
-        await notify_submission_rejected.update_status(params)
+        await notify_submission_rejected.report_error(params)
 
         assert update_route.call_count == 1
         assert update_route.calls.last.request.content == json.dumps(

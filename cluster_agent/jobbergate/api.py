@@ -67,7 +67,7 @@ async def mark_as_submitted(job_submission_id: int, slurm_job_id: int):
 
 
 @dataclass
-class NotifySubmission:
+class SubmissionNotifier:
     """
     Class used to update the status for a job submission when some error is detected.
 
@@ -78,7 +78,7 @@ class NotifySubmission:
     job_submission_id: int
     status: JobSubmissionStatus
 
-    async def update_status(self, params: DoExceptParams) -> None:
+    async def report_error(self, params: DoExceptParams) -> None:
         """
         Update the status for a job submission.
 
@@ -87,9 +87,7 @@ class NotifySubmission:
         log_error(params)
         logger.debug(f"Informing Jobbergate that the job submission was {self.status}")
         await update_status(
-            self.job_submission_id,
-            self.status,
-            reported_message=params.final_message,
+            self.job_submission_id, self.status, reported_message=params.final_message
         )
 
 
