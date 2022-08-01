@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import List
 
 from buzz import DoExceptParams
@@ -52,7 +53,7 @@ async def mark_as_submitted(job_submission_id: int, slurm_job_id: int):
     )
 
     with JobbergateApiError.handle_errors(
-        f"Could not mark job submission {job_submission_id} as updated via the API",
+        f"Could not mark job submission {job_submission_id} as submitted via the API",
         do_except=log_error,
     ):
         response = await backend_client.put(
@@ -65,19 +66,29 @@ async def mark_as_submitted(job_submission_id: int, slurm_job_id: int):
         response.raise_for_status()
 
 
-async def notify_submission_rejected(
-    params: DoExceptParams, job_submission_id: int
-) -> None:
+@dataclass
+class SubmissionNotifier:
     """
-    Notify Jobbergate that a job submission has been rejected.
+    Class used to update the status for a job submission when some error is detected.
+
+    It is designed to work together with py-buzz, extracting the error message,
+    logging it and sending it to Jobbergate API.
     """
-    log_error(params)
-    logger.debug("Informing Jobbergate that the job submission was rejected")
-    await update_status(
-        job_submission_id,
-        JobSubmissionStatus.REJECTED,
-        reported_message=params.final_message,
-    )
+
+    job_submission_id: int
+    status: JobSubmissionStatus
+
+    async def report_error(self, params: DoExceptParams) -> None:
+        """
+        Update the status for a job submission.
+
+        :param DoExceptParams params: Dataclass for the ``do_except`` user supplied handling method.
+        """
+        log_error(params)
+        logger.debug(f"Informing Jobbergate that the job submission was {self.status}")
+        await update_status(
+            self.job_submission_id, self.status, reported_message=params.final_message
+        )
 
 
 async def update_status(
