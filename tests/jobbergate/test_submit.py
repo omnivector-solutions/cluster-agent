@@ -360,7 +360,7 @@ async def test_submit_pending_jobs(dummy_template_source, tweak_settings):
     ]
 
     async with respx.mock:
-        respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
+        respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token").mock(
             return_value=httpx.Response(
                 status_code=200, json=dict(access_token="dummy-token")
             )

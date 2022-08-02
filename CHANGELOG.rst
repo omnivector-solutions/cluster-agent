@@ -7,6 +7,11 @@ This file keeps track of all notable changes to the Cluster Agent.
 Unreleased
 ----------
 
+1.6.2 - 2022-07-28
+------------------
+
+* Update code to fit Keycloak OIDC authentication instead of Auth0.
+
 1.6.1 - 2022-07-26
 ------------------
 

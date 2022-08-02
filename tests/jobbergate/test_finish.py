@@ -17,7 +17,7 @@ async def test_fetch_pending_submissions__success():
     job_state from Slurm and convert it into a JobSubmissionStatus.
     """
     async with respx.mock:
-        respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
+        respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token").mock(
             return_value=httpx.Response(
                 status_code=200, json=dict(access_token="dummy-token")
             )
@@ -66,7 +66,7 @@ async def test_fetch_pending_submissions__raises_SlurmrestdError_if_response_is_
     response is not a 200.
     """
     async with respx.mock:
-        respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
+        respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token").mock(
             return_value=httpx.Response(
                 status_code=200, json=dict(access_token="dummy-token")
             )
@@ -96,7 +96,7 @@ async def test_finish_active_jobs():
     ]
 
     async with respx.mock:
-        respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
+        respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token").mock(
             return_value=httpx.Response(
                 status_code=200, json=dict(access_token="dummy-token")
             )
