@@ -202,7 +202,7 @@ async def test_submit_job_script__raises_exception_if_no_executable_script_was_f
     )
 
     async with respx.mock:
-        respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
+        respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/oauth/token").mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=dict(access_token="dummy-token"),
@@ -236,7 +236,7 @@ async def test_submit_job_script__raises_exception_if_submit_call_response_is_no
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
 
     async with respx.mock:
-        respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
+        respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/oauth/token").mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=dict(access_token="dummy-token"),
@@ -289,7 +289,7 @@ async def test_submit_job_script__raises_exception_if_response_cannot_be_unpacke
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
 
     async with respx.mock:
-        respx.post(f"https://{SETTINGS.AUTH0_DOMAIN}/oauth/token").mock(
+        respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/oauth/token").mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=dict(access_token="dummy-token"),
