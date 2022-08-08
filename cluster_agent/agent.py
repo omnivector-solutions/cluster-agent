@@ -84,9 +84,7 @@ async def update_diagnostics():
     )
     diagnostics = r.json()
 
-    response = await cluster_api_client.post(
-        "/cluster/agent/diagnostics", json=diagnostics
-    )
+    response = await cluster_api_client.post("/cluster/agent/diagnostics", json=diagnostics)
 
     return response.status_code
 

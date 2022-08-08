@@ -28,9 +28,7 @@ async def fetch_job_status(slurm_job_id: int) -> JobSubmissionStatus:
     slurm_status = job["job_state"]
     logger.debug(f"Slurm status for slurm job {slurm_job_id} is {slurm_status}")
     jobbergate_status = status_map[job["job_state"]]
-    logger.debug(
-        f"Jobbergate status for slurm job {slurm_job_id} is {jobbergate_status}"
-    )
+    logger.debug(f"Jobbergate status for slurm job {slurm_job_id} is {jobbergate_status}")
     return jobbergate_status
 
 
@@ -45,9 +43,7 @@ async def finish_active_jobs():
 
     for active_job_submission in active_job_submissions:
         skip = "skipping to next active job"
-        logger.debug(
-            f"Fetching status of job_submission {active_job_submission.id} from slurm"
-        )
+        logger.debug(f"Fetching status of job_submission {active_job_submission.id} from slurm")
 
         try:
             status = await fetch_job_status(active_job_submission.slurm_job_id)

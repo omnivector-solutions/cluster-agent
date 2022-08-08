@@ -31,15 +31,11 @@ def _load_token_from_cache(username: str) -> typing.Union[str, None]:
         token = token_path.read_text().strip()
         logger.debug(f"Retrieved token from {token_path} as {token}")
     except Exception:
-        logger.warning(
-            f"Couldn't load token from cache file {token_path}. Will acquire a new one"
-        )
+        logger.warning(f"Couldn't load token from cache file {token_path}. Will acquire a new one")
         return None
 
     try:
-        jwt.decode(
-            token, options=dict(verify_signature=False, verify_exp=True), leeway=-10
-        )
+        jwt.decode(token, options=dict(verify_signature=False, verify_exp=True), leeway=-10)
     except jwt.ExpiredSignatureError:
         logger.warning("Cached token is expired. Will acquire a new one.")
         return None
@@ -84,7 +80,9 @@ def acquire_token(username: str) -> str:
 
         now = datetime.now()
         payload = {
-            "exp": int(datetime.timestamp(now + timedelta(seconds=SETTINGS.SLURMRESTD_EXP_TIME_IN_SECONDS))),
+            "exp": int(
+                datetime.timestamp(now + timedelta(seconds=SETTINGS.SLURMRESTD_EXP_TIME_IN_SECONDS))
+            ),
             "iat": int(datetime.timestamp(now)),
             "sun": username,
         }

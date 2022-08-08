@@ -153,9 +153,7 @@ sbatch_to_slurm = [
     SbatchToSlurm("reservation", "--reservation"),
     SbatchToSlurm("signal", "--signal"),
     SbatchToSlurm("sockets_per_node", "--sockets-per-node", "", dict(type=int)),
-    SbatchToSlurm(
-        "spread_job", "--spread-job", "", dict(action="store_const", const=True)
-    ),
+    SbatchToSlurm("spread_job", "--spread-job", "", dict(action="store_const", const=True)),
     SbatchToSlurm("", "--switches"),
     SbatchToSlurm("", "--test-only", "", dict(action="store_const", const=True)),
     SbatchToSlurm("thread_specification", "--thread-spec", "", dict(type=int)),
@@ -165,9 +163,7 @@ sbatch_to_slurm = [
     SbatchToSlurm("", "--tmp"),
     SbatchToSlurm("", "--uid"),
     SbatchToSlurm("", "--usage", "", dict(action="store_const", const=True)),
-    SbatchToSlurm(
-        "minimum_nodes", "--use-min-nodes", "", dict(action="store_const", const=True)
-    ),
+    SbatchToSlurm("minimum_nodes", "--use-min-nodes", "", dict(action="store_const", const=True)),
     SbatchToSlurm("", "--verbose", "-v", dict(action="store_const", const=True)),
     SbatchToSlurm("", "--version", "-V", dict(action="store_const", const=True)),
     SbatchToSlurm("", "--wait", "-W", dict(action="store_const", const=True)),
@@ -236,13 +232,9 @@ def jobscript_to_dict(jobscript: str) -> Dict[str, Union[str, bool]]:
     parsed_args, unknown_arg = parser.parse_known_args(_clean_jobscript(jobscript))
 
     if unknown_arg:
-        raise ValueError(
-            "Unrecognized SBATCH arguments: {}".format(" ".join(unknown_arg))
-        )
+        raise ValueError("Unrecognized SBATCH arguments: {}".format(" ".join(unknown_arg)))
 
-    sbatch_params = {
-        key: value for key, value in vars(parsed_args).items() if value is not None
-    }
+    sbatch_params = {key: value for key, value in vars(parsed_args).items() if value is not None}
 
     logger.debug(f"SBATCH params parsed from job script: {sbatch_params}")
 

@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     SLURMRESTD_JWT_KEY_PATH: Optional[str]
     SLURMRESTD_JWT_KEY_STRING: Optional[str]
     SLURMRESTD_USE_KEY_PATH: bool = True
-    SLURMRESTD_EXP_TIME_IN_SECONDS: int = 60 * 60 * 24 # one day
+    SLURMRESTD_EXP_TIME_IN_SECONDS: int = 60 * 60 * 24  # one day
 
     # cluster api info
     BASE_API_URL: AnyHttpUrl = Field("https://armada-k8s.staging.omnivector.solutions")
@@ -69,15 +69,19 @@ class Settings(BaseSettings):
         if values["SINGLE_USER_SUBMITTER"] is None:
             values["SINGLE_USER_SUBMITTER"] = values["X_SLURM_USER_NAME"]
 
-        assert any([
-            values["SLURMRESTD_JWT_KEY_PATH"],
-            values["SLURMRESTD_JWT_KEY_STRING"],
-        ]), "At least one of SLURMRESTD_JWT_KEY_PATH and SLURMRESTD_JWT_KEY_STRING must be configured"
+        assert any(
+            [
+                values["SLURMRESTD_JWT_KEY_PATH"],
+                values["SLURMRESTD_JWT_KEY_STRING"],
+            ]
+        ), "Either SLURMRESTD_JWT_KEY_PATH or SLURMRESTD_JWT_KEY_STRING must be configured"
 
-        if not all([
-            values["SLURMRESTD_JWT_KEY_PATH"],
-            values["SLURMRESTD_JWT_KEY_STRING"],
-        ]):
+        if not all(
+            [
+                values["SLURMRESTD_JWT_KEY_PATH"],
+                values["SLURMRESTD_JWT_KEY_STRING"],
+            ]
+        ):
             values["SLURMRESTD_USE_KEY_PATH"] = False
 
         return values
@@ -88,6 +92,7 @@ class Settings(BaseSettings):
 
         Note that we disable use of ``dotenv`` if we are in test mode.
         """
+
         env_prefix = "CLUSTER_AGENT_"
 
         _test_mode = "pytest" in sys.modules
