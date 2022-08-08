@@ -44,6 +44,12 @@ def mock_slurmrestd_api_cache_dir(tmp_path):
 
 
 @pytest.fixture(autouse=True)
+def slurmrestd_jwt_key_path(tmp_path):
+    _jwt_dir = tmp_path / "jwt.key"
+    yield _jwt_dir
+
+
+@pytest.fixture(autouse=True)
 def mock_slurmrestd_acquire_token(mocker):
     mocker.patch(
         "cluster_agent.identity.slurmrestd.acquire_token",
