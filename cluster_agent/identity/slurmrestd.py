@@ -1,13 +1,13 @@
 """Core module for Jobbergate API identity management"""
 
-import subprocess
 import typing
+from datetime import datetime, timedelta
 
 import httpx
 import jwt
+from jose import jwt as jose_jwt
 
 from cluster_agent.settings import SETTINGS
-from cluster_agent.utils.exception import ProcessExecutionError
 from cluster_agent.utils.logging import logger
 
 CACHE_DIR = SETTINGS.CACHE_DIR / "slurmrestd"
@@ -76,21 +76,22 @@ def acquire_token(username: str) -> str:
     token = _load_token_from_cache(username)
 
     if token is None:
-        logger.debug("Attempting to acquire token from Slurmrestd")
-        proc = subprocess.Popen(
-            f"scontrol token username={username}".split(),
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-        stdout, stderr = proc.communicate()
-        ProcessExecutionError.require_condition(
-            proc.returncode == 0, stderr.decode().strip()
-        )
-        token = stdout.decode().strip().split("=")[1]
+        logger.debug("Attempting to generate token for Slurmrestd")
+        if SETTINGS.SLURMRESTD_USE_KEY_PATH:
+            secret_key = open(SETTINGS.SLURMRESTD_JWT_KEY_PATH, "r").read()
+        else:
+            secret_key = SETTINGS.SLURMRESTD_JWT_KEY_STRING
+
+        now = datetime.now()
+        payload = {
+            "exp": int(datetime.timestamp(now + timedelta(seconds=SETTINGS.SLURMRESTD_EXP_TIME_IN_SECONDS))),
+            "iat": int(datetime.timestamp(now)),
+            "sun": username,
+        }
+        token = jose_jwt.encode(payload, secret_key, algorithm="HS256")
         _write_token_to_cache(token, username)
 
-    logger.debug("Successfully acquired auth token")
+    logger.debug("Successfully generated auth token")
     return token
 
 
