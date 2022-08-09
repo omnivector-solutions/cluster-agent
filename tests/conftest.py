@@ -44,8 +44,14 @@ def mock_slurmrestd_api_cache_dir(tmp_path):
 
 
 @pytest.fixture(autouse=True)
-def slurmrestd_jwt_key_path(tmp_path):
+def slurmrestd_jwt_key_string():
+    yield "dummy-key"
+
+
+@pytest.fixture(autouse=True)
+def slurmrestd_jwt_key_path(tmp_path, slurmrestd_jwt_key_string):
     _jwt_dir = tmp_path / "jwt.key"
+    _jwt_dir.write_text(slurmrestd_jwt_key_string)
     yield _jwt_dir
 
 

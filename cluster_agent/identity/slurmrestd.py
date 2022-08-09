@@ -4,8 +4,8 @@ import typing
 from datetime import datetime, timedelta
 
 import httpx
-import jwt
-from jose import jwt as jose_jwt
+from jose import jwt
+from jose.exceptions import ExpiredSignatureError, JWTClaimsError, JWTError
 
 from cluster_agent.settings import SETTINGS
 from cluster_agent.utils.logging import logger
@@ -20,6 +20,8 @@ def _load_token_from_cache(username: str) -> typing.Union[str, None]:
     * The token does not exist
     * Can't read the token
     * The token is expired (or will expire within 10 seconds)
+    * The token has invalid signature
+    * The token has invalid claims
     """
     token_path = CACHE_DIR / f"{username}.token"
     logger.debug(f"Attempting to retrieve token from: {token_path}")
@@ -34,10 +36,23 @@ def _load_token_from_cache(username: str) -> typing.Union[str, None]:
         logger.warning(f"Couldn't load token from cache file {token_path}. Will acquire a new one")
         return None
 
+    if SETTINGS.SLURMRESTD_USE_KEY_PATH:
+        secret_key = open(SETTINGS.SLURMRESTD_JWT_KEY_PATH, "r").read()
+    else:
+        secret_key = SETTINGS.SLURMRESTD_JWT_KEY_STRING
+
     try:
-        jwt.decode(token, options=dict(verify_signature=False, verify_exp=True), leeway=-10)
-    except jwt.ExpiredSignatureError:
+        jwt.decode(
+            token, secret_key, options=dict(verify_signature=False, verify_exp=True, leeway=-10)
+        )
+    except ExpiredSignatureError:
         logger.warning("Cached token is expired. Will acquire a new one.")
+        return None
+    except JWTClaimsError:
+        logger.warning("Cached token has the signature invalid in any way. Will acquire a new one.")
+        return None
+    except JWTError:
+        logger.warning("Cached token has invalid claims. Will acquire a new one.")
         return None
 
     return token
@@ -86,7 +101,7 @@ def acquire_token(username: str) -> str:
             "iat": int(datetime.timestamp(now)),
             "sun": username,
         }
-        token = jose_jwt.encode(payload, secret_key, algorithm="HS256")
+        token = jwt.encode(payload, secret_key, algorithm="HS256")
         _write_token_to_cache(token, username)
 
     logger.debug("Successfully generated auth token")
