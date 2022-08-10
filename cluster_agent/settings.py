@@ -3,6 +3,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
+import buzz
 from pydantic import AnyHttpUrl, BaseSettings, Field, root_validator
 from pydantic.error_wrappers import ValidationError
 
@@ -69,12 +70,16 @@ class Settings(BaseSettings):
         if values["SINGLE_USER_SUBMITTER"] is None:
             values["SINGLE_USER_SUBMITTER"] = values["X_SLURM_USER_NAME"]
 
-        assert any(
-            [
-                values["SLURMRESTD_JWT_KEY_PATH"],
-                values["SLURMRESTD_JWT_KEY_STRING"],
-            ]
-        ), "Either SLURMRESTD_JWT_KEY_PATH or SLURMRESTD_JWT_KEY_STRING must be configured"
+        buzz.require_condition(
+            any(
+                [
+                    values["SLURMRESTD_JWT_KEY_PATH"],
+                    values["SLURMRESTD_JWT_KEY_STRING"],
+                ]
+            ),
+            "Either SLURMRESTD_JWT_KEY_PATH or SLURMRESTD_JWT_KEY_STRING must be configured",
+            RuntimeError,
+        )
 
         if not all(
             [
