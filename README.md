@@ -32,6 +32,8 @@ To install the package from Pypi simply run `pip install ovs-cluster-agent`.
   CLUSTER_AGENT_BASE_API_URL="<base-api-url>"
   CLUSTER_AGENT_BASE_SLURMRESTD_URL="<slurmrestd-endpoint>"
   CLUSTER_AGENT_X_SLURM_USER_NAME="<slurmrestd-user-name>"
+  CLUSTER_AGENT_SLURMRESTD_JWT_KEY_PATH="/path/to/the/jwt/secret/key"
+  CLUSTER_AGENT_SLURMRESTD_JWT_KEY_STRING="jwt-secret-key-in-plain-text"
   CLUSTER_AGENT_SENTRY_DSN="<sentry-dsn-key>"
   CLUSTER_AGENT_OIDC_DOMAIN="<OIDC-domain>"
   CLUSTER_AGENT_OIDC_AUDIENCE="<OIDC-audience>"
@@ -44,6 +46,8 @@ To install the package from Pypi simply run `pip install ovs-cluster-agent`.
   ```
 
   NOTE: `CLUSTER_AGENT_SENTRY_DSN` is optional. If you do not pass it the agent understands Sentry will not be used.
+
+  NOTE: When both `CLUSTER_AGENT_SLURMRESTD_JWT_KEY_PATH` and `CLUSTER_AGENT_SLURMRESTD_JWT_KEY_STRING` are passed, the agent will completely ignore the `CLUSTER_AGENT_SLURMRESTD_JWT_KEY_PATH` and will prioritize the `CLUSTER_AGENT_SLURMRESTD_JWT_KEY_STRING`. Beware this behaviour.
 
 ## Local usage example
 
