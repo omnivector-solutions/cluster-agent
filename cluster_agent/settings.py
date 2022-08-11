@@ -87,6 +87,10 @@ class Settings(BaseSettings):
                 values["SLURMRESTD_JWT_KEY_STRING"],
             ]
         ):
+            logger.warning(
+                "ALERT! Both SLURMRESTD_JWT_KEY_PATH and SLURMRESTD_JWT_KEY_STRING"
+                " were passed. Prioritizing the SLURMRESTD_JWT_KEY_STRING so."
+            )
             values["SLURMRESTD_USE_KEY_PATH"] = False
 
         return values
