@@ -23,7 +23,7 @@ from cluster_agent.jobbergate.api import (
 
 
 @pytest.mark.asyncio
-async def test_fetch_pending_submissions__success():
+async def test_fetch_pending_submissions__success(dummy_job_script_files):
     """
     Test that the ``fetch_pending_submissions()`` function can successfully retrieve
     PendingJobSubmission objects from the API.
@@ -35,7 +35,7 @@ async def test_fetch_pending_submissions__success():
             job_submission_owner_email="email1@dummy.com",
             job_script_id=11,
             job_script_name="script1",
-            job_script_data_as_string="{}",
+            job_script_files=dummy_job_script_files,
             application_name="app1",
             slurm_job_id=111,
         ),
@@ -45,7 +45,7 @@ async def test_fetch_pending_submissions__success():
             job_submission_owner_email="email2@dummy.com",
             job_script_id=22,
             job_script_name="script2",
-            job_script_data_as_string="{}",
+            job_script_files=dummy_job_script_files,
             application_name="app2",
             slurm_job_id=222,
         ),
@@ -55,13 +55,15 @@ async def test_fetch_pending_submissions__success():
             job_submission_owner_email="email3@dummy.com",
             job_script_id=33,
             job_script_name="script3",
-            job_script_data_as_string="{}",
+            job_script_files=dummy_job_script_files,
             application_name="app3",
             slurm_job_id=333,
         ),
     ]
     async with respx.mock:
-        respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token").mock(
+        respx.post(
+            f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token"
+        ).mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=dict(access_token="dummy-token"),
@@ -89,7 +91,9 @@ async def test_fetch_pending_submissions__raises_JobbergateApiError_if_response_
     JobbergateApiError if the response from the API is not OK (200).
     """
     with respx.mock:
-        respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token").mock(
+        respx.post(
+            f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token"
+        ).mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=dict(access_token="dummy-token"),
@@ -113,7 +117,9 @@ async def test_fetch_pending_submissions__raises_JobbergateApiError_if_response_
         dict(bad="data"),
     ]
     with respx.mock:
-        respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token").mock(
+        respx.post(
+            f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token"
+        ).mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=dict(access_token="dummy-token"),
@@ -156,7 +162,9 @@ async def test_fetch_active_submissions__success():
         ),
     ]
     with respx.mock:
-        respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token").mock(
+        respx.post(
+            f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token"
+        ).mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=dict(access_token="dummy-token"),
@@ -185,7 +193,9 @@ async def test_fetch_active_submissions__raises_JobbergateApiError_if_response_i
     JobbergateApiError if the response from the API is not OK (200).
     """
     with respx.mock:
-        respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token").mock(
+        respx.post(
+            f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token"
+        ).mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=dict(access_token="dummy-token"),
@@ -209,7 +219,9 @@ async def test_fetch_active_submissions__raises_JobbergateApiError_if_response_c
         dict(bad="data"),
     ]
     with respx.mock:
-        respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token").mock(
+        respx.post(
+            f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token"
+        ).mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=dict(access_token="dummy-token"),
@@ -235,7 +247,9 @@ async def test_mark_as_submitted__success():
     with its ``slurm_job_id`` and a status of ``SUBMITTED``.
     """
     with respx.mock:
-        respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token").mock(
+        respx.post(
+            f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token"
+        ).mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=dict(access_token="dummy-token"),
@@ -257,7 +271,9 @@ async def test_mark_as_submitted__raises_JobbergateApiError_if_the_response_is_n
     the response from the API is not OK (200).
     """
     with respx.mock:
-        respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token").mock(
+        respx.post(
+            f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token"
+        ).mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=dict(access_token="dummy-token"),
@@ -283,7 +299,9 @@ async def test_update_status__success():
     with a ``JobSubmissionStatus``.
     """
     with respx.mock:
-        respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token").mock(
+        respx.post(
+            f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token"
+        ).mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=dict(access_token="dummy-token"),
@@ -314,7 +332,9 @@ async def test_update_status__raises_JobbergateApiError_if_the_response_is_not_2
     the response from the API is not OK (200).
     """
     with respx.mock:
-        respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token").mock(
+        respx.post(
+            f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token"
+        ).mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=dict(access_token="dummy-token"),
@@ -355,7 +375,9 @@ async def test_notify_submission_rejected():
     )
 
     async with respx.mock:
-        respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token").mock(
+        respx.post(
+            f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token"
+        ).mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=dict(access_token="dummy-token"),
