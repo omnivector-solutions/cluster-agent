@@ -314,12 +314,12 @@ async def test_update_status__success():
 
         await update_status(1, JobSubmissionStatus.COMPLETED)
         assert update_route.calls.last.request.content == json.dumps(
-            dict(new_status=JobSubmissionStatus.COMPLETED, reported_message="")
+            dict(new_status=JobSubmissionStatus.COMPLETED, report_message="")
         ).encode("utf-8")
 
         await update_status(2, JobSubmissionStatus.FAILED)
         assert update_route.calls.last.request.content == json.dumps(
-            dict(new_status=JobSubmissionStatus.FAILED, reported_message="")
+            dict(new_status=JobSubmissionStatus.FAILED, report_message="")
         ).encode("utf-8")
 
         assert update_route.call_count == 2
@@ -360,13 +360,13 @@ async def test_notify_submission_rejected():
     and set the job status to REJECTED.
     """
     job_submission_id = 1
-    reported_message = (
+    report_message = (
         f"An expected failure occurred when submit {job_submission_id=} at 'unittest'"
     )
 
     params = DoExceptParams(
         JobSubmissionError,
-        final_message=reported_message,
+        final_message=report_message,
         trace=None,
     )
 
@@ -394,6 +394,6 @@ async def test_notify_submission_rejected():
         assert update_route.calls.last.request.content == json.dumps(
             dict(
                 new_status=JobSubmissionStatus.REJECTED,
-                reported_message=reported_message,
+                report_message=report_message,
             ),
         ).encode("utf-8")
