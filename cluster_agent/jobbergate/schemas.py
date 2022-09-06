@@ -1,7 +1,16 @@
 from pathlib import Path
-from typing import Optional, List
+from typing import Dict, List, Optional
 
 import pydantic
+
+
+class JobScriptFiles(pydantic.BaseModel, extra=pydantic.Extra.ignore):
+    """
+    Model containing job-script files.
+    """
+
+    main_file_path: Path
+    files: Dict[Path, str]
 
 
 class PendingJobSubmission(pydantic.BaseModel, extra=pydantic.Extra.ignore):
@@ -13,10 +22,10 @@ class PendingJobSubmission(pydantic.BaseModel, extra=pydantic.Extra.ignore):
     id: int
     job_submission_name: str
     job_submission_owner_email: str
-    job_script_name: str
-    job_script_data_as_string: str
-    application_name: str
     execution_directory: Optional[Path]
+    job_script_name: str
+    application_name: str
+    job_script_files: JobScriptFiles
 
 
 class ActiveJobSubmission(pydantic.BaseModel, extra=pydantic.Extra.ignore):
