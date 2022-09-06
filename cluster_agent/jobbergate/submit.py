@@ -85,6 +85,7 @@ async def submit_job_script(
 
         for path, file_content in pending_job_submission.job_script_files.files.items():
             local_script_path = submit_dir / path
+            local_script_path.parent.mkdir(parents=True, exist_ok=True)
             local_script_path.write_text(file_content)
             logger.debug(f"Copied job script file to {local_script_path}")
 
