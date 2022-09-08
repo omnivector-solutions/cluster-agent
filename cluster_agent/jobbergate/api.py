@@ -87,12 +87,12 @@ class SubmissionNotifier:
         log_error(params)
         logger.debug(f"Informing Jobbergate that the job submission was {self.status}")
         await update_status(
-            self.job_submission_id, self.status, reported_message=params.final_message
+            self.job_submission_id, self.status, report_message=params.final_message
         )
 
 
 async def update_status(
-    job_submission_id: int, status: JobSubmissionStatus, *, reported_message: str = ""
+    job_submission_id: int, status: JobSubmissionStatus, *, report_message: str = ""
 ) -> None:
     """
     Update a job submission with a status
@@ -105,6 +105,6 @@ async def update_status(
     ):
         response = await backend_client.put(
             f"jobbergate/job-submissions/agent/{job_submission_id}",
-            json=dict(new_status=status, reported_message=reported_message),
+            json=dict(new_status=status, report_message=report_message),
         )
         response.raise_for_status()
