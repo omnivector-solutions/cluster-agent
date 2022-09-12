@@ -7,6 +7,9 @@ This file keeps track of all notable changes to the Cluster Agent.
 Unreleased
 ----------
 
+1.6.3 - 2022-09-12
+------------------
+
 * Fix report messages for rejected job submissions.
 * Add supporting file functionality to job submissions.
 
