@@ -1,8 +1,6 @@
 """
 Define fixtures for the ``jobbergate`` section.
 """
-
-import json
 from textwrap import dedent
 
 import pytest
@@ -27,7 +25,15 @@ def dummy_template_source():
 
 
 @pytest.fixture
-def dummy_pending_job_submission_data(dummy_template_source):
+def dummy_job_script_files(dummy_template_source):
+    return {
+        "main_file_path": "application.sh",
+        "files": {"application.sh": dummy_template_source},
+    }
+
+
+@pytest.fixture
+def dummy_pending_job_submission_data(dummy_job_script_files):
     """
     Provide a fixture that returns a dict that is compatible with PendingJobSubmission.
     """
@@ -37,7 +43,7 @@ def dummy_pending_job_submission_data(dummy_template_source):
         job_submission_owner_email="email1@dummy.com",
         job_script_id=11,
         job_script_name="script1",
-        job_script_data_as_string=json.dumps({"application.sh": dummy_template_source}),
+        job_script_files=dummy_job_script_files,
         application_name="app1",
         slurm_job_id=13,
     )
