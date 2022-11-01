@@ -12,6 +12,13 @@ Unreleased
 
 * Introduce support to generate the Slurmrestd JWT by Python code instead of calling ``scontrol token``.
 
+1.6.3 - 2022-09-12
+------------------
+
+* Fix report messages for rejected job submissions.
+* Add supporting file functionality to job submissions.
+
+
 1.6.2 - 2022-07-28
 ------------------
 

@@ -34,12 +34,9 @@ def get_job_script(pending_job_submission: PendingJobSubmission) -> str:
     Get the job script from a PendingJobSubmission object.
     Raise JobSubmissionError if no job script is found or if its empty.
     """
-
-    try:
-        unpacked_data = json.loads(pending_job_submission.job_script_data_as_string)
-        job_script = unpacked_data.get("application.sh", "")
-    except json.JSONDecodeError:
-        job_script = ""
+    job_script = pending_job_submission.job_script_files.files.get(
+        pending_job_submission.job_script_files.main_file_path, ""
+    )
 
     JobSubmissionError.require_condition(
         bool(job_script),
@@ -81,10 +78,11 @@ async def submit_job_script(
 
         submit_dir = pending_job_submission.execution_directory or SETTINGS.DEFAULT_SLURM_WORK_DIR
 
-        local_script_path = submit_dir / f"{name}.job"
-        local_script_path.write_text(job_script)
-
-    logger.debug(f"Copied job_script to local file {local_script_path}.")
+        for path, file_content in pending_job_submission.job_script_files.files.items():
+            local_script_path = submit_dir / path
+            local_script_path.parent.mkdir(parents=True, exist_ok=True)
+            local_script_path.write_text(file_content)
+            logger.debug(f"Copied job script file to {local_script_path}")
 
     async with handle_errors_async(
         "Failed to extract Slurm parameters",
@@ -151,7 +149,7 @@ async def submit_pending_jobs():
         logger.debug(f"Submitting pending job_submission {pending_job_submission.id}")
         with JobSubmissionError.handle_errors(
             (
-                f"Failed to sumbit pending job_submission {pending_job_submission.id}"
+                f"Failed to submit pending job_submission {pending_job_submission.id}"
                 "...skipping to next pending job"
             ),
             do_except=log_error,

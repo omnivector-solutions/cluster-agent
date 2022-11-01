@@ -44,9 +44,7 @@ async def test_get_job_script__raises_exception_if_empty(
     recovered from a PendingJobSubmission.
     """
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
-    pending_job_submission.job_script_data_as_string = json.dumps(
-        {"application.sh": ""}
-    )
+    pending_job_submission.job_script_files.files = {"application.sh": ""}
     with pytest.raises(JobSubmissionError):
         get_job_script(pending_job_submission)
 
@@ -60,7 +58,7 @@ async def test_get_job_script__raises_exception_if_missing(
     recovered from a PendingJobSubmission.
     """
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
-    pending_job_submission.job_script_data_as_string = ""
+    pending_job_submission.job_script_files.files = {"application.sh": None}
     with pytest.raises(JobSubmissionError):
         get_job_script(pending_job_submission)
 
@@ -191,15 +189,7 @@ async def test_submit_job_script__raises_exception_if_no_executable_script_was_f
     and that the job submission status is updated to rejected.
     """
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
-    pending_job_submission.job_script_data_as_string = json.dumps(
-        {
-            k: v
-            for (k, v) in json.loads(
-                pending_job_submission.job_script_data_as_string
-            ).items()
-            if k != "application.sh"
-        }
-    )
+    pending_job_submission.job_script_files.files = {"application.sh": ""}
 
     async with respx.mock:
         respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/oauth/token").mock(
@@ -317,7 +307,7 @@ async def test_submit_job_script__raises_exception_if_response_cannot_be_unpacke
 
 
 @pytest.mark.asyncio
-async def test_submit_pending_jobs(dummy_template_source, tweak_settings):
+async def test_submit_pending_jobs(dummy_job_script_files, tweak_settings):
     """
     Test that the ``submit_pending_jobs()`` function can fetch pending job submissions,
     submit each to slurm via the Slurm REST API, and update the job submission via the
@@ -330,9 +320,7 @@ async def test_submit_pending_jobs(dummy_template_source, tweak_settings):
             job_submission_owner_email="email1@dummy.com",
             job_script_id=11,
             job_script_name="script1",
-            job_script_data_as_string=json.dumps(
-                {"application.sh": dummy_template_source}
-            ),
+            job_script_files=dummy_job_script_files,
             application_name="app1",
         ),
         dict(
@@ -341,9 +329,7 @@ async def test_submit_pending_jobs(dummy_template_source, tweak_settings):
             job_submission_owner_email="email2@dummy.com",
             job_script_id=22,
             job_script_name="script2",
-            job_script_data_as_string=json.dumps(
-                {"application.sh": dummy_template_source}
-            ),
+            job_script_files=dummy_job_script_files,
             application_name="app2",
         ),
         dict(
@@ -352,15 +338,15 @@ async def test_submit_pending_jobs(dummy_template_source, tweak_settings):
             job_submission_owner_email="email3@dummy.com",
             job_script_id=33,
             job_script_name="script3",
-            job_script_data_as_string=json.dumps(
-                {"application.sh": dummy_template_source}
-            ),
+            job_script_files=dummy_job_script_files,
             application_name="app3",
         ),
     ]
 
     async with respx.mock:
-        respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token").mock(
+        respx.post(
+            f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token"
+        ).mock(
             return_value=httpx.Response(
                 status_code=200, json=dict(access_token="dummy-token")
             )
