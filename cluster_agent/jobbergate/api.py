@@ -20,9 +20,7 @@ async def fetch_pending_submissions() -> List[PendingJobSubmission]:
     ):
         response = await backend_client.get("/jobbergate/job-submissions/agent/pending")
         response.raise_for_status()
-        pending_job_submissions = [
-            PendingJobSubmission(**pjs) for pjs in response.json()
-        ]
+        pending_job_submissions = [PendingJobSubmission(**pjs) for pjs in response.json()]
 
     logger.debug(f"Retrieved {len(pending_job_submissions)} pending job submissions")
     return pending_job_submissions

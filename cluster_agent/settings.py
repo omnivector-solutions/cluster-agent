@@ -3,6 +3,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
+import buzz
 from pydantic import AnyHttpUrl, BaseSettings, Field, root_validator
 from pydantic.error_wrappers import ValidationError
 
@@ -19,6 +20,12 @@ class Settings(BaseSettings):
     X_SLURM_USER_NAME: str = "ubuntu"
     X_SLURM_USER_TOKEN: Optional[str]
     DEFAULT_SLURM_WORK_DIR: Path = Path("/tmp")
+
+    # Slurmrestd authentication
+    SLURMRESTD_JWT_KEY_PATH: Optional[str]
+    SLURMRESTD_JWT_KEY_STRING: Optional[str]
+    SLURMRESTD_USE_KEY_PATH: bool = True
+    SLURMRESTD_EXP_TIME_IN_SECONDS: int = 60 * 60 * 24  # one day
 
     # cluster api info
     BASE_API_URL: AnyHttpUrl = Field("https://armada-k8s.staging.omnivector.solutions")
@@ -63,6 +70,29 @@ class Settings(BaseSettings):
         if values["SINGLE_USER_SUBMITTER"] is None:
             values["SINGLE_USER_SUBMITTER"] = values["X_SLURM_USER_NAME"]
 
+        buzz.require_condition(
+            any(
+                [
+                    values["SLURMRESTD_JWT_KEY_PATH"],
+                    values["SLURMRESTD_JWT_KEY_STRING"],
+                ]
+            ),
+            "Either SLURMRESTD_JWT_KEY_PATH or SLURMRESTD_JWT_KEY_STRING must be configured",
+            RuntimeError,
+        )
+
+        if not all(
+            [
+                values["SLURMRESTD_JWT_KEY_PATH"],
+                values["SLURMRESTD_JWT_KEY_STRING"],
+            ]
+        ):
+            logger.warning(
+                "ALERT! Both SLURMRESTD_JWT_KEY_PATH and SLURMRESTD_JWT_KEY_STRING"
+                " were passed. Prioritizing the SLURMRESTD_JWT_KEY_STRING so."
+            )
+            values["SLURMRESTD_USE_KEY_PATH"] = False
+
         return values
 
     class Config:
@@ -71,6 +101,7 @@ class Settings(BaseSettings):
 
         Note that we disable use of ``dotenv`` if we are in test mode.
         """
+
         env_prefix = "CLUSTER_AGENT_"
 
         _test_mode = "pytest" in sys.modules

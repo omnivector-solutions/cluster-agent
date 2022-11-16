@@ -26,15 +26,11 @@ def _load_token_from_cache() -> typing.Union[str, None]:
     try:
         token = token_path.read_text()
     except Exception:
-        logger.warning(
-            f"Couldn't load token from cache file {token_path}. Will acquire a new one"
-        )
+        logger.warning(f"Couldn't load token from cache file {token_path}. Will acquire a new one")
         return None
 
     try:
-        jwt.decode(
-            token, options=dict(verify_signature=False, verify_exp=True), leeway=-10
-        )
+        jwt.decode(token, options=dict(verify_signature=False, verify_exp=True), leeway=-10)
     except jwt.ExpiredSignatureError:
         logger.warning("Cached token is expired. Will acquire a new one.")
         return None

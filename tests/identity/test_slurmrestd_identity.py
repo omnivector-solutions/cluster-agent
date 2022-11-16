@@ -1,15 +1,14 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from unittest import mock
 
-import jwt
-import pytest
+from jose import jwt
 
 from cluster_agent.identity.slurmrestd import (
     _load_token_from_cache,
     _write_token_to_cache,
     acquire_token,
+    SETTINGS,
 )
-from cluster_agent.utils.exception import ProcessExecutionError
 
 
 def test__write_token_to_cache__caches_a_token(mock_slurmrestd_api_cache_dir):
@@ -36,6 +35,8 @@ def test__write_token_to_cache__creates_cache_directory_if_does_not_exist(
 
 def test__load_token_from_cache__loads_token_data_from_the_cache(
     mock_slurmrestd_api_cache_dir,
+    slurmrestd_jwt_key_path,
+    slurmrestd_jwt_key_string,
 ):
     """
     Verifies that a token can be retrieved from the cache.
@@ -45,11 +46,13 @@ def test__load_token_from_cache__loads_token_data_from_the_cache(
     one_minute_from_now = int(datetime.now(tz=timezone.utc).timestamp()) + 60
     created_token = jwt.encode(
         dict(exp=one_minute_from_now),
-        key="dummy-key",
+        key=slurmrestd_jwt_key_string,
         algorithm="HS256",
     )
     token_path.write_text(created_token)
-    retrieved_token = _load_token_from_cache("dummy-user")
+    with mock.patch.object(SETTINGS, "SLURMRESTD_USE_KEY_PATH", new=True):
+        with mock.patch.object(SETTINGS, "SLURMRESTD_JWT_KEY_PATH", new=slurmrestd_jwt_key_path):
+            retrieved_token = _load_token_from_cache("dummy-user")
     assert retrieved_token == created_token
 
 
@@ -82,6 +85,8 @@ def test__load_token_from_cache__returns_none_if_cached_token_cannot_be_read(
 
 def test__load_token_from_cache__returns_none_if_cached_token_is_expired(
     mock_slurmrestd_api_cache_dir,
+    slurmrestd_jwt_key_path,
+    slurmrestd_jwt_key_string,
 ):  # noqa
     """
     Verifies that None is returned if the token is expired.
@@ -90,17 +95,21 @@ def test__load_token_from_cache__returns_none_if_cached_token_is_expired(
     token_path = mock_slurmrestd_api_cache_dir / "dummy-user.token"
     one_second_ago = int(datetime.now(tz=timezone.utc).timestamp()) - 1
     expired_token = jwt.encode(
-        dict(exp=one_second_ago), key="dummy-key", algorithm="HS256"
+        dict(exp=one_second_ago), key=slurmrestd_jwt_key_string, algorithm="HS256"
     )
     token_path.write_text(expired_token)
 
-    retrieved_token = _load_token_from_cache("dummy-user")
+    with mock.patch.object(SETTINGS, "SLURMRESTD_USE_KEY_PATH", new=True):
+        with mock.patch.object(SETTINGS, "SLURMRESTD_JWT_KEY_PATH", new=slurmrestd_jwt_key_path):
+            retrieved_token = _load_token_from_cache("dummy-user")
 
     assert retrieved_token is None
 
 
 def test__load_token_from_cache__returns_none_cached_token_will_expire_soon(
     mock_slurmrestd_api_cache_dir,
+    slurmrestd_jwt_key_path,
+    slurmrestd_jwt_key_string,
 ):
     """
     Verifies that None is returned if the token will expired soon.
@@ -109,11 +118,31 @@ def test__load_token_from_cache__returns_none_cached_token_will_expire_soon(
     token_path = mock_slurmrestd_api_cache_dir / "dummy-user.token"
     nine_seconds_from_now = int(datetime.now(tz=timezone.utc).timestamp()) + 9
     expired_token = jwt.encode(
-        dict(exp=nine_seconds_from_now), key="dummy-key", algorithm="HS256"
+        dict(exp=nine_seconds_from_now), key=slurmrestd_jwt_key_string, algorithm="HS256"
     )
     token_path.write_text(expired_token)
 
-    retrieved_token = _load_token_from_cache("dummy-user")
+    with mock.patch.object(SETTINGS, "SLURMRESTD_USE_KEY_PATH", new=True):
+        with mock.patch.object(SETTINGS, "SLURMRESTD_JWT_KEY_PATH", new=slurmrestd_jwt_key_path):
+            retrieved_token = _load_token_from_cache("dummy-user")
+
+    assert retrieved_token is None
+
+
+def test__load_token_from_cache__returns_none_if_token_is_malformed(
+    mock_slurmrestd_api_cache_dir,
+    slurmrestd_jwt_key_path,
+):
+    """
+    Verifies that None is returned if the token has invalid claims.
+    """
+    mock_slurmrestd_api_cache_dir.mkdir(parents=True)
+    token_path = mock_slurmrestd_api_cache_dir / "dummy-user.token"
+    token_path.write_text("not-a-valid-jwt")
+
+    with mock.patch.object(SETTINGS, "SLURMRESTD_USE_KEY_PATH", new=True):
+        with mock.patch.object(SETTINGS, "SLURMRESTD_JWT_KEY_PATH", new=slurmrestd_jwt_key_path):
+            retrieved_token = _load_token_from_cache("dummy-user")
 
     assert retrieved_token is None
 
@@ -135,9 +164,9 @@ def test_acquire_token__gets_a_token_from_the_cache(mock_slurmrestd_api_cache_di
     assert retrieved_token == created_token
 
 
-@mock.patch("cluster_agent.identity.slurmrestd.subprocess.Popen")
+@mock.patch("cluster_agent.identity.slurmrestd.datetime")
 def test_acquire_token__gets_a_token_from_slurm_if_one_is_not_in_the_cache(
-    mock_subprocess_popen,
+    mocked_datetime,
     mock_slurmrestd_api_cache_dir,
 ):  # noqa
     """
@@ -148,44 +177,67 @@ def test_acquire_token__gets_a_token_from_slurm_if_one_is_not_in_the_cache(
     token_path = mock_slurmrestd_api_cache_dir / "dummy-user.token"
     assert not token_path.exists()
 
-    process_mock = mock.Mock()
-    process_mock.communicate.return_value = (
-        bytes("SLURM_JWT=dummy-token\n".encode("utf-8")),
-        bytes(str().encode("utf-8")),
+    now = datetime.now()
+    username = "dummy-user"
+
+    mocked_datetime.now = mock.Mock()
+    mocked_datetime.now.return_value = now
+    mocked_datetime.timestamp = mock.Mock()
+    mocked_datetime.timestamp.return_value = 123
+
+    expected_token = jwt.encode(
+        {
+            "exp": 123,
+            "iat": 123,
+            "sun": username,
+        },
+        SETTINGS.SLURMRESTD_JWT_KEY_STRING,
+        algorithm="HS256",
     )
-    process_mock.returncode = 0
 
-    mock_subprocess_popen.return_value = process_mock
+    retrieved_token = acquire_token(username)
+    assert retrieved_token == expected_token
 
-    retrieved_token = acquire_token("dummy-user")
-    assert retrieved_token == "dummy-token"
+    mocked_datetime.now.assert_called_once_with()
+    mocked_datetime.timestamp.assert_has_calls(calls=[
+        mock.call(now + timedelta(seconds=SETTINGS.SLURMRESTD_EXP_TIME_IN_SECONDS)),
+        mock.call(now),
+    ])
 
     token_path = mock_slurmrestd_api_cache_dir / "dummy-user.token"
     assert token_path.read_text() == retrieved_token
 
 
-@mock.patch("cluster_agent.identity.slurmrestd.subprocess.Popen")
-def test_acquire_token__raise_error_if_subprocess_command_failed(
-    mock_subprocess_popen,
-    mock_slurmrestd_api_cache_dir,
+@mock.patch("cluster_agent.identity.slurmrestd.datetime")
+def test_acquire_token__uses_key_path_if_supplied(
+    mocked_datetime,
+    slurmrestd_jwt_key_path,
+    slurmrestd_jwt_key_string,
 ):  # noqa
     """
-    Verifies whether an error is raised or not in case "scontrol token" subprocess call fails.
+    Verifies if the `acquire_token` function generates a token based
+    on the key path if supplied in the Settings class.
     """
-    mock_slurmrestd_api_cache_dir.mkdir(parents=True)
-    token_path = mock_slurmrestd_api_cache_dir / "dummy-user.token"
-    assert not token_path.exists()
 
-    process_mock = mock.Mock()
-    process_mock.communicate.return_value = (
-        bytes(str().encode("utf-8")),
-        bytes("This is a dummy error message".encode("utf-8")),
+    now = datetime.now()
+    username = "dummy-user"
+
+    mocked_datetime.now = mock.Mock()
+    mocked_datetime.now.return_value = now
+    mocked_datetime.timestamp = mock.Mock()
+    mocked_datetime.timestamp.return_value = 123
+
+    expected_token = jwt.encode(
+        {
+            "exp": 123,
+            "iat": 123,
+            "sun": username,
+        },
+        slurmrestd_jwt_key_string,
+        algorithm="HS256",
     )
-    process_mock.returncode = 1
 
-    mock_subprocess_popen.return_value = process_mock
-
-    with pytest.raises(ProcessExecutionError) as error:
-        acquire_token("dummy-user")
-
-    assert "This is a dummy error message" in str(error.value)
+    with mock.patch.object(SETTINGS, "SLURMRESTD_USE_KEY_PATH", new=True):
+        with mock.patch.object(SETTINGS, "SLURMRESTD_JWT_KEY_PATH", new=slurmrestd_jwt_key_path):
+            retrieved_token = acquire_token(username)
+    assert retrieved_token == expected_token

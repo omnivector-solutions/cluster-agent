@@ -7,6 +7,11 @@ This file keeps track of all notable changes to the Cluster Agent.
 Unreleased
 ----------
 
+2.0.0 - 2022-08-17
+------------------
+
+* Introduce support to generate the Slurmrestd JWT by Python code instead of calling ``scontrol token``.
+
 1.6.3 - 2022-09-12
 ------------------
 
