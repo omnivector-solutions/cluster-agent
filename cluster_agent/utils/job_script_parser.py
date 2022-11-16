@@ -149,7 +149,12 @@ sbatch_to_slurm = [
     SbatchToSlurm("open_mode", "--open-mode"),
     SbatchToSlurm("standard_output", "--output", "-o"),
     SbatchToSlurm("", "--overcommit", "-O", dict(action="store_const", const=True)),
-    SbatchToSlurm("", "--oversubscribe", "-s", dict(action="store_const", const=True)),
+    SbatchToSlurm(
+        "",
+        "--oversubscribe",
+        "-s",
+        dict(action="store_const", const="oversubscribe", dest="exclusive"),
+    ),
     SbatchToSlurm("", "--parsable", "", dict(action="store_const", const=True)),
     SbatchToSlurm("partition", "--partition", "-p"),
     SbatchToSlurm("", "--power"),
