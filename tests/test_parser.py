@@ -450,3 +450,61 @@ class TestBidictMapping:
         desired_value = {value: key for key, value in dummy_mapping.items()}
 
         assert desired_value == bidict(dummy_mapping).inverse
+
+
+class TestExclusiveParameter:
+    """
+    --exclusive is a special SBATCH parameter that can be used in two different ways:
+
+    1. --exclusive as a flag, meaning the value True should be recovered for slurmd.
+    2. --exclusive=<value>, meaning the value <value> should be recovered for slurmd.
+    According to the Slurm documentation, the value can be 'user' or 'mcs'.
+    """
+
+    def test_empty_jobscript(self):
+        """
+        Base case: no --exclusive parameter at all.
+        """
+        jobscript = ""
+
+        desired_dict = {}
+
+        actual_dict = jobscript_to_dict(jobscript)
+
+        assert actual_dict == desired_dict
+
+    def test_exclusive_as_a_flag(self):
+        """
+        Test the first scenario: --exclusive as a flag.
+        """
+        jobscript = "#SBATCH --exclusive"
+
+        desired_dict = {"exclusive": "exclusive"}
+
+        actual_dict = jobscript_to_dict(jobscript)
+
+        assert actual_dict == desired_dict
+
+    @pytest.mark.parametrize(
+        "exclusive_value", ["user", "mcs", "exclusive", "oversubscribe"]
+    )
+    def test_exclusive_with_string_value(self, exclusive_value):
+        """
+        Test the second scenario: --exclusive=<value>.
+        """
+        jobscript = f"#SBATCH --exclusive={exclusive_value}"
+
+        desired_dict = {"exclusive": exclusive_value}
+
+        actual_dict = jobscript_to_dict(jobscript)
+
+        assert actual_dict == desired_dict
+
+    def test_exclusive_with_incorrect_value(self):
+        """
+        Test the second scenario with an incorrect value, ValueError should be raised.
+        """
+        jobscript = "#SBATCH --exclusive=test-test"
+
+        with pytest.raises(ValueError, match="invalid choice: 'test-test'"):
+            jobscript_to_dict(jobscript)

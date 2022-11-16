@@ -92,7 +92,17 @@ sbatch_to_slurm = [
     SbatchToSlurm("distribution", "--distribution", "-m"),
     SbatchToSlurm("standard_error", "--error", "-e"),
     SbatchToSlurm("", "--exclude", "-x"),
-    SbatchToSlurm("exclusive", "--exclusive"),
+    SbatchToSlurm(
+        "exclusive",
+        "--exclusive",
+        "",
+        dict(
+            type=str,
+            choices={"user", "mcs", "exclusive", "oversubscribe"},
+            nargs="?",
+            const="exclusive",
+        ),
+    ),
     SbatchToSlurm("", "--export"),
     SbatchToSlurm("", "--export-file"),
     SbatchToSlurm("", "--extra-node-info", "-B"),
