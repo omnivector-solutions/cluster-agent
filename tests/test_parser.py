@@ -450,3 +450,116 @@ class TestBidictMapping:
         desired_value = {value: key for key, value in dummy_mapping.items()}
 
         assert desired_value == bidict(dummy_mapping).inverse
+
+
+class TestExclusiveParameter:
+    """
+    --exclusive is a special SBATCH parameter that can be used in some different ways:
+
+    1. --exclusive as a flag, meaning the value 'exclusive' should be recovered for slurmd.
+    2. --exclusive=<value>, meaning the value <value> should be recovered for slurmd.
+    According to the Slurm documentation, the value can be 'user' or 'mcs'.
+    3. On top of that, 'exclusive' is expected to be set to 'oversubscribe' when the
+    flag --oversubscribe is used.
+
+    Note: When both are used, the last of them takes precedence.
+    """
+
+    def test_empty_jobscript(self):
+        """
+        Base case: no --exclusive parameter at all.
+        """
+        jobscript = ""
+
+        desired_dict = {}
+
+        actual_dict = jobscript_to_dict(jobscript)
+
+        assert actual_dict == desired_dict
+
+    def test_exclusive_as_a_flag(self):
+        """
+        Test the first scenario: --exclusive as a flag.
+        """
+        jobscript = "#SBATCH --exclusive"
+
+        desired_dict = {"exclusive": "exclusive"}
+
+        actual_dict = jobscript_to_dict(jobscript)
+
+        assert actual_dict == desired_dict
+
+    @pytest.mark.parametrize(
+        "exclusive_value", ["user", "mcs", "exclusive", "oversubscribe"]
+    )
+    def test_exclusive_with_string_value(self, exclusive_value):
+        """
+        Test the second scenario: --exclusive=<value>.
+        """
+        jobscript = f"#SBATCH --exclusive={exclusive_value}"
+
+        desired_dict = {"exclusive": exclusive_value}
+
+        actual_dict = jobscript_to_dict(jobscript)
+
+        assert actual_dict == desired_dict
+
+    def test_exclusive_with_incorrect_value(self):
+        """
+        Test the second scenario with an incorrect value, ValueError should be raised.
+        """
+        jobscript = "#SBATCH --exclusive=test-test"
+
+        with pytest.raises(ValueError, match="invalid choice: 'test-test'"):
+            jobscript_to_dict(jobscript)
+
+    def test_oversubscribe(self):
+        """
+        Test the third scenario: --oversubscribe as a flag.
+        """
+        jobscript = "#SBATCH --oversubscribe"
+
+        desired_dict = {"exclusive": "oversubscribe"}
+
+        actual_dict = jobscript_to_dict(jobscript)
+
+        assert actual_dict == desired_dict
+
+    def test_oversubscribe_with_incorrect_value(self):
+        """
+        Test the second scenario with an incorrect value, ValueError should be raised.
+        """
+        jobscript = "#SBATCH --oversubscribe=test-test"
+
+        with pytest.raises(
+            ValueError, match="Unrecognized SBATCH arguments: test-test"
+        ):
+            jobscript_to_dict(jobscript)
+
+    def test_both_exclusive_and_oversubscribe_1(self):
+        """
+        Test that when both are used, the last of them takes precedence.
+
+        In this case, --exclusive is the last one.
+        """
+        jobscript = "#SBATCH --oversubscribe\n#SBATCH --exclusive"
+
+        desired_dict = {"exclusive": "exclusive"}
+
+        actual_dict = jobscript_to_dict(jobscript)
+
+        assert actual_dict == desired_dict
+
+    def test_both_exclusive_and_oversubscribe_2(self):
+        """
+        Test that when both are used, the last of them takes precedence.
+
+        In this case, --oversubscribe is the last one.
+        """
+        jobscript = "#SBATCH --exclusive\n#SBATCH --oversubscribe"
+
+        desired_dict = {"exclusive": "oversubscribe"}
+
+        actual_dict = jobscript_to_dict(jobscript)
+
+        assert actual_dict == desired_dict

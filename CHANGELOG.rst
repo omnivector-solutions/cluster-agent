@@ -6,6 +6,7 @@ This file keeps track of all notable changes to the Cluster Agent.
 
 Unreleased
 ----------
+* Fix SBATCH parameter --exclusive
 
 2.0.0 - 2022-08-17
 ------------------
