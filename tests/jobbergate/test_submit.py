@@ -7,6 +7,8 @@ import json
 import httpx
 import pytest
 import respx
+from pydantic import ValidationError
+
 from cluster_agent.identity.slurm_user.mappers.mapper_base import SlurmUserMapper
 from cluster_agent.jobbergate.constants import JobSubmissionStatus
 from cluster_agent.jobbergate.schemas import (
@@ -15,6 +17,7 @@ from cluster_agent.jobbergate.schemas import (
     SlurmJobSubmission,
 )
 from cluster_agent.jobbergate.submit import (
+    get_job_parameters,
     get_job_script,
     submit_job_script,
     submit_pending_jobs,
@@ -107,7 +110,6 @@ async def test_submit_job_script__success(
                     current_working_directory=SETTINGS.DEFAULT_SLURM_WORK_DIR,
                     standard_output=SETTINGS.DEFAULT_SLURM_WORK_DIR / f"{name}.out",
                     standard_error=SETTINGS.DEFAULT_SLURM_WORK_DIR / f"{name}.err",
-                    time_limit="60",
                 ),
             ).json()
         )
@@ -141,9 +143,8 @@ async def test_submit_job_script__with_non_default_execution_directory(
     )
     name = pending_job_submission.application_name
 
-    job_script = get_job_script(pending_job_submission)
     job_parameters = get_job_parameters(
-        job_script,
+        pending_job_submission.execution_parameters,
         name=pending_job_submission.application_name,
         current_working_directory=exe_path,
         standard_output=exe_path / f"{name}.out",
@@ -173,7 +174,7 @@ async def test_submit_job_script__with_non_default_execution_directory(
             last_request.content.decode("utf-8")
             == SlurmJobSubmission(
                 script=dummy_template_source,
-                job=SlurmJobParams(**job_parameters),
+                job=job_parameters,
             ).json()
         )
 
@@ -414,3 +415,53 @@ async def test_submit_pending_jobs(dummy_job_script_files, tweak_settings):
         ).encode("utf-8")
 
         assert update_3_route.call_count == 1  # called to notify the job was rejected
+
+
+class TestGetJobParameters:
+    """
+    Test the ``get_job_parameters()`` function.
+    """
+
+    def test_base_case__fail(self):
+        """
+        Base case should fail, since name is a required field.
+        """
+        with pytest.raises(
+            ValidationError,
+            match="1 validation error for SlurmJobParams\nname\n  field required.*",
+        ):
+            get_job_parameters(slurm_parameters={})
+
+    def test_base_case__success(self):
+        """
+        Base case should succeed with a valid name.
+        """
+        desired_value = SlurmJobParams(name="test-test")
+
+        actual_value = get_job_parameters(slurm_parameters={}, name="test-test")
+
+        assert actual_value == desired_value
+
+    def test_priority(self):
+        """
+        Test that slurm parameters have priority over extra keyword arguments.
+        """
+        desired_value = SlurmJobParams(name="high-priority")
+
+        actual_value = get_job_parameters(
+            slurm_parameters=dict(name="high-priority"), name="test-test"
+        )
+
+        assert actual_value == desired_value
+
+    def test_extra_arguments(self):
+        """
+        Test that SlurmJobParams can be constructed with extra keyword arguments.
+        """
+        desired_value = SlurmJobParams(foo="bar", name="test-test")
+
+        actual_value = get_job_parameters(
+            slurm_parameters=dict(foo="bar"), name="test-test"
+        )
+
+        assert actual_value == desired_value

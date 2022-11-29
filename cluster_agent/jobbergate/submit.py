@@ -1,5 +1,5 @@
 import json
-from typing import cast
+from typing import Any, Dict, cast
 
 from cluster_agent.identity.slurm_user.factory import manufacture
 from cluster_agent.identity.slurm_user.mappers import SlurmUserMapper
@@ -43,6 +43,18 @@ def get_job_script(pending_job_submission: PendingJobSubmission) -> str:
     )
 
     return job_script
+
+
+def get_job_parameters(slurm_parameters: Dict[str, Any], **kwargs) -> SlurmJobParams:
+    """
+    Obtain the job parameters from the slurm_parameters dict and additional values.
+
+    Extra keyword arguments can be used to supply default values for any parameter
+    (like name or current_working_directory). Note they may be overwritten by
+    values from slurm_parameters.
+    """
+    merged_parameters = {**kwargs, **slurm_parameters}
+    return SlurmJobParams(**merged_parameters)
 
 
 async def submit_job_script(
@@ -94,7 +106,13 @@ async def submit_job_script(
         do_except=notify_submission_rejected.report_error,
     ):
 
-        job_parameters = SlurmJobParams()
+        job_parameters = get_job_parameters(
+            pending_job_submission.execution_parameters,
+            name=pending_job_submission.application_name,
+            current_working_directory=submit_dir,
+            standard_output=submit_dir / f"{name}.out",
+            standard_error=submit_dir / f"{name}.err",
+        )
 
     payload = SlurmJobSubmission(script=job_script, job=job_parameters)
     logger.debug(
