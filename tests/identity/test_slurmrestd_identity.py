@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta, timezone
 from unittest import mock
 
+from freezegun import freeze_time
 from jose import jwt
 
+from cluster_agent.utils.logging import logger
 from cluster_agent.identity.slurmrestd import (
     _load_token_from_cache,
     _write_token_to_cache,
@@ -164,9 +166,8 @@ def test_acquire_token__gets_a_token_from_the_cache(mock_slurmrestd_api_cache_di
     assert retrieved_token == created_token
 
 
-@mock.patch("cluster_agent.identity.slurmrestd.datetime")
+@freeze_time("2022-12-01")
 def test_acquire_token__gets_a_token_from_slurm_if_one_is_not_in_the_cache(
-    mocked_datetime,
     mock_slurmrestd_api_cache_dir,
 ):  # noqa
     """
@@ -177,18 +178,17 @@ def test_acquire_token__gets_a_token_from_slurm_if_one_is_not_in_the_cache(
     token_path = mock_slurmrestd_api_cache_dir / "dummy-user.token"
     assert not token_path.exists()
 
-    now = datetime.now()
     username = "dummy-user"
 
-    mocked_datetime.now = mock.Mock()
-    mocked_datetime.now.return_value = now
-    mocked_datetime.timestamp = mock.Mock()
-    mocked_datetime.timestamp.return_value = 123
+    now = datetime.now()
+    logger.debug(SETTINGS.SLURMRESTD_JWT_KEY_STRING)
 
     expected_token = jwt.encode(
         {
-            "exp": 123,
-            "iat": 123,
+            "exp": int(
+                datetime.timestamp(now + timedelta(seconds=SETTINGS.SLURMRESTD_EXP_TIME_IN_SECONDS))
+            ),
+            "iat": int(datetime.timestamp(now)),
             "sun": username,
         },
         SETTINGS.SLURMRESTD_JWT_KEY_STRING,
@@ -197,12 +197,6 @@ def test_acquire_token__gets_a_token_from_slurm_if_one_is_not_in_the_cache(
 
     retrieved_token = acquire_token(username)
     assert retrieved_token == expected_token
-
-    mocked_datetime.now.assert_called_once_with()
-    mocked_datetime.timestamp.assert_has_calls(calls=[
-        mock.call(now + timedelta(seconds=SETTINGS.SLURMRESTD_EXP_TIME_IN_SECONDS)),
-        mock.call(now),
-    ])
 
     token_path = mock_slurmrestd_api_cache_dir / "dummy-user.token"
     assert token_path.read_text() == retrieved_token

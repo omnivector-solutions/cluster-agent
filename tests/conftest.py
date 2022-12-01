@@ -45,14 +45,15 @@ def mock_slurmrestd_api_cache_dir(tmp_path):
 
 @pytest.fixture(autouse=True)
 def slurmrestd_jwt_key_string():
-    yield "dummy-key"
+    yield "DUMMY-JWT-SECRET"
 
 
 @pytest.fixture(autouse=True)
 def slurmrestd_jwt_key_path(tmp_path, slurmrestd_jwt_key_string):
     _jwt_dir = tmp_path / "jwt.key"
     _jwt_dir.write_text(slurmrestd_jwt_key_string)
-    yield _jwt_dir
+    with mock.patch.object(SETTINGS, "SLURMRESTD_JWT_KEY_PATH", new=_jwt_dir.as_posix()):
+        yield _jwt_dir
 
 
 @pytest.fixture(autouse=True)
