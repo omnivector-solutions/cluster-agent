@@ -81,7 +81,7 @@ class Settings(BaseSettings):
             RuntimeError,
         )
 
-        if not all(
+        if all(
             [
                 values["SLURMRESTD_JWT_KEY_PATH"],
                 values["SLURMRESTD_JWT_KEY_STRING"],

@@ -7,10 +7,11 @@ This file keeps track of all notable changes to the Cluster Agent.
 Unreleased
 ----------
 
-2.0.1-rc.1 - 2022-11-30
+2.0.1 - 2022-12-05
 --------------------
 
 * Fix SBATCH parameter --exclusive
+* Fix logic that checks if both SLURMRESTD_JWT_KEY_PATH and SLURMRESTD_JWT_KEY_STRING parameters are set
 
 2.0.0 - 2022-08-17
 ------------------

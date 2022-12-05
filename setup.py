@@ -3,7 +3,7 @@ from os.path import dirname, join
 
 here = dirname(__file__)
 
-_VERSION = "2.0.1-rc.1"
+_VERSION = "2.0.1"
 
 setup(
     name="ovs-cluster-agent",
@@ -30,6 +30,7 @@ setup(
         "pytest-env==0.6.2",
         "pytest-random-order==1.0.4",
         "pytest-cov==3.0.0",
+        "freezegun==1.2.2",
 
     ]),
     packages=find_packages(),
