@@ -8,7 +8,7 @@ Unreleased
 ----------
 
 * Removed job-script parser to extract the name and values of the SBATCH parameters contained in the file.
-* Added logic to pull `execution_parameters` from job submissions and use they as job properties when jobs are submitted.
+* Added logic to pull `execution_parameters` from job submissions and use them as job properties when jobs are submitted.
 
 2.0.1 - 2022-12-05
 --------------------
