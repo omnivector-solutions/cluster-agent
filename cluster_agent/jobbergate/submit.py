@@ -1,5 +1,5 @@
 import json
-from typing import cast
+from typing import Any, Dict, cast
 
 from cluster_agent.identity.slurm_user.factory import manufacture
 from cluster_agent.identity.slurm_user.mappers import SlurmUserMapper
@@ -24,7 +24,6 @@ from cluster_agent.utils.exception import (
     SlurmrestdError,
     handle_errors_async,
 )
-from cluster_agent.utils.job_script_parser import get_job_parameters
 from cluster_agent.utils.logging import log_error
 from loguru import logger
 
@@ -44,6 +43,18 @@ def get_job_script(pending_job_submission: PendingJobSubmission) -> str:
     )
 
     return job_script
+
+
+def get_job_parameters(slurm_parameters: Dict[str, Any], **kwargs) -> SlurmJobParams:
+    """
+    Obtain the job parameters from the slurm_parameters dict and additional values.
+
+    Extra keyword arguments can be used to supply default values for any parameter
+    (like name or current_working_directory). Note they may be overwritten by
+    values from slurm_parameters.
+    """
+    merged_parameters = {**kwargs, **slurm_parameters}
+    return SlurmJobParams(**merged_parameters)
 
 
 async def submit_job_script(
@@ -70,13 +81,18 @@ async def submit_job_script(
         email = pending_job_submission.job_submission_owner_email
         name = pending_job_submission.application_name
         mapper_class_name = user_mapper.__class__.__name__
-        logger.debug(f"Fetching username for email {email} with mapper {mapper_class_name}")
+        logger.debug(
+            f"Fetching username for email {email} with mapper {mapper_class_name}"
+        )
         username = await user_mapper.find_username(email)
         logger.debug(f"Using local slurm user {username} for job submission")
 
         job_script = get_job_script(pending_job_submission)
 
-        submit_dir = pending_job_submission.execution_directory or SETTINGS.DEFAULT_SLURM_WORK_DIR
+        submit_dir = (
+            pending_job_submission.execution_directory
+            or SETTINGS.DEFAULT_SLURM_WORK_DIR
+        )
 
         for path, file_content in pending_job_submission.job_script_files.files.items():
             local_script_path = submit_dir / path
@@ -91,17 +107,14 @@ async def submit_job_script(
     ):
 
         job_parameters = get_job_parameters(
-            job_script,
+            pending_job_submission.execution_parameters,
             name=pending_job_submission.application_name,
             current_working_directory=submit_dir,
             standard_output=submit_dir / f"{name}.out",
             standard_error=submit_dir / f"{name}.err",
         )
 
-    payload = SlurmJobSubmission(
-        script=job_script,
-        job=SlurmJobParams(**job_parameters),
-    )
+    payload = SlurmJobSubmission(script=job_script, job=job_parameters)
     logger.debug(
         f"Submitting pending job submission {pending_job_submission.id} "
         f"to slurm with payload {payload}"
