@@ -1,13 +1,14 @@
 from loguru import logger
 
+from cluster_agent.identity.slurmrestd import backend_client as slurmrestd_client
 from cluster_agent.jobbergate.api import fetch_active_submissions, update_status
-from cluster_agent.jobbergate.constants import JobSubmissionStatus, status_map
+from cluster_agent.jobbergate.constants import JobSubmissionStatus
+from cluster_agent.jobbergate.schemas import SlurmSubmittedJobStatus
 from cluster_agent.utils.exception import SlurmrestdError
 from cluster_agent.utils.logging import log_error
-from cluster_agent.identity.slurmrestd import backend_client as slurmrestd_client
 
 
-async def fetch_job_status(slurm_job_id: int) -> JobSubmissionStatus:
+async def fetch_job_status(slurm_job_id: int) -> SlurmSubmittedJobStatus:
 
     logger.debug(f"Fetching slurm job status for slurm job {slurm_job_id}")
 
@@ -24,12 +25,9 @@ async def fetch_job_status(slurm_job_id: int) -> JobSubmissionStatus:
         len(jobs) == 1,
         f"Couldn't find a slurm job matching id {slurm_job_id}",
     )
-    job = jobs.pop()
-    slurm_status = job["job_state"]
-    logger.debug(f"Slurm status for slurm job {slurm_job_id} is {slurm_status}")
-    jobbergate_status = status_map[job["job_state"]]
-    logger.debug(f"Jobbergate status for slurm job {slurm_job_id} is {jobbergate_status}")
-    return jobbergate_status
+    slurm_status = SlurmSubmittedJobStatus.parse_obj(jobs.pop())
+    logger.debug(f"Status for slurm job {slurm_job_id} is {slurm_status}")
+    return slurm_status.jobbergate_status
 
 
 async def finish_active_jobs():
@@ -43,7 +41,9 @@ async def finish_active_jobs():
 
     for active_job_submission in active_job_submissions:
         skip = "skipping to next active job"
-        logger.debug(f"Fetching status of job_submission {active_job_submission.id} from slurm")
+        logger.debug(
+            f"Fetching status of job_submission {active_job_submission.id} from slurm"
+        )
 
         try:
             status = await fetch_job_status(active_job_submission.slurm_job_id)

@@ -3,6 +3,8 @@ from typing import Any, Dict, List, Optional
 
 import pydantic
 
+from cluster_agent.jobbergate.constants import JobSubmissionStatus, status_map
+
 
 class JobScriptFiles(pydantic.BaseModel, extra=pydantic.Extra.ignore):
     """
@@ -83,3 +85,19 @@ class SlurmSubmitResponse(pydantic.BaseModel, extra=pydantic.Extra.ignore):
 
     errors: List[SlurmSubmitError] = []
     job_id: Optional[int]
+
+
+class SlurmSubmittedJobStatus(pydantic.BaseModel, extra=pydantic.Extra.ignore):
+    """
+    Specialized model for the cluster-agent to pull a concluded job_submission.
+    """
+
+    job_id: Optional[int]
+    job_state: Optional[str]
+    state_reason: Optional[str]
+
+    @property
+    def jobbergate_status(self) -> Optional[JobSubmissionStatus]:
+        if self.job_state:
+            return status_map[self.job_state]
+        return None
