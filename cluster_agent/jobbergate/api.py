@@ -1,13 +1,14 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 from buzz import DoExceptParams
+from loguru import logger
+
 from cluster_agent.identity.cluster_api import backend_client
 from cluster_agent.jobbergate.constants import JobSubmissionStatus
 from cluster_agent.jobbergate.schemas import ActiveJobSubmission, PendingJobSubmission
 from cluster_agent.utils.exception import JobbergateApiError
 from cluster_agent.utils.logging import log_error
-from loguru import logger
 
 
 async def fetch_pending_submissions() -> List[PendingJobSubmission]:
@@ -20,7 +21,9 @@ async def fetch_pending_submissions() -> List[PendingJobSubmission]:
     ):
         response = await backend_client.get("/jobbergate/job-submissions/agent/pending")
         response.raise_for_status()
-        pending_job_submissions = [PendingJobSubmission(**pjs) for pjs in response.json()]
+        pending_job_submissions = [
+            PendingJobSubmission(**pjs) for pjs in response.json()
+        ]
 
     logger.debug(f"Retrieved {len(pending_job_submissions)} pending job submissions")
     return pending_job_submissions
@@ -90,7 +93,10 @@ class SubmissionNotifier:
 
 
 async def update_status(
-    job_submission_id: int, status: JobSubmissionStatus, *, report_message: str = ""
+    job_submission_id: int,
+    status: JobSubmissionStatus,
+    *,
+    report_message: Optional[str] = None,
 ) -> None:
     """
     Update a job submission with a status

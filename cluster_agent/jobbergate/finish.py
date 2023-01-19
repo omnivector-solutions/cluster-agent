@@ -27,7 +27,7 @@ async def fetch_job_status(slurm_job_id: int) -> SlurmSubmittedJobStatus:
     )
     slurm_status = SlurmSubmittedJobStatus.parse_obj(jobs.pop())
     logger.debug(f"Status for slurm job {slurm_job_id} is {slurm_status}")
-    return slurm_status.jobbergate_status
+    return slurm_status
 
 
 async def finish_active_jobs():
@@ -51,14 +51,21 @@ async def finish_active_jobs():
             logger.debug(f"Fetch status failed...{skip}")
             continue
 
-        if status not in (JobSubmissionStatus.COMPLETED, JobSubmissionStatus.FAILED):
+        if status.jobbergate_status not in {
+            JobSubmissionStatus.COMPLETED,
+            JobSubmissionStatus.FAILED,
+        }:
             logger.debug(f"Job is not complete or failed...{skip}")
             continue
 
-        logger.debug(f"Updating job_submission with {status=}")
+        logger.debug(f"Updating job_submission with status={status.jobbergate_status}")
 
         try:
-            await update_status(active_job_submission.id, status)
+            await update_status(
+                active_job_submission.id,
+                status.jobbergate_status,
+                report_message=status.state_reason,
+            )
         except Exception:
             logger.debug(f"API update failed...{skip}")
 
