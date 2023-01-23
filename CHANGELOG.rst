@@ -7,6 +7,8 @@ This file keeps track of all notable changes to the Cluster Agent.
 Unreleased
 ----------
 
+* Capture rejection message from Slurm
+
 2.1.0 2023-01-03
 ----------------
 
