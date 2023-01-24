@@ -95,7 +95,9 @@ async def update_status(
     """
     Update a job submission with a status
     """
-    logger.debug(f"Updating {job_submission_id=} with status={status}")
+    logger.debug(
+        f"Updating {job_submission_id=} with {status=} due to {report_message=}"
+    )
 
     with JobbergateApiError.handle_errors(
         f"Could not update status for job submission {job_submission_id} via the API",

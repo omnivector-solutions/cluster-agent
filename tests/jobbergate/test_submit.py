@@ -15,12 +15,14 @@ from cluster_agent.jobbergate.schemas import (
     PendingJobSubmission,
     SlurmJobParams,
     SlurmJobSubmission,
+    SlurmSubmitResponse,
 )
 from cluster_agent.jobbergate.submit import (
     get_job_parameters,
     get_job_script,
     submit_job_script,
     submit_pending_jobs,
+    unpack_error_from_slurm_response,
 )
 from cluster_agent.settings import SETTINGS
 from cluster_agent.utils.exception import JobSubmissionError, SlurmrestdError
@@ -465,3 +467,40 @@ class TestGetJobParameters:
         )
 
         assert actual_value == desired_value
+
+
+def test_unpack_error_from_slurm_response():
+    """
+    Test that the function ``unpack_error_from_slurm_response()`` returns the correct error.
+    """
+    response = httpx.Response(
+        status_code=400,
+        json={
+            "meta": {
+                "plugin": {"type": "openapi/v0.0.36", "name": "REST v0.0.36"},
+                "Slurm": {
+                    "version": {"major": 21, "micro": 6, "minor": 8},
+                    "release": "21.08.6",
+                },
+            },
+            "errors": [
+                {"error": "Unable to read integer value", "error_code": 9202},
+                {
+                    "error": "process failed for key wait_all_nodes with error: Unspecified error",
+                    "error_code": 1,
+                },
+                {"error_code": 9001, "error": "Failure during parsing"},
+            ],
+        },
+    )
+
+    desired_message = (
+        "Unable to read integer value;"
+        " process failed for key wait_all_nodes with error: Unspecified error;"
+        " Failure during parsing"
+    )
+    actual_error = unpack_error_from_slurm_response(
+        SlurmSubmitResponse.parse_raw(response.content)
+    )
+
+    assert actual_error == desired_message

@@ -7,6 +7,11 @@ This file keeps track of all notable changes to the Cluster Agent.
 Unreleased
 ----------
 
+* Capture rejection message from Slurm
+
+2.1.0 2023-01-03
+----------------
+
 * Removed job-script parser to extract the name and values of the SBATCH parameters contained in the file.
 * Added logic to pull `execution_parameters` from job submissions and use them as job properties when jobs are submitted.
 

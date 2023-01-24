@@ -62,13 +62,17 @@ class SlurmJobSubmission(pydantic.BaseModel):
     job: SlurmJobParams
 
 
-class SlurmSubmitError(pydantic.BaseModel, extra=pydantic.Extra.ignore):
+class SlurmSubmitError(pydantic.BaseModel):
     """
     Specialized model for error content in a SlurmSubmitResponse.
     """
 
     error: Optional[str]
-    errno: Optional[int]
+    error_code: Optional[int] = pydantic.Field(alias="errno")
+
+    class Config:
+        allow_population_by_field_name = True
+        extra = pydantic.Extra.ignore
 
 
 class SlurmSubmitResponse(pydantic.BaseModel, extra=pydantic.Extra.ignore):

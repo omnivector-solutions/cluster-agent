@@ -1,6 +1,9 @@
 import json
 from typing import Any, Dict, cast
 
+from buzz import handle_errors
+from loguru import logger
+
 from cluster_agent.identity.slurm_user.factory import manufacture
 from cluster_agent.identity.slurm_user.mappers import SlurmUserMapper
 from cluster_agent.identity.slurmrestd import backend_client as slurmrestd_client
@@ -25,7 +28,6 @@ from cluster_agent.utils.exception import (
     handle_errors_async,
 )
 from cluster_agent.utils.logging import log_error
-from loguru import logger
 
 
 def get_job_script(pending_job_submission: PendingJobSubmission) -> str:
@@ -43,6 +45,13 @@ def get_job_script(pending_job_submission: PendingJobSubmission) -> str:
     )
 
     return job_script
+
+
+def unpack_error_from_slurm_response(response: SlurmSubmitResponse) -> str:
+    """
+    Unpack the error message from the response of a slurmrestd request.
+    """
+    return "; ".join(e.error for e in response.errors if e.error)
 
 
 def get_job_parameters(slurm_parameters: Dict[str, Any], **kwargs) -> SlurmJobParams:
@@ -131,8 +140,9 @@ async def submit_job_script(
             json=json.loads(payload.json()),
         )
         logger.debug(f"Slurmrestd response: {response.json()}")
-        response.raise_for_status()
         sub_data = SlurmSubmitResponse.parse_raw(response.content)
+        with handle_errors(unpack_error_from_slurm_response(sub_data)):
+            response.raise_for_status()
 
     # Make static type checkers happy.
     slurm_job_id = cast(int, sub_data.job_id)
