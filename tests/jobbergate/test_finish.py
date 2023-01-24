@@ -10,63 +10,66 @@ from cluster_agent.utils.exception import SlurmrestdError
 from cluster_agent.settings import SETTINGS
 
 
+@pytest.mark.parametrize(
+    "slurm_status,expected_jobbergate_status",
+    (
+        ("COMPLETED", JobSubmissionStatus.COMPLETED),
+        ("FAILED", JobSubmissionStatus.FAILED),
+        ("UNMAPPED_STATUS", JobSubmissionStatus.SUBMITTED),
+    ),
+)
 @pytest.mark.asyncio
-async def test_fetch_pending_submissions__success():
+async def test_fetch_pending_submissions__success(
+    slurm_status, expected_jobbergate_status
+):
     """
     Test that the ``fetch_job_status()`` function can successfully retrieve
     job_state from Slurm and convert it into a JobSubmissionStatus.
     """
+    slurm_id = 123
+    slurm_state_reason = "NonZeroExitCode" if slurm_status == "FAILED" else None
+
     async with respx.mock:
-        respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token").mock(
+        respx.post(
+            f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token"
+        ).mock(
             return_value=httpx.Response(
                 status_code=200, json=dict(access_token="dummy-token")
             )
         )
-        respx.get(f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/11").mock(
+        respx.get(f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/{slurm_id}").mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=dict(
                     jobs=[
-                        dict(job_state="COMPLETED"),
-                    ],
-                ),
-            )
-        )
-        respx.get(f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/22").mock(
-            return_value=httpx.Response(
-                status_code=200,
-                json=dict(
-                    jobs=[
-                        dict(job_state="FAILED"),
-                    ],
-                ),
-            )
-        )
-        respx.get(f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/33").mock(
-            return_value=httpx.Response(
-                status_code=200,
-                json=dict(
-                    jobs=[
-                        dict(job_state="UNMAPPED_STATUS"),
+                        dict(
+                            job_state=slurm_status,
+                            job_id=slurm_id,
+                            state_reason=slurm_state_reason,
+                        ),
                     ],
                 ),
             )
         )
 
-        assert await fetch_job_status(11) == JobSubmissionStatus.COMPLETED
-        assert await fetch_job_status(22) == JobSubmissionStatus.FAILED
-        assert await fetch_job_status(33) == JobSubmissionStatus.SUBMITTED
+        result = await fetch_job_status(slurm_id)
+
+        assert result.job_id == slurm_id
+        assert result.job_state == slurm_status
+        assert result.state_reason == slurm_state_reason
+        assert result.jobbergate_status == expected_jobbergate_status
 
 
 @pytest.mark.asyncio
-async def test_fetch_pending_submissions__raises_SlurmrestdError_if_response_is_not_200(
-):
+async def test_fetch_pending_submissions__raises_SlurmrestdError_if_response_is_not_200():
     """
     Test that the ``fetch_job_status()`` will raise a ``SlurmrestdError`` if the
     response is not a 200.
     """
     async with respx.mock:
-        respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token").mock(
+        respx.post(
+            f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token"
+        ).mock(
             return_value=httpx.Response(
                 status_code=200, json=dict(access_token="dummy-token")
             )
@@ -96,7 +99,9 @@ async def test_finish_active_jobs():
     ]
 
     async with respx.mock:
-        respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token").mock(
+        respx.post(
+            f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token"
+        ).mock(
             return_value=httpx.Response(
                 status_code=200, json=dict(access_token="dummy-token")
             )

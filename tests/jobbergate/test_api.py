@@ -314,12 +314,12 @@ async def test_update_status__success():
 
         await update_status(1, JobSubmissionStatus.COMPLETED)
         assert update_route.calls.last.request.content == json.dumps(
-            dict(new_status=JobSubmissionStatus.COMPLETED, report_message="")
+            dict(new_status=JobSubmissionStatus.COMPLETED, report_message=None)
         ).encode("utf-8")
 
         await update_status(2, JobSubmissionStatus.FAILED)
         assert update_route.calls.last.request.content == json.dumps(
-            dict(new_status=JobSubmissionStatus.FAILED, report_message="")
+            dict(new_status=JobSubmissionStatus.FAILED, report_message=None)
         ).encode("utf-8")
 
         assert update_route.call_count == 2

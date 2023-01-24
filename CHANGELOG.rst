@@ -8,6 +8,7 @@ Unreleased
 ----------
 
 * Capture rejection message from Slurm
+* Capture failure message from Slurm jobs
 
 2.1.0 2023-01-03
 ----------------
