@@ -5,6 +5,7 @@ Define tests for the ldap mapper.
 import json
 
 import pytest
+from ldap3 import RESTARTABLE
 
 from cluster_agent.identity.slurm_user.exceptions import LDAPError
 from cluster_agent.identity.slurm_user.mappers import ldap
@@ -33,6 +34,7 @@ async def test_configure__success(mocker, tweak_settings):
             user=SETTINGS.LDAP_USERNAME,
             password=SETTINGS.LDAP_PASSWORD,
             authentication=ldap.SIMPLE,
+            client_strategy=RESTARTABLE,
         )
     assert mapper.search_base == "DC=dummy,DC=domain,DC=com"
 
@@ -60,6 +62,7 @@ async def test_configure__sets_up_ntlm_auth_type_correctly(mocker, tweak_setting
             user=f"{SETTINGS.LDAP_DOMAIN}\\{SETTINGS.LDAP_USERNAME}",
             password=SETTINGS.LDAP_PASSWORD,
             authentication=ldap.NTLM,
+            client_strategy=RESTARTABLE,
         )
     assert mapper.search_base == "DC=dummy,DC=domain,DC=com"
 
@@ -215,7 +218,9 @@ async def test_find_username__fails_if_entries_cannot_be_extracted(
             await mapper.find_username("dummy_user@dummy.domain.com")
 
 
-async def test_find_username__fails_if_user_has_more_than_one_CN(mocker, tweak_settings):
+async def test_find_username__fails_if_user_has_more_than_one_CN(
+    mocker, tweak_settings
+):
     """
     Test that the ``find_username()`` fails if a user has more than one username.
 
