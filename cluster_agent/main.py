@@ -60,7 +60,9 @@ async def finish_jobs():
 
 
 try:
-    sentry_logging = LoggingIntegration(level=logging.INFO, event_level=logging.ERROR)
+    sentry_logging = LoggingIntegration(
+        level=logging.WARNING, event_level=logging.ERROR
+    )
 
     sentry_sdk.init(
         dsn=SETTINGS.SENTRY_DSN,

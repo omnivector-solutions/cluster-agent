@@ -1,7 +1,7 @@
 import json
 
 from ldap3 import ALL, NTLM, RESTARTABLE, SIMPLE, Connection, Server
-from ldap3.utils.log import BASIC, set_library_log_detail_level
+from ldap3.utils.log import ERROR, set_library_log_detail_level
 from loguru import logger
 
 from cluster_agent.identity.slurm_user.constants import LDAPAuthType
@@ -10,7 +10,7 @@ from cluster_agent.identity.slurm_user.mappers.mapper_base import SlurmUserMappe
 from cluster_agent.settings import Settings
 from cluster_agent.utils.logging import log_error
 
-set_library_log_detail_level(BASIC)
+set_library_log_detail_level(ERROR)
 
 
 class LDAPMapper(SlurmUserMapper):
