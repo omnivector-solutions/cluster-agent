@@ -7,6 +7,11 @@ This file keeps track of all notable changes to the Cluster Agent.
 Unreleased
 ----------
 
+2.2.1 2023-02-29
+----------------
+
+* Added the ability to recover the agent when a connection to the LDAP server fails
+
 2.2.0 2023-01-25
 ----------------
 
