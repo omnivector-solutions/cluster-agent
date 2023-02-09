@@ -3,7 +3,7 @@ from os.path import dirname, join
 
 here = dirname(__file__)
 
-_VERSION = "2.1.0"
+_VERSION = "2.2.0"
 
 setup(
     name="ovs-cluster-agent",
