@@ -3,6 +3,7 @@ import json
 from ldap3 import ALL, NTLM, RESTARTABLE, SIMPLE, Connection, Server
 from ldap3.utils.log import ERROR, set_library_log_detail_level
 from loguru import logger
+from timeoutcontext import timeout
 
 from cluster_agent.identity.slurm_user.constants import LDAPAuthType
 from cluster_agent.identity.slurm_user.exceptions import LDAPError
@@ -55,20 +56,22 @@ class LDAPMapper(SlurmUserMapper):
         password = settings.LDAP_PASSWORD
 
         logger.debug(f"Connecting to LDAP at {host} ({domain}) with {username}")
-        with LDAPError.handle_errors(
-            "Couldn't connect to LDAP",
-            do_except=log_error,
-        ):
-            server = Server(host, get_info=ALL)
-            self.connection = Connection(
-                server,
-                user=username,
-                password=password,
-                authentication=auth_type,
-                client_strategy=RESTARTABLE,
-            )
-            self.connection.start_tls()
-            self.connection.bind()
+        with LDAPError.handle_errors("Couldn't connect to LDAP", do_except=log_error):
+            with timeout(30):
+                logger.debug("Creating server object")
+                server = Server(host, get_info=ALL)
+                logger.debug("Creating connection object")
+                self.connection = Connection(
+                    server,
+                    user=username,
+                    password=password,
+                    authentication=auth_type,
+                    client_strategy=RESTARTABLE,
+                )
+                logger.debug("Starting TLS")
+                self.connection.start_tls()
+                logger.debug("Binding to LDAP")
+                self.connection.bind()
         logger.debug("Connection established to LDAP")
 
     async def find_username(self, email: str) -> str:
