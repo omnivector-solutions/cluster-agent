@@ -3,6 +3,7 @@ Define tests for the ldap mapper.
 """
 
 import json
+import time
 
 import pytest
 from ldap3 import RESTARTABLE
@@ -37,6 +38,31 @@ async def test_configure__success(mocker, tweak_settings):
             client_strategy=RESTARTABLE,
         )
     assert mapper.search_base == "DC=dummy,DC=domain,DC=com"
+
+
+async def test_configure__raises_TimeoutError(mocker, tweak_settings):
+    """
+    Test that an LDAP instance faces a timeout on ``configure()`` when it takes too long.
+    """
+    test_timeout = 0.01
+    mapper = ldap.LDAPMapper()
+    mocker.patch(
+        "cluster_agent.identity.slurm_user.mappers.ldap.Server",
+        lambda *args, **kwargs: time.sleep(test_timeout),
+    )
+    mocker.patch(
+        "cluster_agent.identity.slurm_user.mappers.ldap.TIMEOUT_SECONDS",
+        test_timeout / 2.0,
+    )
+
+    with tweak_settings(
+        LDAP_DOMAIN="dummy.domain.com",
+        LDAP_HOST="dummy.domain.com",
+        LDAP_USERNAME="dummyUser",
+        LDAP_PASSWORD="dummy-password",
+    ):
+        with pytest.raises(LDAPError, match="Couldn't connect to LDAP -- TimeoutError"):
+            await mapper.configure(SETTINGS)
 
 
 async def test_configure__sets_up_ntlm_auth_type_correctly(mocker, tweak_settings):
