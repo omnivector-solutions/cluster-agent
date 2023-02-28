@@ -13,8 +13,6 @@ from cluster_agent.utils.logging import log_error
 
 set_library_log_detail_level(ERROR)
 
-TIMEOUT_SECONDS = 30
-
 
 class LDAPMapper(SlurmUserMapper):
     """
@@ -22,6 +20,7 @@ class LDAPMapper(SlurmUserMapper):
     """
 
     connection = None
+    _timeout_seconds = 30
 
     async def configure(self, settings: Settings):
         """
@@ -59,7 +58,7 @@ class LDAPMapper(SlurmUserMapper):
 
         logger.debug(f"Connecting to LDAP at {host} ({domain}) with {username}")
         with LDAPError.handle_errors("Couldn't connect to LDAP", do_except=log_error):
-            with timeout(TIMEOUT_SECONDS):
+            with timeout(self._timeout_seconds):
                 logger.debug("Creating server object")
                 server = Server(host, get_info=ALL)
                 logger.debug("Creating connection object")

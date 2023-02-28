@@ -50,10 +50,7 @@ async def test_configure__raises_TimeoutError(mocker, tweak_settings):
         "cluster_agent.identity.slurm_user.mappers.ldap.Server",
         lambda *args, **kwargs: time.sleep(test_timeout),
     )
-    mocker.patch(
-        "cluster_agent.identity.slurm_user.mappers.ldap.TIMEOUT_SECONDS",
-        test_timeout / 2.0,
-    )
+    mocker.patch.object(mapper, "_timeout_seconds", test_timeout / 2.0)
 
     with tweak_settings(
         LDAP_DOMAIN="dummy.domain.com",
