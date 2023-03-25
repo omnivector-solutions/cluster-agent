@@ -19,6 +19,7 @@ setup(
     + _VERSION
     + "tar.gz",
     install_requires=list(map(lambda string: string.strip("\n"), open("requirements.txt", "r"))),
+    python_requires='>3.6.8,<4.0',
     extras_require=dict(dev=[
         "pytest==7.1.0",
         "pytest-mock==3.7.0",
@@ -48,6 +49,9 @@ setup(
         "License :: Other/Proprietary License",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Operating System :: OS Independent",
     ],
     entry_points={
