@@ -3,16 +3,23 @@ from typing import Any, Dict, List, Optional
 
 import pydantic
 
-from cluster_agent.jobbergate.constants import JobSubmissionStatus, status_map
+from cluster_agent.jobbergate.constants import FileType, JobSubmissionStatus, status_map
 
 
-class JobScriptFiles(pydantic.BaseModel, extra=pydantic.Extra.ignore):
-    """
-    Model containing job-script files.
-    """
+class JobScriptFile(pydantic.BaseModel, extra=pydantic.Extra.ignore):
+    """Model for the job_script_files field of the JobScript resource."""
 
-    main_file_path: Path
-    files: Dict[Path, str]
+    id: int
+    filename: str
+    file_type: FileType
+
+    url: str
+
+
+class JobScript(pydantic.BaseModel, extra=pydantic.Extra.ignore):
+    """Model to match database for the JobScript resource."""
+
+    files: Dict[str, JobScriptFile]
 
 
 class PendingJobSubmission(pydantic.BaseModel, extra=pydantic.Extra.ignore):
@@ -22,13 +29,11 @@ class PendingJobSubmission(pydantic.BaseModel, extra=pydantic.Extra.ignore):
     """
 
     id: int
-    job_submission_name: str
-    job_submission_owner_email: str
+    name: str
+    owner_email: str
     execution_directory: Optional[Path]
     execution_parameters: Dict[str, Any] = pydantic.Field(default_factory=dict)
-    job_script_name: str
-    application_name: str
-    job_script_files: JobScriptFiles
+    job_script: JobScript
 
 
 class ActiveJobSubmission(pydantic.BaseModel, extra=pydantic.Extra.ignore):

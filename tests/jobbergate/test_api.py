@@ -28,38 +28,31 @@ async def test_fetch_pending_submissions__success(dummy_job_script_files):
     Test that the ``fetch_pending_submissions()`` function can successfully retrieve
     PendingJobSubmission objects from the API.
     """
-    pending_job_submissions_data = [
-        dict(
-            id=1,
-            job_submission_name="sub1",
-            job_submission_owner_email="email1@dummy.com",
-            job_script_id=11,
-            job_script_name="script1",
-            job_script_files=dummy_job_script_files,
-            application_name="app1",
-            slurm_job_id=111,
-        ),
-        dict(
-            id=2,
-            job_submission_name="sub2",
-            job_submission_owner_email="email2@dummy.com",
-            job_script_id=22,
-            job_script_name="script2",
-            job_script_files=dummy_job_script_files,
-            application_name="app2",
-            slurm_job_id=222,
-        ),
-        dict(
-            id=3,
-            job_submission_name="sub3",
-            job_submission_owner_email="email3@dummy.com",
-            job_script_id=33,
-            job_script_name="script3",
-            job_script_files=dummy_job_script_files,
-            application_name="app3",
-            slurm_job_id=333,
-        ),
-    ]
+    pending_job_submissions_data = {
+        "items": [
+            dict(
+                id=1,
+                name="sub1",
+                owner_email="email1@dummy.com",
+                job_script={"files": dummy_job_script_files},
+                slurm_job_id=111,
+            ),
+            dict(
+                id=2,
+                name="sub2",
+                owner_email="email2@dummy.com",
+                job_script={"files": dummy_job_script_files},
+                slurm_job_id=222,
+            ),
+            dict(
+                id=3,
+                name="sub3",
+                owner_email="email3@dummy.com",
+                job_script={"files": dummy_job_script_files},
+                slurm_job_id=333,
+            ),
+        ]
+    }
     async with respx.mock:
         respx.post(
             f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token"
@@ -79,7 +72,7 @@ async def test_fetch_pending_submissions__success(dummy_job_script_files):
         )
 
         pending_job_submissions = await fetch_pending_submissions()
-        for (i, pending_job_submission) in enumerate(pending_job_submissions):
+        for i, pending_job_submission in enumerate(pending_job_submissions):
             assert isinstance(pending_job_submission, PendingJobSubmission)
             assert i + 1 == pending_job_submission.id
 
@@ -144,23 +137,22 @@ async def test_fetch_active_submissions__success():
     Test that the ``fetch_active_submissions()`` function can successfully retrieve
     ActiveJobSubmission objects from the API.
     """
-    pending_job_submissions_data = [
-        dict(
-            id=1,
-            job_submission_name="sub1",
-            slurm_job_id=11,
-        ),
-        dict(
-            id=2,
-            job_submission_name="sub2",
-            slurm_job_id=22,
-        ),
-        dict(
-            id=3,
-            job_submission_name="sub3",
-            slurm_job_id=33,
-        ),
-    ]
+    pending_job_submissions_data = {
+        "items": [
+            dict(
+                id=1,
+                slurm_job_id=11,
+            ),
+            dict(
+                id=2,
+                slurm_job_id=22,
+            ),
+            dict(
+                id=3,
+                slurm_job_id=33,
+            ),
+        ]
+    }
     with respx.mock:
         respx.post(
             f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token"
@@ -180,7 +172,7 @@ async def test_fetch_active_submissions__success():
         )
 
         active_job_submissions = fetch_active_submissions()
-        for (i, active_job_submission) in enumerate(await active_job_submissions):
+        for i, active_job_submission in enumerate(await active_job_submissions):
             assert isinstance(active_job_submission, ActiveJobSubmission)
             assert i + 1 == active_job_submission.id
             assert (i + 1) * 11 == active_job_submission.slurm_job_id
@@ -314,12 +306,12 @@ async def test_update_status__success():
 
         await update_status(1, JobSubmissionStatus.COMPLETED)
         assert update_route.calls.last.request.content == json.dumps(
-            dict(new_status=JobSubmissionStatus.COMPLETED, report_message=None)
+            dict(status=JobSubmissionStatus.COMPLETED, report_message=None)
         ).encode("utf-8")
 
         await update_status(2, JobSubmissionStatus.FAILED)
         assert update_route.calls.last.request.content == json.dumps(
-            dict(new_status=JobSubmissionStatus.FAILED, report_message=None)
+            dict(status=JobSubmissionStatus.FAILED, report_message=None)
         ).encode("utf-8")
 
         assert update_route.call_count == 2
@@ -393,7 +385,7 @@ async def test_notify_submission_rejected():
         assert update_route.call_count == 1
         assert update_route.calls.last.request.content == json.dumps(
             dict(
-                new_status=JobSubmissionStatus.REJECTED,
+                status=JobSubmissionStatus.REJECTED,
                 report_message=report_message,
             ),
         ).encode("utf-8")

@@ -19,52 +19,12 @@ from cluster_agent.jobbergate.schemas import (
 )
 from cluster_agent.jobbergate.submit import (
     get_job_parameters,
-    get_job_script,
     submit_job_script,
     submit_pending_jobs,
     unpack_error_from_slurm_response,
 )
 from cluster_agent.settings import SETTINGS
 from cluster_agent.utils.exception import JobSubmissionError, SlurmrestdError
-
-
-@pytest.mark.asyncio
-async def test_get_job_script__success(
-    dummy_pending_job_submission_data, dummy_template_source
-):
-    """
-    Test if a job script is successfully recovered from a PendingJobSubmission.
-    """
-    pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
-    assert dummy_template_source == get_job_script(pending_job_submission)
-
-
-@pytest.mark.asyncio
-async def test_get_job_script__raises_exception_if_empty(
-    dummy_pending_job_submission_data,
-):
-    """
-    Test if JobSubmissionError is raised when a empty job script is
-    recovered from a PendingJobSubmission.
-    """
-    pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
-    pending_job_submission.job_script_files.files = {"application.sh": ""}
-    with pytest.raises(JobSubmissionError):
-        get_job_script(pending_job_submission)
-
-
-@pytest.mark.asyncio
-async def test_get_job_script__raises_exception_if_missing(
-    dummy_pending_job_submission_data,
-):
-    """
-    Test if JobSubmissionError is raised when a job script is not successfully
-    recovered from a PendingJobSubmission.
-    """
-    pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
-    pending_job_submission.job_script_files.files = {"application.sh": None}
-    with pytest.raises(JobSubmissionError):
-        get_job_script(pending_job_submission)
 
 
 @pytest.mark.asyncio
@@ -82,7 +42,7 @@ async def test_submit_job_script__success(
     user_mapper.find_username.return_value = "dummy-user"
 
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
-    name = pending_job_submission.application_name
+    name = pending_job_submission.name
 
     async with respx.mock:
         submit_route = respx.post(f"{SETTINGS.SLURM_RESTD_VERSIONED_URL}/job/submit")
@@ -93,26 +53,37 @@ async def test_submit_job_script__success(
             )
         )
 
+        download_route = respx.get(
+            f"{SETTINGS.BASE_API_URL}/jobbergate/job-scripts/1/upload/application.sh"
+        )
+        download_route.mock(
+            return_value=httpx.Response(
+                status_code=200,
+                content=dummy_template_source.encode("utf-8"),
+            ),
+        )
+
         slurm_job_id = await submit_job_script(pending_job_submission, user_mapper)
 
         assert slurm_job_id == 13
         assert submit_route.call_count == 1
+        assert download_route.call_count == 1
         last_request = submit_route.calls.last.request
         assert last_request.method == "POST"
         assert last_request.headers["x-slurm-user-name"] == "dummy-user"
         assert last_request.headers["x-slurm-user-token"] == "default-dummy-token"
-        assert (
-            last_request.content.decode("utf-8")
-            == SlurmJobSubmission(
-                script=dummy_template_source,
-                job=SlurmJobParams(
-                    name=name,
-                    current_working_directory=SETTINGS.DEFAULT_SLURM_WORK_DIR,
-                    standard_output=SETTINGS.DEFAULT_SLURM_WORK_DIR / f"{name}.out",
-                    standard_error=SETTINGS.DEFAULT_SLURM_WORK_DIR / f"{name}.err",
-                ),
-            ).json()
-        )
+        actual_response = last_request.content.decode("utf-8")
+        expected_response = SlurmJobSubmission(
+            script=dummy_template_source,
+            job=SlurmJobParams(
+                name=name,
+                current_working_directory=SETTINGS.DEFAULT_SLURM_WORK_DIR,
+                standard_output=SETTINGS.DEFAULT_SLURM_WORK_DIR / f"{name}.out",
+                standard_error=SETTINGS.DEFAULT_SLURM_WORK_DIR / f"{name}.err",
+            ),
+        ).json()
+
+        assert actual_response == expected_response
 
 
 @pytest.mark.asyncio
@@ -141,11 +112,11 @@ async def test_submit_job_script__with_non_default_execution_directory(
         **dummy_pending_job_submission_data,
         execution_directory=exe_path,
     )
-    name = pending_job_submission.application_name
+    name = pending_job_submission.name
 
     job_parameters = get_job_parameters(
         pending_job_submission.execution_parameters,
-        name=pending_job_submission.application_name,
+        name=name,
         current_working_directory=exe_path,
         standard_output=exe_path / f"{name}.out",
         standard_error=exe_path / f"{name}.err",
@@ -160,10 +131,21 @@ async def test_submit_job_script__with_non_default_execution_directory(
             )
         )
 
+        download_route = respx.get(
+            f"{SETTINGS.BASE_API_URL}/jobbergate/job-scripts/1/upload/application.sh"
+        )
+        download_route.mock(
+            return_value=httpx.Response(
+                status_code=200,
+                content=dummy_template_source.encode("utf-8"),
+            ),
+        )
+
         slurm_job_id = await submit_job_script(pending_job_submission, user_mapper)
 
         assert slurm_job_id == 13
         assert submit_route.call_count == 1
+        assert download_route.call_count == 1
         last_request = submit_route.calls.last.request
         assert last_request.method == "POST"
         assert last_request.headers["x-slurm-user-name"] == "dummy-user"
@@ -187,7 +169,7 @@ async def test_submit_job_script__raises_exception_if_no_executable_script_was_f
     and that the job submission status is updated to rejected.
     """
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
-    pending_job_submission.job_script_files.files = {"application.sh": ""}
+    pending_job_submission.job_script.files = {}
 
     async with respx.mock:
         respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/oauth/token").mock(
@@ -211,7 +193,7 @@ async def test_submit_job_script__raises_exception_if_no_executable_script_was_f
 
 @pytest.mark.asyncio
 async def test_submit_job_script__raises_exception_if_submit_call_response_is_not_200(
-    dummy_pending_job_submission_data, mocker
+    dummy_pending_job_submission_data, mocker, dummy_template_source
 ):
     """
     Test that ``submit_job_script()`` raises an exception if the response from Slurm
@@ -250,6 +232,16 @@ async def test_submit_job_script__raises_exception_if_submit_call_response_is_no
             )
         )
 
+        download_route = respx.get(
+            f"{SETTINGS.BASE_API_URL}/jobbergate/job-scripts/1/upload/application.sh"
+        )
+        download_route.mock(
+            return_value=httpx.Response(
+                status_code=200,
+                content=dummy_template_source.encode("utf-8"),
+            ),
+        )
+
         with pytest.raises(
             SlurmrestdError,
             match="Failed to submit job to slurm",
@@ -257,12 +249,14 @@ async def test_submit_job_script__raises_exception_if_submit_call_response_is_no
             await submit_job_script(pending_job_submission, user_mapper)
 
     assert update_route.call_count == 1
+    assert download_route.call_count == 1
 
 
 @pytest.mark.asyncio
 async def test_submit_job_script__raises_exception_if_response_cannot_be_unpacked(
     dummy_pending_job_submission_data,
     mocker,
+    dummy_template_source,
 ):
     """
     Test that ``submit_job_script()`` raises an exception if the response from Slurm
@@ -294,49 +288,56 @@ async def test_submit_job_script__raises_exception_if_response_cannot_be_unpacke
             )
         )
 
+        download_route = respx.get(
+            f"{SETTINGS.BASE_API_URL}/jobbergate/job-scripts/1/upload/application.sh"
+        )
+        download_route.mock(
+            return_value=httpx.Response(
+                status_code=200,
+                content=dummy_template_source.encode("utf-8"),
+            ),
+        )
+
         with pytest.raises(SlurmrestdError, match="Failed to submit job to slurm"):
             await submit_job_script(pending_job_submission, user_mapper)
 
     assert update_route.call_count == 1
+    assert download_route.call_count == 1
 
 
 @pytest.mark.asyncio
-async def test_submit_pending_jobs(dummy_job_script_files, tweak_settings):
+async def test_submit_pending_jobs(
+    dummy_job_script_files,
+    tweak_settings,
+    dummy_template_source,
+):
     """
     Test that the ``submit_pending_jobs()`` function can fetch pending job submissions,
     submit each to slurm via the Slurm REST API, and update the job submission via the
     Jobbergate API.
     """
-    pending_job_submissions_data = [
-        dict(
-            id=1,
-            job_submission_name="sub1",
-            job_submission_owner_email="email1@dummy.com",
-            job_script_id=11,
-            job_script_name="script1",
-            job_script_files=dummy_job_script_files,
-            application_name="app1",
-        ),
-        dict(
-            id=2,
-            job_submission_name="sub2",
-            job_submission_owner_email="email2@dummy.com",
-            job_script_id=22,
-            job_script_name="script2",
-            job_script_files=dummy_job_script_files,
-            application_name="app2",
-        ),
-        dict(
-            id=3,
-            job_submission_name="sub3",
-            job_submission_owner_email="email3@dummy.com",
-            job_script_id=33,
-            job_script_name="script3",
-            job_script_files=dummy_job_script_files,
-            application_name="app3",
-        ),
-    ]
-
+    pending_job_submissions_data = {
+        "items": [
+            dict(
+                id=1,
+                name="sub1",
+                owner_email="email1@dummy.com",
+                job_script={"files": dummy_job_script_files},
+            ),
+            dict(
+                id=2,
+                name="sub2",
+                owner_email="email2@dummy.com",
+                job_script={"files": dummy_job_script_files},
+            ),
+            dict(
+                id=3,
+                name="sub3",
+                owner_email="email3@dummy.com",
+                job_script={"files": dummy_job_script_files},
+            ),
+        ]
+    }
     async with respx.mock:
         respx.post(
             f"https://{SETTINGS.OIDC_DOMAIN}/protocol/openid-connect/token"
@@ -369,11 +370,21 @@ async def test_submit_pending_jobs(dummy_job_script_files, tweak_settings):
         )
         update_3_route.mock(return_value=httpx.Response(status_code=200))
 
+        download_route = respx.get(
+            f"{SETTINGS.BASE_API_URL}/jobbergate/job-scripts/1/upload/application.sh"
+        )
+        download_route.mock(
+            return_value=httpx.Response(
+                status_code=200,
+                content=dummy_template_source.encode("utf-8"),
+            ),
+        )
+
         def _submit_side_effect(request):
             req_data = request.content.decode("utf-8")
             name = json.loads(req_data)["job"]["name"]
-            fake_slurm_job_id = int(name.replace("app", "")) * 11
-            if name == "app3":
+            fake_slurm_job_id = int(name.replace("sub", "")) * 11
+            if name == "sub3":
                 return httpx.Response(
                     status_code=400,
                     json=dict(errors=dict(error="BOOM!")),
@@ -393,7 +404,7 @@ async def test_submit_pending_jobs(dummy_job_script_files, tweak_settings):
         assert update_1_route.call_count == 1
         assert update_1_route.calls.last.request.content == json.dumps(
             dict(
-                new_status=JobSubmissionStatus.SUBMITTED,
+                status=JobSubmissionStatus.SUBMITTED,
                 slurm_job_id=11,
             )
         ).encode("utf-8")
@@ -401,12 +412,13 @@ async def test_submit_pending_jobs(dummy_job_script_files, tweak_settings):
         assert update_2_route.call_count == 1
         assert update_2_route.calls.last.request.content == json.dumps(
             dict(
-                new_status=JobSubmissionStatus.SUBMITTED,
+                status=JobSubmissionStatus.SUBMITTED,
                 slurm_job_id=22,
             )
         ).encode("utf-8")
 
         assert update_3_route.call_count == 1  # called to notify the job was rejected
+        assert download_route.call_count == len(pending_job_submissions_data["items"])
 
 
 class TestGetJobParameters:

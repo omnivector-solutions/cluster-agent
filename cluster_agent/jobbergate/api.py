@@ -22,7 +22,7 @@ async def fetch_pending_submissions() -> List[PendingJobSubmission]:
         response = await backend_client.get("/jobbergate/job-submissions/agent/pending")
         response.raise_for_status()
         pending_job_submissions = [
-            PendingJobSubmission(**pjs) for pjs in response.json()
+            PendingJobSubmission(**pjs) for pjs in response.json().get("items", [])
         ]
 
     logger.debug(f"Retrieved {len(pending_job_submissions)} pending job submissions")
@@ -39,7 +39,9 @@ async def fetch_active_submissions() -> List[ActiveJobSubmission]:
     ):
         response = await backend_client.get("jobbergate/job-submissions/agent/active")
         response.raise_for_status()
-        active_job_submissions = [ActiveJobSubmission(**ajs) for ajs in response.json()]
+        active_job_submissions = [
+            ActiveJobSubmission(**ajs) for ajs in response.json().get("items", [])
+        ]
 
     logger.debug(f"Retrieved {len(active_job_submissions)} active job submissions")
     return active_job_submissions
@@ -60,7 +62,7 @@ async def mark_as_submitted(job_submission_id: int, slurm_job_id: int):
         response = await backend_client.put(
             f"jobbergate/job-submissions/agent/{job_submission_id}",
             json=dict(
-                new_status=JobSubmissionStatus.SUBMITTED,
+                status=JobSubmissionStatus.SUBMITTED,
                 slurm_job_id=slurm_job_id,
             ),
         )
@@ -111,6 +113,6 @@ async def update_status(
     ):
         response = await backend_client.put(
             f"jobbergate/job-submissions/agent/{job_submission_id}",
-            json=dict(new_status=status, report_message=report_message),
+            json=dict(status=status, report_message=report_message),
         )
         response.raise_for_status()
