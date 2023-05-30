@@ -8,6 +8,7 @@ Unreleased
 ----------
 
 * Added support to set slurm restd version dynamically
+* Modified the interface with Jobbergate-API to address the new data model on the back-end
 
 2.2.2 2023-02-28
 ----------------
