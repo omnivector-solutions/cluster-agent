@@ -86,7 +86,6 @@ async def submit_job_script(
         raise_exc_class=JobSubmissionError,
         do_except=notify_submission_rejected.report_error,
     ):
-
         email = pending_job_submission.job_submission_owner_email
         name = pending_job_submission.application_name
         mapper_class_name = user_mapper.__class__.__name__
@@ -114,7 +113,6 @@ async def submit_job_script(
         raise_exc_class=SlurmParameterParserError,
         do_except=notify_submission_rejected.report_error,
     ):
-
         job_parameters = get_job_parameters(
             pending_job_submission.execution_parameters,
             name=pending_job_submission.application_name,
@@ -135,11 +133,11 @@ async def submit_job_script(
         do_except=notify_submission_rejected.report_error,
     ):
         response = await slurmrestd_client.post(
-            "/slurm/v0.0.36/job/submit",
+            "/job/submit",
             auth=lambda r: inject_token(r, username=username),
             json=json.loads(payload.json()),
         )
-        logger.debug(f"Slurmrestd response: {response.json()}")
+        logger.debug(f"Slurmrestd response: {response.text}")
         sub_data = SlurmSubmitResponse.parse_raw(response.content)
         with handle_errors(unpack_error_from_slurm_response(sub_data)):
             response.raise_for_status()
@@ -181,7 +179,6 @@ async def submit_pending_jobs():
             ),
             re_raise=False,
         ):
-
             slurm_job_id = await submit_job_script(pending_job_submission, user_mapper)
 
             await mark_as_submitted(pending_job_submission.id, slurm_job_id)

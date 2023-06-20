@@ -1,16 +1,14 @@
+import re
 import sys
 from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
 import buzz
-from pydantic import AnyHttpUrl, BaseSettings, Field, root_validator
+from pydantic import AnyHttpUrl, BaseSettings, Field, root_validator, validator
 from pydantic.error_wrappers import ValidationError
 
-from cluster_agent.identity.slurm_user.constants import (
-    LDAPAuthType,
-    MapperType,
-)
+from cluster_agent.identity.slurm_user.constants import LDAPAuthType, MapperType
 from cluster_agent.utils.logging import logger
 
 
@@ -53,6 +51,20 @@ class Settings(BaseSettings):
 
     # Single user submitter settings
     SINGLE_USER_SUBMITTER: Optional[str]
+
+    @validator("BASE_SLURMRESTD_URL", always=True)
+    def _validate_slurm_version_on_url(cls, v):
+        """
+        Add the default slurm version to the url if it is not present, for backward compatibility.
+        """
+        if not re.match(r".*/slurm/v\d+\.\d+\.\d+$", v):
+            default_version = "/slurm/v0.0.36"
+            logger.warning(
+                "Slurmrestd version not found in the URL, defaulting to {}",
+                default_version,
+            )
+            v += default_version
+        return v
 
     @root_validator
     def compute_extra_settings(cls, values):
