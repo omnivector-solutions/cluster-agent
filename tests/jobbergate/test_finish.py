@@ -37,7 +37,7 @@ async def test_fetch_pending_submissions__success(
                 status_code=200, json=dict(access_token="dummy-token")
             )
         )
-        respx.get(f"{SETTINGS.BASE_SLURMRESTD_URL}/job/{slurm_id}").mock(
+        respx.get(f"{SETTINGS.SLURM_RESTD_VERSIONED_URL}/job/{slurm_id}").mock(
             return_value=httpx.Response(
                 status_code=200,
                 json=dict(
@@ -74,7 +74,7 @@ async def test_fetch_pending_submissions__raises_SlurmrestdError_if_response_is_
                 status_code=200, json=dict(access_token="dummy-token")
             )
         )
-        respx.get(f"{SETTINGS.BASE_SLURMRESTD_URL}/job/11").mock(
+        respx.get(f"{SETTINGS.SLURM_RESTD_VERSIONED_URL}/job/11").mock(
             return_value=httpx.Response(status_code=400)
         )
         with pytest.raises(
@@ -136,7 +136,9 @@ async def test_finish_active_jobs():
                 ),
             )
 
-        slurm_route = respx.get(url__regex=rf"{SETTINGS.BASE_SLURMRESTD_URL}/job/\d+")
+        slurm_route = respx.get(
+            url__regex=rf"{SETTINGS.SLURM_RESTD_VERSIONED_URL}/job/\d+"
+        )
         slurm_route.mock(side_effect=_map_slurm_request)
 
         def _map_update_request(request: httpx.Request):

@@ -53,7 +53,7 @@ async def test_upsert_partitions(
     mock_slurmrestd_client.get.return_value.json.return_value = mock_response_body
     mock_slurmrestd_client.get.return_value.status_code = 200
     mock_slurmrestd_client.get.return_value.url = (
-        SETTINGS.BASE_SLURMRESTD_URL + "/partitions"
+        SETTINGS.SLURM_RESTD_VERSIONED_URL + "/partitions"
     )
     mock_slurmrestd_client.get.return_value.text = "no error"
 
@@ -97,7 +97,7 @@ async def test_upsert_partitions__raise_error_in_case_slurmrestd_returns_4xx_or_
     """
 
     error_message = "dummy error message"
-    url = SETTINGS.BASE_SLURMRESTD_URL + "/partitions"
+    url = SETTINGS.SLURM_RESTD_VERSIONED_URL + "/partitions"
 
     mock_slurmrestd_client.get = asynctest.CoroutineMock()
     mock_slurmrestd_client.get.return_value.status_code = response_status_code
@@ -147,7 +147,7 @@ async def test_upsert_nodes(
     mock_slurmrestd_client.get.return_value.json.return_value = mock_response_body
     mock_slurmrestd_client.get.return_value.status_code = 200
     mock_slurmrestd_client.get.return_value.url = (
-        SETTINGS.BASE_SLURMRESTD_URL + "/nodes"
+        SETTINGS.SLURM_RESTD_VERSIONED_URL + "/nodes"
     )
     mock_slurmrestd_client.get.return_value.text = "no error"
 
@@ -189,7 +189,7 @@ async def test_upsert_nodes__raise_error_in_case_slurmrestd_returns_4xx_or_5xx(
     """
 
     error_message = "dummy error message"
-    url = SETTINGS.BASE_SLURMRESTD_URL + "/nodes"
+    url = SETTINGS.SLURM_RESTD_VERSIONED_URL + "/nodes"
 
     mock_slurmrestd_client.get = asynctest.CoroutineMock()
     mock_slurmrestd_client.get.return_value.status_code = response_status_code
@@ -235,7 +235,7 @@ async def test_update_diagnostics(
     )
     mock_slurmrestd_client.get.return_value.status_code = 200
     mock_slurmrestd_client.get.return_value.url = (
-        SETTINGS.BASE_SLURMRESTD_URL + "/diag/"
+        SETTINGS.SLURM_RESTD_VERSIONED_URL + "/diag/"
     )
     mock_slurmrestd_client.get.return_value.text = "no error"
 
@@ -265,7 +265,7 @@ async def test_update_diagnostics__raise_error_in_case_slurmrestd_returns_4xx_or
     """
 
     error_message = "dummy error message"
-    url = SETTINGS.BASE_SLURMRESTD_URL + "/diag/"
+    url = SETTINGS.SLURM_RESTD_VERSIONED_URL + "/diag/"
 
     mock_slurmrestd_client.get = asynctest.CoroutineMock()
     mock_slurmrestd_client.get.return_value.status_code = response_status_code
@@ -311,7 +311,9 @@ async def test_upsert_jobs(
     mock_slurmrestd_client.get = asynctest.CoroutineMock()
     mock_slurmrestd_client.get.return_value.json.return_value = mock_response_body
     mock_slurmrestd_client.get.return_value.status_code = 200
-    mock_slurmrestd_client.get.return_value.url = SETTINGS.BASE_SLURMRESTD_URL + "/jobs"
+    mock_slurmrestd_client.get.return_value.url = (
+        SETTINGS.SLURM_RESTD_VERSIONED_URL + "/jobs"
+    )
     mock_slurmrestd_client.get.return_value.text = "no error"
 
     mock_response_status = mock.Mock()
@@ -352,7 +354,7 @@ async def test_upsert_jobs__raise_error_in_case_slurmrestd_returns_4xx_or_5xx(
     """
 
     error_message = "dummy error message"
-    url = SETTINGS.BASE_SLURMRESTD_URL + "/jobs"
+    url = SETTINGS.SLURM_RESTD_VERSIONED_URL + "/jobs"
 
     mock_slurmrestd_client.get = asynctest.CoroutineMock()
     mock_slurmrestd_client.get.return_value.status_code = response_status_code
