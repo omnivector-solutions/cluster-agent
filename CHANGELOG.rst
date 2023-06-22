@@ -7,6 +7,11 @@ This file keeps track of all notable changes to the Cluster Agent.
 Unreleased
 ----------
 
+* Added support to set slurm restd version dynamically
+
+2.2.2 2023-02-28
+----------------
+
 * Added a timeout to the LDAP connection
 
 2.2.1 2023-02-09

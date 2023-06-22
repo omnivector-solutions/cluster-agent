@@ -7,16 +7,15 @@ import buzz
 from pydantic import AnyHttpUrl, BaseSettings, Field, root_validator
 from pydantic.error_wrappers import ValidationError
 
-from cluster_agent.identity.slurm_user.constants import (
-    LDAPAuthType,
-    MapperType,
-)
+from cluster_agent.identity.slurm_user.constants import LDAPAuthType, MapperType
 from cluster_agent.utils.logging import logger
 
 
 class Settings(BaseSettings):
     # slurmrestd info
     BASE_SLURMRESTD_URL: AnyHttpUrl = Field("http://127.0.0.1:6820")
+    SLURM_RESTD_VERSION: str = "v0.0.36"
+    SLURM_RESTD_VERSIONED_URL: Optional[AnyHttpUrl] = None
     X_SLURM_USER_NAME: str = "ubuntu"
     X_SLURM_USER_TOKEN: Optional[str]
     DEFAULT_SLURM_WORK_DIR: Path = Path("/tmp")
@@ -59,6 +58,12 @@ class Settings(BaseSettings):
         """
         Compute settings values that are based on other settings values.
         """
+        if values.get("SLURM_RESTD_VERSIONED_URL") is None:
+            values["SLURM_RESTD_VERSIONED_URL"] = "{base}/slurm/{version}".format(
+                base=values["BASE_SLURMRESTD_URL"],
+                version=values["SLURM_RESTD_VERSION"],
+            )
+
         ldap_host = values["LDAP_HOST"]
         ldap_domain = values["LDAP_DOMAIN"]
 
