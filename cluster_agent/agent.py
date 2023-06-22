@@ -8,8 +8,7 @@ import hostlist
 
 
 async def upsert_partitions():
-
-    r = await slurmrestd_client.get("/slurm/v0.0.36/partitions")
+    r = await slurmrestd_client.get("/partitions")
     SlurmrestdError.require_condition(
         r.status_code == 200,
         f"Slurmrestd returned {r.status_code} when calling {r.url}: {r.text}",
@@ -19,7 +18,6 @@ async def upsert_partitions():
     tasks = list()
 
     for partition in partitions["partitions"]:
-
         # transform nodes names string into a list
         # e.g. "juju-54c58e-[67,45]" -> ["juju-54c58e-67", "juju-54c58e-45"]
         partition["nodes"] = hostlist.expand_hostlist(partition["nodes"])
@@ -44,8 +42,7 @@ async def upsert_partitions():
 
 
 async def upsert_nodes():
-
-    r = await slurmrestd_client.get("/slurm/v0.0.36/nodes")
+    r = await slurmrestd_client.get("/nodes")
     SlurmrestdError.require_condition(
         r.status_code == 200,
         f"Slurmrestd returned {r.status_code} when calling {r.url}: {r.text}",
@@ -55,7 +52,6 @@ async def upsert_nodes():
     tasks = list()
 
     for node in nodes["nodes"]:
-
         payload = {
             "meta": nodes["meta"],
             "errors": nodes["errors"],
@@ -76,22 +72,22 @@ async def upsert_nodes():
 
 
 async def update_diagnostics():
-
-    r = await slurmrestd_client.get("/slurm/v0.0.36/diag/")
+    r = await slurmrestd_client.get("/diag/")
     SlurmrestdError.require_condition(
         r.status_code == 200,
         f"Slurmrestd returned {r.status_code} when calling {r.url}: {r.text}",
     )
     diagnostics = r.json()
 
-    response = await cluster_api_client.post("/cluster/agent/diagnostics", json=diagnostics)
+    response = await cluster_api_client.post(
+        "/cluster/agent/diagnostics", json=diagnostics
+    )
 
     return response.status_code
 
 
 async def upsert_jobs():
-
-    r = await slurmrestd_client.get("/slurm/v0.0.36/jobs")
+    r = await slurmrestd_client.get("/jobs")
     SlurmrestdError.require_condition(
         r.status_code == 200,
         f"Slurmrestd returned {r.status_code} when calling {r.url}: {r.text}",
@@ -101,7 +97,6 @@ async def upsert_jobs():
     tasks = list()
 
     for job in jobs["jobs"]:
-
         payload = {
             "meta": jobs["meta"],
             "errors": jobs["errors"],

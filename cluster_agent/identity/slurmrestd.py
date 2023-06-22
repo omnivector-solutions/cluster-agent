@@ -145,8 +145,12 @@ class AsyncBackendClient(httpx.AsyncClient):
     _token: typing.Optional[str]
 
     def __init__(self):
+        if SETTINGS.SLURM_RESTD_VERSIONED_URL is None:
+            raise ValueError(
+                "SLURM_RESTD_VERSIONED_URL must be set in order to use the AsyncBackendClient"
+            )
         super().__init__(
-            base_url=SETTINGS.BASE_SLURMRESTD_URL,
+            base_url=SETTINGS.SLURM_RESTD_VERSIONED_URL,
             auth=inject_token,
             event_hooks=dict(
                 request=[self._log_request],

@@ -85,9 +85,7 @@ async def test_submit_job_script__success(
     name = pending_job_submission.application_name
 
     async with respx.mock:
-        submit_route = respx.post(
-            f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/submit"
-        )
+        submit_route = respx.post(f"{SETTINGS.SLURM_RESTD_VERSIONED_URL}/job/submit")
         submit_route.mock(
             return_value=httpx.Response(
                 status_code=200,
@@ -154,9 +152,7 @@ async def test_submit_job_script__with_non_default_execution_directory(
     )
 
     async with respx.mock:
-        submit_route = respx.post(
-            f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/submit"
-        )
+        submit_route = respx.post(f"{SETTINGS.SLURM_RESTD_VERSIONED_URL}/job/submit")
         submit_route.mock(
             return_value=httpx.Response(
                 status_code=200,
@@ -239,9 +235,7 @@ async def test_submit_job_script__raises_exception_if_submit_call_response_is_no
         )
         update_route.mock(return_value=httpx.Response(status_code=200))
 
-        submit_route = respx.post(
-            f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/submit"
-        )
+        submit_route = respx.post(f"{SETTINGS.SLURM_RESTD_VERSIONED_URL}/job/submit")
         submit_route.mock(
             return_value=httpx.Response(
                 status_code=400,
@@ -292,9 +286,7 @@ async def test_submit_job_script__raises_exception_if_response_cannot_be_unpacke
         )
         update_route.mock(return_value=httpx.Response(status_code=200))
 
-        submit_route = respx.post(
-            f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/submit"
-        )
+        submit_route = respx.post(f"{SETTINGS.SLURM_RESTD_VERSIONED_URL}/job/submit")
         submit_route.mock(
             return_value=httpx.Response(
                 status_code=200,
@@ -392,9 +384,7 @@ async def test_submit_pending_jobs(dummy_job_script_files, tweak_settings):
                     json=dict(job_id=fake_slurm_job_id),
                 )
 
-        submit_route = respx.post(
-            f"{SETTINGS.BASE_SLURMRESTD_URL}/slurm/v0.0.36/job/submit"
-        )
+        submit_route = respx.post(f"{SETTINGS.SLURM_RESTD_VERSIONED_URL}/job/submit")
         submit_route.mock(side_effect=_submit_side_effect)
 
         with tweak_settings(SINGLE_USER_SUBMITTER="dummy-user"):
