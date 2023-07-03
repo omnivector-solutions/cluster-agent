@@ -7,7 +7,7 @@ This file keeps track of all notable changes to the Cluster Agent.
 Unreleased
 ----------
 
-2.2.3-rc.1 2023-06-22
+2.2.3 2023-07-02
 ---------------------
 
 * Added support to set slurm restd version dynamically
