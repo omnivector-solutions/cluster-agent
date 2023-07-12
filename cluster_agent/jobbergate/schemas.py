@@ -13,7 +13,7 @@ class JobScriptFile(pydantic.BaseModel, extra=pydantic.Extra.ignore):
     filename: str
     file_type: FileType
 
-    url: str
+    path: str
 
 
 class JobScript(pydantic.BaseModel, extra=pydantic.Extra.ignore):

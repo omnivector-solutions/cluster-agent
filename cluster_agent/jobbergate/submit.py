@@ -90,7 +90,7 @@ async def submit_job_script(
             local_script_path = submit_dir / filename
             local_script_path.parent.mkdir(parents=True, exist_ok=True)
 
-            response = await backend_client.get(metadata.url)
+            response = await backend_client.get(metadata.path)
             response.raise_for_status()
             local_script_path.write_bytes(response.content)
 

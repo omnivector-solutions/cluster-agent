@@ -31,7 +31,7 @@ def dummy_job_script_files():
             "id": 1,
             "filename": "application.sh",
             "file_type": "ENTRYPOINT",
-            "url": "jobbergate/job-scripts/1/upload/application.sh",
+            "path": "jobbergate/job-scripts/1/upload/application.sh",
         },
     }
 
