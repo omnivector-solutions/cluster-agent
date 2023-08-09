@@ -26,14 +26,13 @@ def dummy_template_source():
 
 @pytest.fixture
 def dummy_job_script_files():
-    return {
-        "application.sh": {
-            "id": 1,
+    return [
+        {
+            "parent_id": 1,
             "filename": "application.sh",
             "file_type": "ENTRYPOINT",
-            "path": "jobbergate/job-scripts/1/upload/application.sh",
         },
-    }
+    ]
 
 
 @pytest.fixture

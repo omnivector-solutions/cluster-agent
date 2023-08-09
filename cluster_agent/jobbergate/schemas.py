@@ -9,17 +9,20 @@ from cluster_agent.jobbergate.constants import FileType, JobSubmissionStatus, st
 class JobScriptFile(pydantic.BaseModel, extra=pydantic.Extra.ignore):
     """Model for the job_script_files field of the JobScript resource."""
 
-    id: int
+    parent_id: int
     filename: str
     file_type: FileType
+    parent_id: int
 
-    path: str
+    @property
+    def path(self) -> str:
+        return f"/jobbergate/job-scripts/{self.parent_id}/upload/{self.filename}"
 
 
 class JobScript(pydantic.BaseModel, extra=pydantic.Extra.ignore):
     """Model to match database for the JobScript resource."""
 
-    files: Dict[str, JobScriptFile]
+    files: List[JobScriptFile]
 
 
 class PendingJobSubmission(pydantic.BaseModel, extra=pydantic.Extra.ignore):

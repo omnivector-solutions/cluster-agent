@@ -169,7 +169,7 @@ async def test_submit_job_script__raises_exception_if_no_executable_script_was_f
     and that the job submission status is updated to rejected.
     """
     pending_job_submission = PendingJobSubmission(**dummy_pending_job_submission_data)
-    pending_job_submission.job_script.files = {}
+    pending_job_submission.job_script.files = []
 
     async with respx.mock:
         respx.post(f"https://{SETTINGS.OIDC_DOMAIN}/oauth/token").mock(

@@ -86,8 +86,8 @@ async def submit_job_script(
 
         job_script = None
 
-        for filename, metadata in pending_job_submission.job_script.files.items():
-            local_script_path = submit_dir / filename
+        for metadata in pending_job_submission.job_script.files:
+            local_script_path = submit_dir / metadata.filename
             local_script_path.parent.mkdir(parents=True, exist_ok=True)
 
             response = await backend_client.get(metadata.path)
