@@ -90,13 +90,15 @@ async def test_finish_active_jobs():
     retrieve the job state from slurm, map it to a ``JobSubmissionStatus``, and update
     the job submission status via the API.
     """
-    active_job_submissions_data = [
-        dict(id=1, slurm_job_id=11),  # Will complete
-        dict(id=2, slurm_job_id=22),  # Jobbergate API gives a 400
-        dict(id=3, slurm_job_id=33),  # Slurm REST API gives a 400
-        dict(id=4, slurm_job_id=44),  # Slurm has no matching job
-        dict(id=5, slurm_job_id=55),  # Unmapped status
-    ]
+    active_job_submissions_data = {
+        "items": [
+            dict(id=1, slurm_job_id=11),  # Will complete
+            dict(id=2, slurm_job_id=22),  # Jobbergate API gives a 400
+            dict(id=3, slurm_job_id=33),  # Slurm REST API gives a 400
+            dict(id=4, slurm_job_id=44),  # Slurm has no matching job
+            dict(id=5, slurm_job_id=55),  # Unmapped status
+        ]
+    }
 
     async with respx.mock:
         respx.post(
@@ -169,7 +171,7 @@ async def test_finish_active_jobs():
         def _map_update_call(request: httpx.Request):
             return (
                 int(request.url.path.split("/")[-1]),
-                json.loads(request.content.decode("utf-8"))["new_status"],
+                json.loads(request.content.decode("utf-8"))["status"],
             )
 
         assert update_route.call_count == 2

@@ -3,6 +3,13 @@ from enum import Enum
 from typing import DefaultDict
 
 
+class FileType(str, Enum):
+    """File type enum."""
+
+    ENTRYPOINT = "ENTRYPOINT"
+    SUPPORT = "SUPPORT"
+
+
 class JobSubmissionStatus(str, Enum):
     """
     Enumeration of possible job_submission statuses.
